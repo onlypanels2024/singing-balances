@@ -109,7 +109,8 @@ public class Nudges extends BroadcastReceiver {
             PendingIntent pi = PendingIntent.getActivity(c, n.id, open,
                     PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
             Notification notif = new Notification.Builder(c, CHANNEL)
-                    .setSmallIcon(android.R.drawable.ic_popup_reminder)
+                    .setSmallIcon(R.drawable.ic_notify)
+                    .setColor(Ui.PRIMARY)
                     .setContentTitle(n.title)
                     .setContentText(n.text)
                     .setStyle(new Notification.BigTextStyle().bigText(n.text))

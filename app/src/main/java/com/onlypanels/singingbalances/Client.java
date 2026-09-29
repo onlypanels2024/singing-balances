@@ -25,7 +25,10 @@ final class Client {
     }
 
     String payingHabit() {
-        if (paidGigs == 0) return overdueCents > 0 ? "Hasn't paid yet – overdue" : "No payment history yet";
+        if (paidGigs == 0) {
+            if (overdueCents > 0) return receivedCents > 0 ? "Part paid – rest overdue" : "Hasn't paid yet – overdue";
+            return receivedCents > 0 ? "Part paid so far" : "No payment history yet";
+        }
         double avg = avgDaysToPay();
         String s;
         if (avg < 0.5) s = "Usually pays on the night";

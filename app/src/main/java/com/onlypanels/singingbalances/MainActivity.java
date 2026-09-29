@@ -497,71 +497,44 @@ public class MainActivity extends Activity {
         long from = LocalDate.of(moneyYear, 1, 1).toEpochDay();
         long to = LocalDate.of(moneyYear, 12, 31).toEpochDay();
         long today = Dates.today();
-        long[] earnedByMonth = new long[12];
-        long[] spentByMonth = new long[12];
-        long earned = 0, received = 0, spent = 0, stillOwed = 0;
-        int gigsDone = 0;
+        long[] receivedByMonth = new long[12];
+        long received = 0, pending = 0, pendingOverdue = 0;
         Map<String, Long> byClient = new HashMap<>();
         for (Gig g : db.gigsBetween(from, Math.min(to, today))) {
             if (g.isCancelled()) continue;
-            int m = LocalDate.ofEpochDay(g.gigDay).getMonthValue() - 1;
-            earnedByMonth[m] += g.feeCents;
-            earned += g.feeCents;
-            stillOwed += g.balance();
-            gigsDone++;
+            pending += g.balance();
+            if (g.isOverdue()) pendingOverdue += g.balance();
             byClient.merge(g.client, g.feeCents, Long::sum);
         }
-        for (long[] p : db.paymentsBetween(from, to)) received += p[1];
+        for (long[] p : db.paymentsBetween(from, to)) {
+            received += p[1];
+            receivedByMonth[LocalDate.ofEpochDay(p[0]).getMonthValue() - 1] += p[1];
+        }
         List<Expense> expenses = db.expensesBetween(from, to);
         Map<String, Long> byCategory = new LinkedHashMap<>();
-        for (Expense e : expenses) {
-            spentByMonth[LocalDate.ofEpochDay(e.day).getMonthValue() - 1] += e.cents;
-            spent += e.cents;
-            byCategory.merge(e.category, e.cents, Long::sum);
-        }
-        long booked = 0;
-        int bookedCount = 0;
-        for (Gig g : db.gigsBetween(Math.max(from, today + 1), to)) {
-            if (g.isCancelled()) continue;
-            booked += g.feeCents;
-            bookedCount++;
-        }
+        for (Expense e : expenses) byCategory.merge(e.category, e.cents, Long::sum);
 
-        v.addView(Ui.tiles(this,
-                Ui.tile(this, "Earned (" + gigsDone + (gigsDone == 1 ? " gig)" : " gigs)"), Money.fmt(earned), Ui.DARK),
-                Ui.tile(this, "Received", Money.fmt(received), Ui.GREEN)));
-        v.addView(Ui.tiles(this,
-                Ui.tile(this, "Expenses", Money.fmt(spent), Ui.RED),
-                Ui.tile(this, "Take-home", Money.fmt(earned - spent), earned - spent >= 0 ? Ui.PRIMARY : Ui.RED)));
-        if (stillOwed > 0 || booked > 0) {
-            v.addView(Ui.tiles(this,
-                    Ui.tile(this, "Still owed", Money.fmt(stillOwed), stillOwed > 0 ? Ui.ORANGE : Ui.DARK),
-                    Ui.tile(this, "Booked ahead (" + bookedCount + ")", Money.fmt(booked), Ui.DARK)));
-        }
+        LinearLayout pendingTile = Ui.tile(this, "Pending balance", Money.fmt(pending), pending > 0 ? Ui.ORANGE : Ui.DARK);
+        if (pendingOverdue > 0) pendingTile.addView(Ui.text(this, Money.fmt(pendingOverdue) + " overdue", 12, Ui.RED, true));
+        v.addView(Ui.tiles(this, Ui.tile(this, "Received", Money.fmt(received), Ui.GREEN), pendingTile));
 
         // This month
         LocalDate now = LocalDate.now();
         if (now.getYear() == moneyYear) {
             int m = now.getMonthValue() - 1;
             LinearLayout card = Ui.card(this, Ui.PRIMARY_LIGHT);
-            card.addView(Ui.text(this, "This month (" + Dates.month(today) + ")", 13, Ui.GREY, false));
-            card.addView(Ui.text(this, Money.fmt(earnedByMonth[m]) + " earned · " + Money.fmt(spentByMonth[m]) + " spent",
-                    17, Ui.DARK, true));
+            card.addView(Ui.text(this, "Received this month (" + Dates.month(today) + ")", 13, Ui.GREY, false));
+            card.addView(Ui.text(this, Money.fmt(receivedByMonth[m]), 20, Ui.DARK, true));
             v.addView(card);
         }
 
-        v.addView(Ui.section(this, "Month by month"));
-        v.addView(new BarChart(this, earnedByMonth, spentByMonth, now.getYear() == moneyYear ? now.getMonthValue() - 1 : -1));
-        TextView legend = Ui.text(this, "■ earned    ", 12, Ui.PRIMARY, false);
-        LinearLayout lg = Ui.hbox(this);
-        lg.addView(legend);
-        lg.addView(Ui.text(this, "■ expenses", 12, 0xFFE57373, false));
-        v.addView(lg);
+        v.addView(Ui.section(this, "Received month by month"));
+        v.addView(new BarChart(this, receivedByMonth, null, now.getYear() == moneyYear ? now.getMonthValue() - 1 : -1));
         int best = -1;
-        for (int i = 0; i < 12; i++) if (earnedByMonth[i] > 0 && (best < 0 || earnedByMonth[i] > earnedByMonth[best])) best = i;
+        for (int i = 0; i < 12; i++) if (receivedByMonth[i] > 0 && (best < 0 || receivedByMonth[i] > receivedByMonth[best])) best = i;
         if (best >= 0) {
             v.addView(Ui.text(this, "Best month: " + Dates.month(LocalDate.of(moneyYear, best + 1, 1).toEpochDay())
-                    + " (" + Money.fmt(earnedByMonth[best]) + ")", 14, Ui.DARK, false));
+                    + " (" + Money.fmt(receivedByMonth[best]) + " received)", 14, Ui.DARK, false));
         }
 
         if (!byClient.isEmpty()) {

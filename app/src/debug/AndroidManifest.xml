@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <application>
-        <!-- Test builds only: loads sample data for the automated screenshot test -->
+        <!-- Test builds only: loads sample data and lets the automated test open screens directly -->
         <receiver android:name=".DemoSeeder" android:exported="true" />
+        <activity android:name=".GigActivity" android:exported="true" tools:replace="android:exported" />
+        <activity android:name=".ClientActivity" android:exported="true" tools:replace="android:exported" />
+        <activity android:name=".SettingsActivity" android:exported="true" tools:replace="android:exported" />
     </application>
 </manifest>
