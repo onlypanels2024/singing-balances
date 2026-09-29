@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_bg">#6A1B9A</color>
+    <color name="ic_bg">#28221E</color>
 
     <style name="AppTheme" parent="android:Theme.Material.Light.DarkActionBar">
         <item name="android:colorPrimary">#6A1B9A</item>
