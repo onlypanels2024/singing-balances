@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ic_bg">#6A1B9A</color>
+
+    <style name="AppTheme" parent="android:Theme.Material.Light.DarkActionBar">
+        <item name="android:colorPrimary">#6A1B9A</item>
+        <item name="android:colorPrimaryDark">#4A148C</item>
+        <item name="android:colorAccent">#8E24AA</item>
+        <item name="android:windowBackground">@android:color/white</item>
+    </style>
+</resources>
