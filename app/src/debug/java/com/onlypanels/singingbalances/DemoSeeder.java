@@ -1,0 +1,149 @@
+package com.onlypanels.singingbalances;
+
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.util.Log;
+
+import org.json.JSONObject;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+
+/** TEST BUILDS ONLY. Driven by the automated emulator test via adb broadcasts. */
+public class DemoSeeder extends BroadcastReceiver {
+    private static final String TAG = "UITEST";
+
+    @Override
+    public void onReceive(Context c, Intent intent) {
+        String task = intent.getStringExtra("task");
+        try {
+            if ("seed".equals(task)) seed(c);
+            else if ("invoice".equals(task)) invoice(c, intent.getLongExtra("id", 3));
+            else if ("notify".equals(task)) Log.i(TAG, "notifications shown: " + Nudges.check(c, true));
+            else if ("backup".equals(task)) backupRoundTrip(c);
+            else if ("clientstats".equals(task)) {
+                for (Client k : Db.get(c).clientsWithStats()) {
+                    Log.i(TAG, "client " + k.name + " gigs=" + k.gigCount + " earned=" + k.earnedCents + " owed=" + k.owedCents
+                            + " overdue=" + k.overdueCents + " habit=" + k.payingHabit());
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "task " + task + " FAILED", e);
+        }
+    }
+
+    private static long gig(Db db, String client, String event, long day, int start, double fee, int status, long due) {
+        Gig g = new Gig();
+        g.client = client;
+        g.event = event;
+        g.gigDay = day;
+        g.startMin = start;
+        g.feeCents = Math.round(fee * 100);
+        g.status = status;
+        g.dueDay = due;
+        return db.save(g);
+    }
+
+    private static void client(Db db, String name, String email, String phone) {
+        Client k = db.client(name);
+        if (k == null) k = new Client();
+        k.name = name;
+        k.email = email;
+        k.phone = phone;
+        db.saveClient(k, null);
+    }
+
+    private static void expense(Db db, long day, double amt, String cat, String note, long gigId) {
+        Expense e = new Expense();
+        e.day = day;
+        e.cents = Math.round(amt * 100);
+        e.category = cat;
+        e.note = note;
+        e.gigId = gigId;
+        db.saveExpense(e);
+    }
+
+    private static void seed(Context c) {
+        Prefs.set(c, Prefs.NAME, "Maria Borg");
+        Prefs.set(c, Prefs.EMAIL, "maria.sings@example.com");
+        Prefs.set(c, Prefs.PHONE, "+356 7900 1234");
+        Prefs.set(c, Prefs.ADDRESS, "12 Triq il-Kbira\nSliema SLM 1234\nMalta");
+        Prefs.set(c, Prefs.IBAN, "MT84 MALT 0110 0001 2345 MTLC AST0 01S");
+        Prefs.set(c, Prefs.BIC, "MALTMTMT");
+        Prefs.set(c, Prefs.REVOLUT, "@mariaborg");
+
+        Db db = Db.get(c);
+        long t = Dates.today();
+        int C = Gig.CONFIRMED;
+        long g1 = gig(db, "Hilton Malta", "Gala dinner", t - 40, 20 * 60, 450, C, t - 40);
+        db.addPayment(g1, 45000, t - 40, "Cash");
+        long g2 = gig(db, "Café del Mar", "Sunset session", t - 20, 18 * 60 + 30, 250, C, t - 20);
+        db.addPayment(g2, 25000, t - 15, "Revolut");
+        long g3 = gig(db, "Radisson Blu", "Company party", t - 12, -1, 600, C, t - 12);
+        db.addPayment(g3, 20000, t - 12, "Cash");
+        long g4 = gig(db, "Joanna & Mark", "Wedding reception, Villa Arrigo", t - 1, 19 * 60, 900, C, t - 1);
+        gig(db, "Bob's Bar", "Friday live", t, 21 * 60, 150, C, t);
+        gig(db, "Hilton Malta", "New Year party rehearsal", t + 1, 22 * 60, 800, C, t + 1);
+        gig(db, "Café del Mar", "Acoustic night", t + 9, 20 * 60, 200, Gig.PENCILLED, t + 9);
+        gig(db, "Radisson Blu", "Corporate event", t + 25, 19 * 60 + 30, 500, C, t + 25);
+        gig(db, "Bob's Bar", "Karaoke special", t - 5, 21 * 60, 120, Gig.CANCELLED, t - 5);
+        long g10 = gig(db, "Hilton Malta", "Summer terrace", t - 70, 19 * 60, 300, C, t - 70);
+        db.addPayment(g10, 30000, t - 60, "Bank transfer");
+
+        client(db, "Hilton Malta", "events@hilton.example", "+356 2138 3383");
+        client(db, "Joanna & Mark", "joanna.mark@example.com", "+356 9912 3456");
+        client(db, "Wedding Planners Ltd", "hello@planners.example", "");
+
+        expense(db, t - 1, 25, "Fuel & transport", "Fuel to Mdina", g4);
+        expense(db, t - 1, 60, "Hair & make-up", "", g4);
+        expense(db, t - 30, 120, "Outfits & costumes", "Red dress", 0);
+        expense(db, t - 10, 45, "Backing tracks & music", "Wedding set tracks", 0);
+        expense(db, t - 50, 300, "Equipment", "New microphone", 0);
+        Log.i(TAG, "seeded, today=" + Dates.iso(t));
+    }
+
+    private static void copy(File from, File to) throws Exception {
+        try (InputStream in = new FileInputStream(from); OutputStream out = new FileOutputStream(to)) {
+            byte[] b = new byte[8192];
+            int n;
+            while ((n = in.read(b)) > 0) out.write(b, 0, n);
+        }
+    }
+
+    private static void invoice(Context c, long id) throws Exception {
+        Gig g = Db.get(c).gig(id);
+        File pdf = Invoice.create(c, g);
+        File out = new File(c.getExternalFilesDir(null), "invoice-" + id + ".pdf");
+        copy(pdf, out);
+        Log.i(TAG, "invoice written " + out + " no=" + g.invoiceNo + " size=" + out.length());
+    }
+
+    private static void backupRoundTrip(Context c) throws Exception {
+        Db db = Db.get(c);
+        String before = strip(db.exportAll());
+        File f = new File(c.getExternalFilesDir(null), "backup.json");
+        try (OutputStream out = new FileOutputStream(f)) {
+            out.write(db.exportAll().toString(1).getBytes(StandardCharsets.UTF_8));
+        }
+        byte[] data = new byte[(int) f.length()];
+        try (InputStream in = new FileInputStream(f)) {
+            int off = 0;
+            while (off < data.length) off += in.read(data, off, data.length - off);
+        }
+        db.importAll(new JSONObject(new String(data, StandardCharsets.UTF_8)));
+        String after = strip(db.exportAll());
+        Log.i(TAG, "backup roundtrip " + (before.equals(after) ? "IDENTICAL" : "DIFFERENT\n" + before + "\n" + after)
+                + " bytes=" + data.length);
+    }
+
+    private static String strip(JSONObject o) {
+        o.remove("exported");
+        o.remove("settings");
+        return o.toString();
+    }
+}

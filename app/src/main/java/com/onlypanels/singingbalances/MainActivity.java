@@ -93,10 +93,13 @@ public class MainActivity extends Activity {
     }
 
     private void handleIntent(Intent i) {
-        if (i != null && "unpaid".equals(i.getStringExtra("tab"))) {
+        if (i == null) return;
+        if ("unpaid".equals(i.getStringExtra("tab"))) {
             page = "gigs";
             gigsTab = "unpaid";
         }
+        if (i.getStringExtra("page") != null) page = i.getStringExtra("page");
+        if (i.getStringExtra("gigsTab") != null) gigsTab = i.getStringExtra("gigsTab");
     }
 
     @Override
