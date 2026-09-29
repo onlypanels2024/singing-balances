@@ -155,10 +155,11 @@ final class Ui {
     /** Two tiles side by side. */
     static LinearLayout tiles(Context c, View a, View b) {
         LinearLayout r = hbox(c);
+        r.setBaselineAligned(false);
         r.setLayoutParams(matchWrap(c, 10));
-        LinearLayout.LayoutParams la = weight(1f);
+        LinearLayout.LayoutParams la = new LinearLayout.LayoutParams(0, -1, 1f);
         la.rightMargin = dp(c, 5);
-        LinearLayout.LayoutParams lb = weight(1f);
+        LinearLayout.LayoutParams lb = new LinearLayout.LayoutParams(0, -1, 1f);
         lb.leftMargin = dp(c, 5);
         r.addView(a, la);
         r.addView(b, lb);

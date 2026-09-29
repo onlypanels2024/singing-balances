@@ -84,7 +84,7 @@ final class Outlook {
                 + (g.isPaid()
                 ? "Please find attached the invoice for my performance" + gigDesc(g) + ", marked as paid. Thank you!"
                 : "Please find attached my invoice for the performance" + gigDesc(g) + ". The amount due is "
-                + Money.fmt(g.balance()) + ", payable by " + Dates.fmt(g.dueDay) + "." + payBlock(a, g))
+                + Money.fmt(g.balance()) + (g.dueDay < Dates.today() ? ", payable on receipt." : ", payable by " + Dates.fmt(g.dueDay) + ".") + payBlock(a, g))
                 + "\n\n" + signOff(a);
         sendWithInvoice(a, g, subject, body);
     }

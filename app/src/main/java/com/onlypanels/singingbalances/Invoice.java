@@ -71,7 +71,9 @@ final class Invoice {
         ry += 15;
         right(c, "Date: " + Dates.fmt(g.invoiceDay > 0 ? g.invoiceDay : Dates.today()), W - M, ry, body);
         ry += 15;
-        right(c, "Payment due: " + Dates.fmt(g.dueDay), W - M, ry, body);
+        long invDay = g.invoiceDay > 0 ? g.invoiceDay : Dates.today();
+        String dueText = g.isPaid() ? "Paid \u2013 thank you" : g.dueDay < invDay ? "Payment due: on receipt" : "Payment due: " + Dates.fmt(g.dueDay);
+        right(c, dueText, W - M, ry, body);
 
         // Bill to
         y = Math.max(y, ry) + 30;

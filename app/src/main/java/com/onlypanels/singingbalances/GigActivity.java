@@ -91,7 +91,7 @@ public class GigActivity extends Activity {
 
         // Actions
         if (!g.isCancelled()) {
-            if (!g.isPaid()) {
+            if (!g.isPaid() && !g.isFuture()) {
                 action("Record a payment", Ui.PRIMARY, Ui.WHITE, () -> Forms.recordPayment(this, g, this::render));
                 action("Paid in full (" + Money.fmt(g.balance()) + ")", Ui.GREEN, Ui.WHITE, () -> {
                     Db.get(this).addPayment(g.id, g.balance(), Dates.today(), "Paid in full");

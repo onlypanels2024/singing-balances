@@ -32,7 +32,7 @@ for id in 3 4 5 6 7 9 1; do
   back
 done
 
-adb shell am start -W -n $PKG/.ClientActivity --es name "Hilton Malta" > /dev/null; shot client-hilton; swipe; shot client-hilton-scrolled; back
+adb shell am start -W -n $PKG/.ClientActivity --es name 'Hilton\ Malta' > /dev/null; shot client-hilton; swipe; shot client-hilton-scrolled; back
 
 adb shell am start -W -n $PKG/.SettingsActivity > /dev/null; shot settings; swipe; shot settings-2; swipe; shot settings-3; swipe; shot settings-4; back
 
@@ -41,8 +41,8 @@ main --es page gigs --es gigsTab unpaid
 $UI tap "Add a gig";                          shot form-new-gig; back; back
 adb shell am start -W -n $PKG/.GigActivity --el id 3 > /dev/null
 $UI tap "Record a payment";                   shot form-payment; back; back
+adb shell am start -W -n $PKG/.GigActivity --el id 4 > /dev/null
 $UI tap "Add an expense" 4;                   shot form-expense; back; back
-back
 main --es page clients
 $UI tap "Add a client";                       shot form-client; back; back
 
