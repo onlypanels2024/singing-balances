@@ -46,7 +46,7 @@ $UI tap "Add an expense" 4;                   shot form-expense; back; back
 main --es page clients
 $UI tap "Add a client";                       shot form-client; back; back
 
-# Actions that hand over to other apps (no Outlook on the emulator: expect a chooser or a message, not a crash)
+# Actions that hand over to other apps (no Gmail sign-in on the emulator: expect a chooser or a message, not a crash)
 adb shell am start -W -n $PKG/.GigActivity --el id 4 > /dev/null
 $UI tap "Send invoice";                       shot action-send-invoice; back; back
 adb shell am start -W -n $PKG/.GigActivity --el id 4 > /dev/null

@@ -99,16 +99,16 @@ public class GigActivity extends Activity {
                 });
             }
             if (g.isFuture()) {
-                action("Add gig to Google Calendar", Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> Outlook.calendarGig(this, g));
+                action("Add gig to Google Calendar", Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> Google.calendarGig(this, g));
                 if (g.status == Gig.PENCILLED) {
                     action("Mark as confirmed", Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> setStatus(Gig.CONFIRMED));
                 }
             }
-            action(g.invoiceNo.isEmpty() ? "Send invoice (PDF) via Outlook" : "Send invoice " + g.invoiceNo + " via Outlook",
-                    Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> Outlook.emailInvoice(this, g));
+            action(g.invoiceNo.isEmpty() ? "Send invoice (PDF) via Gmail" : "Send invoice " + g.invoiceNo + " via Gmail",
+                    Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> Google.emailInvoice(this, g));
             if (g.isOwed()) {
-                action("Email payment reminder (Outlook)", Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> Outlook.emailReminder(this, g));
-                action("Add chase-up to Google Calendar", Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> Outlook.calendarChase(this, g));
+                action("Email payment reminder (Gmail)", Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> Google.emailReminder(this, g));
+                action("Add chase-up to Google Calendar", Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> Google.calendarChase(this, g));
             }
             if (!Prefs.hasPaymentDetails(this) && !g.isPaid()) {
                 TextView hint = Ui.text(this, "Tip: add your IBAN / Revolut in Settings so they appear on invoices and reminders.",

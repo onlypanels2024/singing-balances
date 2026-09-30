@@ -16,7 +16,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Automatic backup to a file you choose once (e.g. in OneDrive via the OneDrive app).
+ * Automatic backup to a file you choose once (e.g. in Google Drive via the Drive app).
  * After every change the app rewrites that file a few seconds later.
  */
 final class Backup {

@@ -12,7 +12,7 @@ import android.provider.OpenableColumns;
 import java.io.File;
 import java.io.FileNotFoundException;
 
-/** Lets Outlook (or any app you pick) read the invoice PDFs the app makes. Read-only. */
+/** Lets Gmail (or any app you pick) read the invoice PDFs the app makes. Read-only. */
 public class ShareProvider extends ContentProvider {
     static final String AUTHORITY = "com.onlypanels.singingbalances.files";
 

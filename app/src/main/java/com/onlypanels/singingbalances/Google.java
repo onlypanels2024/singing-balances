@@ -13,18 +13,18 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 
 /**
- * Hands emails and calendar entries to the Outlook app on the phone. No sign-in needed:
- * Outlook opens with everything filled in and you tap Send / Save. If Outlook can't handle it,
+ * Hands emails to Gmail and calendar entries to Google Calendar on the phone. No sign-in needed:
+ * the app opens with everything filled in and you tap Send / Save. If it can't handle it,
  * Android offers your other apps instead.
  */
-final class Outlook {
-    static final String PACKAGE = "com.microsoft.office.outlook";
+final class Google {
+    static final String GMAIL = "com.google.android.gm";
     static final String GOOGLE_CALENDAR = "com.google.android.calendar";
 
-    private Outlook() {}
+    private Google() {}
 
     private static void launch(Activity a, Intent i, String chooserTitle) {
-        launch(a, i, chooserTitle, PACKAGE);
+        launch(a, i, chooserTitle, GMAIL);
     }
 
     /** Tries the preferred app first; if it isn't installed, offers the phone's other apps. */
@@ -77,7 +77,7 @@ final class Outlook {
         i.putExtra(Intent.EXTRA_SUBJECT, subject);
         i.putExtra(Intent.EXTRA_TEXT, body);
         if (g.email.isEmpty()) {
-            Toast.makeText(a, "No email saved for " + g.client + " – add the address in Outlook", Toast.LENGTH_LONG).show();
+            Toast.makeText(a, "No email saved for " + g.client + " – add the address in Gmail", Toast.LENGTH_LONG).show();
         }
         launch(a, i, "Send with");
     }

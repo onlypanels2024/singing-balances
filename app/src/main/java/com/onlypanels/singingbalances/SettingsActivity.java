@@ -96,8 +96,8 @@ public class SettingsActivity extends Activity {
         });
         f.addView(test);
 
-        f.addView(Ui.section(this, "Backup (OneDrive)"));
-        f.addView(Ui.text(this, "Choose a backup file once – pick OneDrive in the file picker. After every change the "
+        f.addView(Ui.section(this, "Backup (Google Drive)"));
+        f.addView(Ui.text(this, "Choose a backup file once – pick Google Drive in the file picker. After every change the "
                 + "app updates that file, so a lost or broken phone doesn't mean lost records.", 13, Ui.GREY, false));
         backupStatus = Ui.text(this, "", 14, Ui.DARK, true);
         backupStatus.setPadding(0, Ui.dp(this, 8), 0, 0);
