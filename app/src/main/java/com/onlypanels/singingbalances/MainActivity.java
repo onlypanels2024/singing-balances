@@ -32,7 +32,7 @@ import java.util.Map;
 public class MainActivity extends Activity {
     private static final int MENU_SETTINGS = 1;
     private static final String[] PAGES = {"gigs", "calendar", "clients", "money"};
-    private static final String[] PAGE_LABELS = {"🎤\nGigs", "📅\nCalendar", "👥\nClients", "💶\nMoney"};
+    private static final String[] PAGE_LABELS = {"🎤\nSinging","📅\nCalendar", "👥\nClients", "💶\nMoney"};
 
     private String page = "gigs";
     private String gigsTab = "unpaid";
