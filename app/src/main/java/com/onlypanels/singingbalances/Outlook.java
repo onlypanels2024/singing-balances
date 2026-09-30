@@ -19,11 +19,17 @@ import java.time.ZoneId;
  */
 final class Outlook {
     static final String PACKAGE = "com.microsoft.office.outlook";
+    static final String GOOGLE_CALENDAR = "com.google.android.calendar";
 
     private Outlook() {}
 
     private static void launch(Activity a, Intent i, String chooserTitle) {
-        i.setPackage(PACKAGE);
+        launch(a, i, chooserTitle, PACKAGE);
+    }
+
+    /** Tries the preferred app first; if it isn't installed, offers the phone's other apps. */
+    private static void launch(Activity a, Intent i, String chooserTitle, String preferredPackage) {
+        i.setPackage(preferredPackage);
         try {
             a.startActivity(i);
             return;
@@ -33,7 +39,7 @@ final class Outlook {
         try {
             a.startActivity(Intent.createChooser(i, chooserTitle));
         } catch (ActivityNotFoundException e) {
-            Toast.makeText(a, "No app found to do this. Is Outlook installed?", Toast.LENGTH_LONG).show();
+            Toast.makeText(a, "No app found to do this. Is the app installed?", Toast.LENGTH_LONG).show();
         }
     }
 
@@ -133,7 +139,7 @@ final class Outlook {
                     .putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, begin)
                     .putExtra(CalendarContract.EXTRA_EVENT_END_TIME, begin + 86_400_000L);
         }
-        launch(a, i, "Add to calendar");
+        launch(a, i, "Add to calendar", GOOGLE_CALENDAR);
     }
 
     /** A 10:00 reminder to chase payment on the due date (or tomorrow if that has passed). */
@@ -151,6 +157,6 @@ final class Outlook {
                 .putExtra(CalendarContract.EXTRA_EVENT_END_TIME, begin + 15 * 60 * 1000L)
                 .putExtra(CalendarContract.Events.TITLE, "Chase payment: " + g.client + " " + Money.fmt(g.balance()))
                 .putExtra(CalendarContract.Events.DESCRIPTION, details);
-        launch(a, i, "Add reminder to");
+        launch(a, i, "Add reminder to", GOOGLE_CALENDAR);
     }
 }

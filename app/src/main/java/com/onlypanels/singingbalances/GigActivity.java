@@ -99,7 +99,7 @@ public class GigActivity extends Activity {
                 });
             }
             if (g.isFuture()) {
-                action("Add gig to Outlook calendar", Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> Outlook.calendarGig(this, g));
+                action("Add gig to Google Calendar", Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> Outlook.calendarGig(this, g));
                 if (g.status == Gig.PENCILLED) {
                     action("Mark as confirmed", Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> setStatus(Gig.CONFIRMED));
                 }
@@ -108,7 +108,7 @@ public class GigActivity extends Activity {
                     Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> Outlook.emailInvoice(this, g));
             if (g.isOwed()) {
                 action("Email payment reminder (Outlook)", Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> Outlook.emailReminder(this, g));
-                action("Add chase-up to Outlook calendar", Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> Outlook.calendarChase(this, g));
+                action("Add chase-up to Google Calendar", Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> Outlook.calendarChase(this, g));
             }
             if (!Prefs.hasPaymentDetails(this) && !g.isPaid()) {
                 TextView hint = Ui.text(this, "Tip: add your IBAN / Revolut in Settings so they appear on invoices and reminders.",
