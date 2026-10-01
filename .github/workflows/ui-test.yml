@@ -38,9 +38,10 @@ jobs:
         run: |
           mkdir -p ui-results
           {
-            echo "ANDROID_HOME=$ANDROID_HOME"; ls $ANDROID_HOME || true
-            ls $ANDROID_HOME/cmdline-tools || true
-            yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-34;google_apis;x86_64" "emulator" 2>&1 | tail -20
+            curl -sSL https://dl.google.com/android/repository/repository2-3.xml | grep -o 'emulator-linux_x64-[0-9]*\.zip' | sort -u
+            for b in $(curl -sSL https://dl.google.com/android/repository/repository2-3.xml | grep -o 'emulator-linux_x64-[0-9]*\.zip' | sort -u); do
+              echo "$b $(curl -s -o /dev/null -w '%{http_code} %{size_download}' -r 0-1000 https://dl.google.com/android/repository/$b)"
+            done
           } > ui-results/diag.txt 2>&1 || true
 
       - name: Run on virtual phone
