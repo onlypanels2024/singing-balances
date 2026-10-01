@@ -33,6 +33,16 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
+      - name: Check Android tools (diagnostics)
+        if: always()
+        run: |
+          mkdir -p ui-results
+          {
+            echo "ANDROID_HOME=$ANDROID_HOME"; ls $ANDROID_HOME || true
+            ls $ANDROID_HOME/cmdline-tools || true
+            yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-34;google_apis;x86_64" "emulator" 2>&1 | tail -20
+          } > ui-results/diag.txt 2>&1 || true
+
       - name: Run on virtual phone
         uses: reactivecircus/android-emulator-runner@v2
         with:
