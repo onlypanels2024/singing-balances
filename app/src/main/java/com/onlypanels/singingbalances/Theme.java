@@ -24,6 +24,13 @@ final class Theme {
     static final String[] MODE_KEYS = {MODE_LIGHT, MODE_DARK, MODE_PHONE};
     static final String[] MODE_NAMES = {"Light", "Dark", "Same as phone"};
 
+    private static final int[] LIGHT_STYLES = {R.style.AppTheme_Light_Plum, R.style.AppTheme_Light_Indigo,
+            R.style.AppTheme_Light_Ocean, R.style.AppTheme_Light_Teal, R.style.AppTheme_Light_Rose,
+            R.style.AppTheme_Light_Graphite, R.style.AppTheme_Light_Gold};
+    private static final int[] DARK_STYLES = {R.style.AppTheme_Dark_Plum, R.style.AppTheme_Dark_Indigo,
+            R.style.AppTheme_Dark_Ocean, R.style.AppTheme_Dark_Teal, R.style.AppTheme_Dark_Rose,
+            R.style.AppTheme_Dark_Graphite, R.style.AppTheme_Dark_Gold};
+
     /** Bumped whenever the look changes, so open screens know to redraw. */
     static int generation;
     static boolean dark;
@@ -116,9 +123,7 @@ final class Theme {
     /** Call at the very start of onCreate, before super.onCreate. */
     static void apply(Activity a) {
         load(a);
-        // Style "AppTheme.Light.Plum" is stored as resource name "AppTheme_Light_Plum".
-        String style = "AppTheme_" + (dark ? "Dark" : "Light") + "_" + ACCENT_NAMES[accentIndex(a)];
-        int id = a.getResources().getIdentifier(style, "style", a.getPackageName());
+        int id = (dark ? DARK_STYLES : LIGHT_STYLES)[accentIndex(a)];
         if (id != 0) a.setTheme(id);
     }
 

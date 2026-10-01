@@ -57,7 +57,10 @@ public class MainActivity extends Activity {
             finish();
             return;
         }
-        Theme.apply(this); // the look may have just been set for an existing user
+        if (themeGeneration != Theme.generation) {
+            recreate(); // the look was just set for an existing user
+            return;
+        }
         if (savedInstanceState != null) {
             page = savedInstanceState.getString("page", page);
             gigsTab = savedInstanceState.getString("gigsTab", gigsTab);
