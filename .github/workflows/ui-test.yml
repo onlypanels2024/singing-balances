@@ -33,17 +33,6 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - name: Check Android tools (diagnostics)
-        if: always()
-        run: |
-          mkdir -p ui-results
-          {
-            curl -sSL https://dl.google.com/android/repository/repository2-3.xml | grep -o 'emulator-linux_x64-[0-9]*\.zip' | sort -u
-            for b in $(curl -sSL https://dl.google.com/android/repository/repository2-3.xml | grep -o 'emulator-linux_x64-[0-9]*\.zip' | sort -u); do
-              echo "$b $(curl -s -o /dev/null -w '%{http_code} %{size_download}' -r 0-1000 https://dl.google.com/android/repository/$b)"
-            done
-          } > ui-results/diag.txt 2>&1 || true
-
       - name: Run on virtual phone
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -51,6 +40,8 @@ jobs:
           target: google_apis
           arch: x86_64
           profile: pixel_6
+          # Pinned: Google's listed default emulator download (16428233) returns "not found" as of 1 Oct 2026
+          emulator-build: 16433917
           disable-animations: true
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           script: bash .github/uitest/run.sh
