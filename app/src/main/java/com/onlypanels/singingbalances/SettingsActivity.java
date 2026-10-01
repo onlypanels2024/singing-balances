@@ -422,7 +422,7 @@ public class SettingsActivity extends Activity {
 
     private String gigsCsv() {
         StringBuilder sb = new StringBuilder("﻿");
-        sb.append("Client,Email,Event,Gig date,Start,Booking,Due date,Fee,Paid,Owed,Status,Invoice,Notes\n");
+        sb.append("Client,Email,Event,Date,Start,Booking status,Due date,Fee,Paid,Owed,Payment status,Invoice,Notes\n");
         for (Gig g : Db.get(this).allGigs()) {
             String st = g.isCancelled() ? "Cancelled" : g.isFuture() ? "Upcoming" : g.isPaid() ? "Paid"
                     : g.isOverdue() ? "Overdue" : "Unpaid";
@@ -441,7 +441,7 @@ public class SettingsActivity extends Activity {
 
     private String expensesCsv() {
         StringBuilder sb = new StringBuilder("﻿");
-        sb.append("Date,Category,Note,Amount,Gig\n");
+        sb.append("Date,Category,Note,Amount,Booking\n");
         Db db = Db.get(this);
         long from = LocalDate.of(1970, 1, 1).toEpochDay(), to = LocalDate.of(2200, 1, 1).toEpochDay();
         for (Expense e : db.expensesBetween(from, to)) {

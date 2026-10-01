@@ -3,7 +3,7 @@ package com.onlypanels.singingbalances;
 import android.content.Context;
 
 /**
- * What the user does, and the words the app uses for it: a singer has "gigs",
+ * What the user does, and the words the app uses for it: a singer has "bookings",
  * a photographer has "shoots", a make-up artist has "bookings". Every preset can be
  * overridden in Settings.
  */
@@ -11,8 +11,8 @@ final class Words {
     static final String[] KEYS = {"singer", "band", "dj", "photographer", "videographer", "makeup", "host", "dancer", "other"};
     static final String[] NAMES = {"Singer", "Band / musician", "DJ", "Photographer", "Videographer",
             "Hair & make-up artist", "MC / host", "Dancer / performer", "Something else"};
-    private static final String[] ONE = {"gig", "gig", "gig", "shoot", "shoot", "booking", "event", "show", "booking"};
-    private static final String[] MANY = {"gigs", "gigs", "gigs", "shoots", "shoots", "bookings", "events", "shows", "bookings"};
+    private static final String[] ONE = {"booking", "booking", "booking", "shoot", "shoot", "booking", "event", "show", "booking"};
+    private static final String[] MANY = {"bookings", "bookings", "bookings", "shoots", "shoots", "bookings", "events", "shows", "bookings"};
     private static final String[] LINE = {"Live vocal performance", "Live music performance", "DJ set",
             "Photography services", "Videography services", "Hair & make-up services", "Hosting services",
             "Performance", "Services"};

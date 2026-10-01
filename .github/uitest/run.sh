@@ -47,7 +47,7 @@ back
 
 # Forms
 main --es page gigs --es gigsTab unpaid
-$UI tap "Add a gig";                          shot form-new-gig; back; back
+$UI tap "Add a booking";                          shot form-new-gig; back; back
 adb shell am start -W -n $PKG/.GigActivity --el id 3 > /dev/null
 $UI tap "Record a payment";                   shot form-payment; back; back
 adb shell am start -W -n $PKG/.GigActivity --el id 4 > /dev/null

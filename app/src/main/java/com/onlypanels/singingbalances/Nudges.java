@@ -100,7 +100,7 @@ public class Nudges extends BroadcastReceiver {
         }
 
         NotificationManager nm = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
-        nm.createNotificationChannel(new NotificationChannel(CHANNEL, "Gig & payment reminders",
+        nm.createNotificationChannel(new NotificationChannel(CHANNEL, "Booking & payment reminders",
                 NotificationManager.IMPORTANCE_DEFAULT));
         for (Note n : notes) {
             Intent open = n.gigId > 0

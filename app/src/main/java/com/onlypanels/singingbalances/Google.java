@@ -146,7 +146,7 @@ final class Google {
     static void calendarChase(Activity a, Gig g) {
         long day = Math.max(g.dueDay, Dates.today() + 1);
         long begin = millis(day, 10 * 60);
-        String details = g.title() + "\nGig date: " + Dates.fmt(g.gigDay)
+        String details = g.title() + "\n" + Words.One(a) + " date: " + Dates.fmt(g.gigDay)
                 + "\nFee: " + Money.fmt(g.feeCents)
                 + "\nPaid so far: " + Money.fmt(g.paidCents)
                 + "\nStill owed: " + Money.fmt(g.balance())

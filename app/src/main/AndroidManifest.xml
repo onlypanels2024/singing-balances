@@ -30,7 +30,7 @@
         <activity
             android:name=".GigActivity"
             android:exported="false"
-            android:label="Gig"
+            android:label="Booking"
             android:parentActivityName=".MainActivity" />
 
         <activity
