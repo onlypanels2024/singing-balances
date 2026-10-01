@@ -27,18 +27,18 @@ jobs:
         run: gradle assembleRelease --no-daemon --stacktrace
 
       - name: Name the APK
-        run: cp app/build/outputs/apk/release/app-release.apk "Nexora-v${{ github.run_number }}.apk"
+        run: cp app/build/outputs/apk/release/app-release.apk "OutRo-v${{ github.run_number }}.apk"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Nexora-apk
-          path: Nexora-*.apk
+          name: OutRo-apk
+          path: OutRo-*.apk
 
       - name: Publish download
         uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ github.run_number }}
-          name: Nexora v${{ github.run_number }}
+          name: OutRo v${{ github.run_number }}
           body: Download the .apk below on your phone and open it to install or update.
-          files: Nexora-*.apk
+          files: OutRo-*.apk
           make_latest: true

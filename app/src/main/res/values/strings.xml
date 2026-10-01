@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- App name; changing it here renames the app everywhere -->
-    <string name="app_name">Nexora</string>
+    <string name="app_name">OutRo</string>
     <string name="widget_label">Owed to you</string>
     <string name="widget_desc">How much you\'re owed and what\'s next</string>
 </resources>
