@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_bg">#2B3990</color>
+    <color name="ic_bg">#010A20</color>
 
     <!-- Default before the user's own look is applied -->
     <style name="AppTheme" parent="android:Theme.Material.Light">
