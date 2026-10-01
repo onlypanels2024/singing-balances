@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="widget_desc">How much you\'re owed and your next gig</string>
+    <!-- Working name for the store version; changing it here renames the app everywhere -->
+    <string name="app_name">GigSettle</string>
+    <string name="widget_label">Owed to you</string>
+    <string name="widget_desc">How much you\'re owed and what\'s next</string>
 </resources>

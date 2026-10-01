@@ -56,8 +56,8 @@ final class Forms {
         return s;
     }
 
-    private static String dueLabel(long gigDay, long dueDay) {
-        return dueDay == gigDay ? Dates.fmt(dueDay) + " (on the night)" : Dates.fmt(dueDay);
+    private static String dueLabel(Activity a, long gigDay, long dueDay) {
+        return dueDay == gigDay ? Dates.fmt(dueDay) + " (" + Words.onTheNight(a) + ")" : Dates.fmt(dueDay);
     }
 
     /** existing == null means a new gig; presetDay is used for new gigs (0 = today). */
@@ -91,17 +91,17 @@ final class Forms {
         });
 
         EditText event = Ui.field(form, "Event / venue", g.event, TEXT_SENTENCE);
-        Button dayBtn = Ui.pickerButton(form, "Gig date");
+        Button dayBtn = Ui.pickerButton(form, Words.One(a) + " date");
         Button timeBtn = Ui.pickerButton(form, "Start time");
         Spinner status = spinner(form, "Booking", Gig.STATUS_NAMES, g.status);
-        EditText fee = Ui.field(form, "Fee (" + Money.SYMBOL + ") *", isNew ? "" : Money.plain(g.feeCents), MONEY);
+        EditText fee = Ui.field(form, "Fee (" + Money.label() + ") *", isNew ? "" : Money.plain(g.feeCents), MONEY);
         Button dueBtn = Ui.pickerButton(form, "Payment due");
-        EditText notes = Ui.field(form, "Notes (songs, contact on the night, parking...)", g.notes, NOTES);
+        EditText notes = Ui.field(form, "Notes (contact " + Words.onTheNight(a) + ", parking, special requests...)", g.notes, NOTES);
 
         Runnable refresh = () -> {
             dayBtn.setText(Dates.withWeekday(gigDay[0]));
             timeBtn.setText(start[0] >= 0 ? Dates.time(start[0]) : "Not set");
-            dueBtn.setText(dueLabel(gigDay[0], dueDay[0]));
+            dueBtn.setText(dueLabel(a, gigDay[0], dueDay[0]));
         };
         refresh.run();
 
@@ -129,7 +129,7 @@ final class Forms {
         }));
 
         AlertDialog dialog = new AlertDialog.Builder(a)
-                .setTitle(isNew ? "New gig" : "Edit gig")
+                .setTitle(isNew ? "New " + Words.one(a) : "Edit " + Words.one(a))
                 .setView(wrap(form))
                 .setPositiveButton("Save", null)
                 .setNegativeButton("Cancel", null)
@@ -138,7 +138,7 @@ final class Forms {
             String name = client.getText().toString().trim();
             Long cents = Money.parse(fee.getText().toString());
             if (name.isEmpty()) {
-                client.setError("Who pays you for this gig?");
+                client.setError("Who pays you for this " + Words.one(a) + "?");
                 return;
             }
             if (cents == null || cents <= 0) {
@@ -164,9 +164,9 @@ final class Forms {
     static void recordPayment(Activity a, Gig g, Runnable onSaved) {
         final long[] day = {Dates.today()};
         LinearLayout form = Ui.vbox(a, 20);
-        EditText amount = Ui.field(form, "Amount received (" + Money.SYMBOL + ")", Money.plain(g.balance()), MONEY);
+        EditText amount = Ui.field(form, "Amount received (" + Money.label() + ")", Money.plain(g.balance()), MONEY);
         Button dayBtn = Ui.pickerButton(form, "Date received");
-        EditText note = Ui.field(form, "How was it paid? (cash, bank transfer, Revolut...)", "", TEXT_SENTENCE);
+        EditText note = Ui.field(form, "How was it paid? (cash, bank transfer, card...)", "", TEXT_SENTENCE);
         dayBtn.setText(Dates.fmt(day[0]));
         dayBtn.setOnClickListener(v -> pickDate(a, day[0], d -> {
             day[0] = d;
@@ -204,7 +204,7 @@ final class Forms {
         final long[] day = {e.day};
         LinearLayout form = Ui.vbox(a, 20);
         if (gig != null) form.addView(Ui.text(a, "For: " + gig.title() + " (" + Dates.fmt(gig.gigDay) + ")", 14, Ui.GREY, false));
-        EditText amount = Ui.field(form, "Amount (" + Money.SYMBOL + ") *", isNew ? "" : Money.plain(e.cents), MONEY);
+        EditText amount = Ui.field(form, "Amount (" + Money.label() + ") *", isNew ? "" : Money.plain(e.cents), MONEY);
         int cat = Arrays.asList(Expense.CATEGORIES).indexOf(e.category);
         Spinner category = spinner(form, "Category", Expense.CATEGORIES, cat < 0 ? Expense.CATEGORIES.length - 1 : cat);
         Button dayBtn = Ui.pickerButton(form, "Date");
@@ -250,7 +250,7 @@ final class Forms {
         final Client k = existing == null ? new Client() : existing;
         final String oldName = k.name;
         LinearLayout form = Ui.vbox(a, 20);
-        EditText name = Ui.field(form, "Name (person, hotel, agency...) *", k.name, TEXT_WORDS);
+        EditText name = Ui.field(form, "Name (person, venue, agency...) *", k.name, TEXT_WORDS);
         EditText email = Ui.field(form, "Email", k.email, EMAIL);
         EditText phone = Ui.field(form, "Phone", k.phone, PHONE);
         EditText notes = Ui.field(form, "Notes", k.notes, NOTES);
@@ -263,7 +263,7 @@ final class Forms {
         if (!isNew && onDeleted != null) {
             b.setNeutralButton("Delete", (d, w) -> new AlertDialog.Builder(a)
                     .setTitle("Delete " + k.name + "?")
-                    .setMessage("Their gigs stay in the app; only the saved contact details are removed.")
+                    .setMessage("Their " + Words.many(a) + " stay in the app; only the saved contact details are removed.")
                     .setPositiveButton("Delete", (d2, w2) -> {
                         Db.get(a).deleteClient(k.id);
                         onDeleted.run();

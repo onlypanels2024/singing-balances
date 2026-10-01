@@ -22,6 +22,34 @@ final class Prefs {
     static final String BACKUP_URI = "backup_uri";
     static final String BACKUP_LAST_OK = "backup_last_ok";
     static final String BACKUP_ERROR = "backup_error";
+    // Personalisation
+    static final String SETUP_DONE = "setup_done";
+    static final String WELCOME_STARTED = "welcome_started";
+    static final String PROFESSION = "profession";
+    static final String TAB_TITLE = "tab_title";
+    static final String WORD_ONE = "word_one";
+    static final String WORD_MANY = "word_many";
+    static final String INVOICE_LINE = "invoice_line";
+    static final String CURRENCY = "currency";
+    static final String ACCENT = "accent";
+    static final String THEME_MODE = "theme_mode";
+
+    /**
+     * Existing users (who had the app before personalisation) keep exactly what they had:
+     * singer wording with the first tab called "Singing", euro and the purple colour.
+     * Returns true if the welcome screen should still be shown.
+     */
+    static boolean needsSetup(Context c) {
+        SharedPreferences sp = sp(c);
+        if (sp.getBoolean(SETUP_DONE, false)) return false;
+        if (sp.getBoolean(WELCOME_STARTED, false)) return true; // a new user who left the welcome screen early
+        boolean existing = !get(c, NAME).isEmpty() || !Db.get(c).allGigs().isEmpty();
+        if (!existing) return true;
+        sp.edit().putString(PROFESSION, "singer").putString(TAB_TITLE, "Singing").putString(CURRENCY, "EUR")
+                .putString(ACCENT, "plum").putString(THEME_MODE, "light").putBoolean(SETUP_DONE, true).apply();
+        Theme.changed(c);
+        return false;
+    }
 
     private Prefs() {}
 

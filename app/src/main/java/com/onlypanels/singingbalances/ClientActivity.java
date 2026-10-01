@@ -23,6 +23,7 @@ public class ClientActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Theme.apply(this);
         super.onCreate(savedInstanceState);
         name = getIntent().getStringExtra("name");
         if (getActionBar() != null) getActionBar().setDisplayHomeAsUpEnabled(true);
@@ -30,6 +31,7 @@ public class ClientActivity extends Activity {
         content = Ui.vbox(this, 16);
         scroll.addView(content);
         setContentView(scroll);
+        Theme.bars(this);
     }
 
     @Override
@@ -51,7 +53,10 @@ public class ClientActivity extends Activity {
         }
         setTitle(k.name);
         content.removeAllViews();
-        content.addView(Ui.text(this, k.name, 22, Ui.DARK, true));
+        LinearLayout head = Ui.hbox(this);
+        head.addView(Ui.avatar(this, k.name, Ui.PRIMARY_LIGHT, Ui.PRIMARY));
+        head.addView(Ui.text(this, k.name, 22, Ui.DARK, true), Ui.weight(1f));
+        content.addView(head);
         if (!k.email.isEmpty()) content.addView(Ui.text(this, k.email, 15, Ui.GREY, false));
         if (!k.phone.isEmpty()) content.addView(Ui.text(this, k.phone, 15, Ui.GREY, false));
         if (!k.notes.isEmpty()) {
@@ -63,20 +68,20 @@ public class ClientActivity extends Activity {
         content.addView(Ui.tiles(this,
                 Ui.tile(this, "Earned from them", Money.fmt(k.earnedCents), Ui.DARK),
                 Ui.tile(this, "Still owed", Money.fmt(k.owedCents), k.overdueCents > 0 ? Ui.RED : Ui.DARK)));
-        LinearLayout habit = Ui.card(this, k.overdueCents > 0 ? Ui.RED_LIGHT : k.paidLate > 0 ? 0xFFFFF3E0 : Ui.GREEN_LIGHT);
-        habit.addView(Ui.text(this, k.payingHabit(), 15, Ui.DARK, true));
-        habit.addView(Ui.text(this, k.gigCount + (k.gigCount == 1 ? " gig" : " gigs")
+        LinearLayout habit = Ui.card(this, k.overdueCents > 0 ? Ui.RED_LIGHT : k.paidLate > 0 ? Ui.ORANGE_LIGHT : Ui.GREEN_LIGHT);
+        habit.addView(Ui.text(this, k.payingHabit(this), 15, Ui.DARK, true));
+        habit.addView(Ui.text(this, Words.count(this, k.gigCount)
                 + (k.upcoming > 0 ? " · " + k.upcoming + " coming up" : ""), 13, Ui.GREY, false));
         content.addView(habit);
 
         LinearLayout buttons = Ui.hbox(this);
         if (!k.phone.isEmpty()) {
-            Button call = Ui.button(this, "Call", Ui.PRIMARY_LIGHT, Ui.PRIMARY);
+            Button call = Ui.tonal(this, "Call");
             call.setOnClickListener(v -> open(new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + k.phone))));
             LinearLayout.LayoutParams lp = Ui.weight(1f);
             lp.rightMargin = Ui.dp(this, 5);
             buttons.addView(call, lp);
-            Button wa = Ui.button(this, "WhatsApp", Ui.PRIMARY_LIGHT, Ui.PRIMARY);
+            Button wa = Ui.tonal(this, "WhatsApp");
             String digits = k.phone.replaceAll("[^0-9]", "");
             wa.setOnClickListener(v -> open(new Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me/" + digits))));
             LinearLayout.LayoutParams lp2 = Ui.weight(1f);
@@ -84,7 +89,7 @@ public class ClientActivity extends Activity {
             buttons.addView(wa, lp2);
             content.addView(buttons);
         }
-        Button add = Ui.button(this, "+  New gig for " + k.name, Ui.PRIMARY, Ui.WHITE);
+        Button add = Ui.primary(this, "+  New " + Words.one(this) + " for " + k.name);
         add.setOnClickListener(v -> {
             Gig g = new Gig();
             g.client = k.name;
@@ -96,11 +101,11 @@ public class ClientActivity extends Activity {
         });
         content.addView(add);
 
-        content.addView(Ui.section(this, "Gigs"));
+        content.addView(Ui.section(this, Words.Many(this)));
         List<Gig> gigs = Db.get(this).gigsForClient(k.name);
-        if (gigs.isEmpty()) content.addView(Ui.text(this, "No gigs yet.", 15, Ui.GREY, false));
+        if (gigs.isEmpty()) content.addView(Ui.text(this, "No " + Words.many(this) + " yet.", 15, Ui.GREY, false));
         for (Gig g : gigs) {
-            LinearLayout r = Ui.row(this, g.event.isEmpty() ? Dates.fmt(g.gigDay) : g.event, g.when(), g.status(),
+            LinearLayout r = Ui.row(this, g.event.isEmpty() ? Dates.fmt(g.gigDay) : g.event, g.when(), g.status(this),
                     g.statusColor(), Money.fmt(g.displayAmount()), g.amountColor());
             r.setPadding(0, r.getPaddingTop(), 0, r.getPaddingBottom());
             r.setOnClickListener(v -> startActivity(new Intent(this, GigActivity.class).putExtra("id", g.id)));

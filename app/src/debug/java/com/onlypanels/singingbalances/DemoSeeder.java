@@ -26,10 +26,21 @@ public class DemoSeeder extends BroadcastReceiver {
             else if ("invoice".equals(task)) invoice(c, intent.getLongExtra("id", 3));
             else if ("notify".equals(task)) Log.i(TAG, "notifications shown: " + Nudges.check(c, true));
             else if ("backup".equals(task)) backupRoundTrip(c);
+            else if ("look".equals(task)) look(c, intent);
+            else if ("migrate".equals(task)) {
+                // Pretend this is the old app: remove the new personalisation settings, keep the data
+                Prefs.sp(c).edit().remove(Prefs.SETUP_DONE).remove(Prefs.PROFESSION).remove(Prefs.TAB_TITLE)
+                        .remove(Prefs.CURRENCY).remove(Prefs.ACCENT).remove(Prefs.THEME_MODE).remove(Prefs.WELCOME_STARTED).apply();
+                Theme.changed(c);
+                Log.i(TAG, "migrate: settings cleared, needsSetup=" + Prefs.needsSetup(c)
+                        + " profession=" + Prefs.get(c, Prefs.PROFESSION) + " tab=" + Words.tab(c)
+                        + " accent=" + Prefs.get(c, Prefs.ACCENT) + " currency=" + Prefs.get(c, Prefs.CURRENCY));
+            }
+            else if ("logo".equals(task)) logo(c);
             else if ("clientstats".equals(task)) {
                 for (Client k : Db.get(c).clientsWithStats()) {
                     Log.i(TAG, "client " + k.name + " gigs=" + k.gigCount + " earned=" + k.earnedCents + " owed=" + k.owedCents
-                            + " overdue=" + k.overdueCents + " habit=" + k.payingHabit());
+                            + " overdue=" + k.overdueCents + " habit=" + k.payingHabit(c));
                 }
             }
         } catch (Exception e) {
@@ -68,7 +79,49 @@ public class DemoSeeder extends BroadcastReceiver {
         db.saveExpense(e);
     }
 
+    /** Switch the look: --es profession photographer --es accent teal --es mode dark --es currency GBP --es tab "" */
+    private static void look(Context c, Intent i) {
+        String[][] map = {{"profession", Prefs.PROFESSION}, {"accent", Prefs.ACCENT}, {"mode", Prefs.THEME_MODE},
+                {"currency", Prefs.CURRENCY}, {"tab", Prefs.TAB_TITLE}};
+        for (String[] m : map) {
+            String v = i.getStringExtra(m[0]);
+            if (v != null) Prefs.set(c, m[1], v.equals("-") ? "" : v);
+        }
+        Theme.changed(c);
+        Log.i(TAG, "look: " + Words.tab(c) + " / " + Words.many(c) + " / " + Prefs.get(c, Prefs.ACCENT) + " / "
+                + Prefs.get(c, Prefs.THEME_MODE) + " / " + Money.fmt(123456));
+    }
+
+    /** Draws a simple sample logo and saves it as the invoice logo. */
+    private static void logo(Context c) throws Exception {
+        android.graphics.Bitmap b = android.graphics.Bitmap.createBitmap(480, 160, android.graphics.Bitmap.Config.ARGB_8888);
+        android.graphics.Canvas cv = new android.graphics.Canvas(b);
+        android.graphics.Paint p = new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
+        p.setColor(Theme.strong(c));
+        cv.drawCircle(80, 80, 70, p);
+        p.setColor(0xFFFFFFFF);
+        p.setTextSize(64);
+        p.setFakeBoldText(true);
+        cv.drawText("MB", 34, 102, p);
+        p.setColor(0xFF1B1C20);
+        p.setTextSize(52);
+        cv.drawText("Maria Borg", 170, 78, p);
+        p.setTextSize(30);
+        p.setFakeBoldText(false);
+        p.setColor(0xFF6B6E76);
+        cv.drawText("LIVE VOCALS", 172, 120, p);
+        File f = new File(c.getCacheDir(), "demo-logo.png");
+        try (OutputStream out = new FileOutputStream(f)) {
+            b.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, out);
+        }
+        Logo.save(c, android.net.Uri.fromFile(f));
+        Log.i(TAG, "logo saved " + Logo.exists(c) + " size=" + Logo.file(c).length());
+    }
+
     private static void seed(Context c) {
+        Prefs.sp(c).edit().putBoolean(Prefs.SETUP_DONE, true).putString(Prefs.PROFESSION, "singer")
+                .putString(Prefs.ACCENT, "indigo").putString(Prefs.THEME_MODE, "light").putString(Prefs.CURRENCY, "EUR").apply();
+        Theme.changed(c);
         Prefs.set(c, Prefs.NAME, "Maria Borg");
         Prefs.set(c, Prefs.EMAIL, "maria.sings@example.com");
         Prefs.set(c, Prefs.PHONE, "+356 7900 1234");

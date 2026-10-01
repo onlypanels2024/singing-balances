@@ -24,7 +24,7 @@ final class BarChart extends View {
         this.spent = spent;
         this.highlight = highlight;
         pEarned.setColor(Ui.PRIMARY);
-        pSpent.setColor(0xFFE57373);
+        pSpent.setColor(Ui.RED);
         pLabel.setColor(Ui.GREY);
         pLabel.setTextSize(Ui.dp(c, 11));
         pLabel.setTextAlign(Paint.Align.CENTER);
@@ -70,8 +70,7 @@ final class BarChart extends View {
             float he = (bottom - top) * earned[best] / max;
             pLabel.setColor(Ui.DARK);
             pLabel.setFakeBoldText(true);
-            String s = Money.fmt(earned[best]);
-            if (s.endsWith(".00")) s = s.substring(0, s.length() - 3);
+            String s = Money.fmtShort(earned[best]);
             float x = Math.max(pLabel.measureText(s) / 2, Math.min(w - pLabel.measureText(s) / 2, cx));
             c.drawText(s, x, bottom - he - Ui.dp(getContext(), 4), pLabel);
         }

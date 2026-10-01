@@ -84,12 +84,12 @@ final class Google {
 
     static void emailInvoice(Activity a, Gig g) {
         Db.get(a).assignInvoice(g);
-        String subject = "Invoice " + g.invoiceNo + " – " + (g.event.isEmpty() ? "performance" : g.event)
+        String subject = "Invoice " + g.invoiceNo + " – " + (g.event.isEmpty() ? Words.invoiceLine(a) : g.event)
                 + " (" + Dates.fmt(g.gigDay) + ")";
         String body = "Hi " + g.client + ",\n\n"
                 + (g.isPaid()
-                ? "Please find attached the invoice for my performance" + gigDesc(g) + ", marked as paid. Thank you!"
-                : "Please find attached my invoice for the performance" + gigDesc(g) + ". The amount due is "
+                ? "Please find attached the invoice for the " + Words.one(a) + gigDesc(g) + ", marked as paid. Thank you!"
+                : "Please find attached my invoice for the " + Words.one(a) + gigDesc(g) + ". The amount due is "
                 + Money.fmt(g.balance()) + (g.dueDay < Dates.today() ? ", payable on receipt." : ", payable by " + Dates.fmt(g.dueDay) + ".") + payBlock(a, g))
                 + "\n\n" + signOff(a);
         sendWithInvoice(a, g, subject, body);
@@ -98,13 +98,13 @@ final class Google {
     /** Friendly payment reminder with payment details and the invoice attached. */
     static void emailReminder(Activity a, Gig g) {
         Db.get(a).assignInvoice(g);
-        String subject = "Payment reminder – " + (g.event.isEmpty() ? "performance on " + Dates.fmt(g.gigDay)
+        String subject = "Payment reminder – " + (g.event.isEmpty() ? Words.one(a) + " on " + Dates.fmt(g.gigDay)
                 : g.event + " (" + Dates.fmt(g.gigDay) + ")");
         StringBuilder body = new StringBuilder();
         body.append("Hi ").append(g.client).append(",\n\n")
                 .append("I hope you're well. Just a friendly reminder that ")
                 .append(Money.fmt(g.balance()))
-                .append(" is still outstanding for my performance").append(gigDesc(g));
+                .append(" is still outstanding for the ").append(Words.one(a)).append(gigDesc(g));
         if (g.paidCents > 0) {
             body.append(" (fee ").append(Money.fmt(g.feeCents))
                     .append(", ").append(Money.fmt(g.paidCents)).append(" received so far)");
@@ -123,7 +123,7 @@ final class Google {
     /** Puts the gig itself in your calendar. */
     static void calendarGig(Activity a, Gig g) {
         Intent i = new Intent(Intent.ACTION_INSERT).setData(CalendarContract.Events.CONTENT_URI)
-                .putExtra(CalendarContract.Events.TITLE, "🎤 " + g.title())
+                .putExtra(CalendarContract.Events.TITLE, g.title())
                 .putExtra(CalendarContract.Events.EVENT_LOCATION, g.event)
                 .putExtra(CalendarContract.Events.DESCRIPTION, "Client: " + g.client
                         + "\nFee: " + Money.fmt(g.feeCents)

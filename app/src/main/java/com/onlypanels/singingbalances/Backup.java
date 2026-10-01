@@ -30,11 +30,11 @@ final class Backup {
         return !Prefs.get(c, Prefs.BACKUP_URI).isEmpty();
     }
 
-    static Intent chooseFileIntent() {
+    static Intent chooseFileIntent(Context c) {
         return new Intent(Intent.ACTION_CREATE_DOCUMENT)
                 .addCategory(Intent.CATEGORY_OPENABLE)
                 .setType("application/json")
-                .putExtra(Intent.EXTRA_TITLE, "Singing-backup.json");
+                .putExtra(Intent.EXTRA_TITLE, c.getString(R.string.app_name) + "-backup.json");
     }
 
     static Intent restoreIntent() {

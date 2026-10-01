@@ -64,6 +64,7 @@ public class Nudges extends BroadcastReceiver {
 
     /** Works out today's reminders and shows them. Returns how many were shown. */
     static int check(Context c, boolean test) {
+        Theme.load(c);
         Db db = Db.get(c);
         long today = Dates.today();
         List<Note> notes = new ArrayList<>();
@@ -71,9 +72,9 @@ public class Nudges extends BroadcastReceiver {
         for (Gig g : db.gigsBetween(today, today + 1)) {
             if (g.isCancelled()) continue;
             boolean isToday = g.gigDay == today;
-            String when = (isToday ? "Tonight" : "Tomorrow") + (g.startMin >= 0 ? " at " + Dates.time(g.startMin) : "");
+            String when = (isToday ? Words.tonight(c) : "Tomorrow") + (g.startMin >= 0 ? " at " + Dates.time(g.startMin) : "");
             String extra = g.status == Gig.PENCILLED ? " · still only pencilled in" : "";
-            notes.add(new Note((int) (1000 + g.id), "🎤 " + when + ": " + g.title(),
+            notes.add(new Note((int) (1000 + g.id), when + ": " + g.title(),
                     "Fee " + Money.fmt(g.feeCents) + " – remember to collect payment" + extra, g.id));
         }
 
@@ -82,7 +83,7 @@ public class Nudges extends BroadcastReceiver {
         for (Gig g : db.unpaidGigs()) {
             if (g.gigDay == today - 1) {
                 notes.add(new Note((int) (2000 + g.id), "Did " + g.client + " pay you?",
-                        Money.fmt(g.balance()) + " still open from yesterday's gig" + (g.event.isEmpty() ? "" : " at " + g.event)
+                        Money.fmt(g.balance()) + " still open from yesterday's " + Words.one(c) + (g.event.isEmpty() ? "" : " at " + g.event)
                                 + ". Tap to record the payment.", g.id));
             } else if (g.isOverdue()) {
                 overdue += g.balance();
@@ -91,11 +92,11 @@ public class Nudges extends BroadcastReceiver {
         }
         if (overdueCount > 0) {
             notes.add(new Note(1, Money.fmt(overdue) + " overdue",
-                    overdueCount + (overdueCount == 1 ? " gig is" : " gigs are") + " past the payment date. Tap to see who owes you.", 0));
+                    Words.count(c, overdueCount) + (overdueCount == 1 ? " is" : " are") + " past the payment date. Tap to see who owes you.", 0));
         }
         if (test && notes.isEmpty()) {
             notes.add(new Note(2, "Reminders are working ✓",
-                    "Nothing needs your attention today. You'll be reminded about gigs and late payments here.", 0));
+                    "Nothing needs your attention today. You'll be reminded about " + Words.many(c) + " and late payments here.", 0));
         }
 
         NotificationManager nm = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);

@@ -24,14 +24,14 @@ final class Client {
         return paidGigs == 0 ? -1 : (double) totalDaysToPay / paidGigs;
     }
 
-    String payingHabit() {
+    String payingHabit(android.content.Context c) {
         if (paidGigs == 0) {
             if (overdueCents > 0) return receivedCents > 0 ? "Part paid – rest overdue" : "Hasn't paid yet – overdue";
             return receivedCents > 0 ? "Part paid so far" : "No payment history yet";
         }
         double avg = avgDaysToPay();
         String s;
-        if (avg < 0.5) s = "Usually pays on the night";
+        if (avg < 0.5) s = "Usually pays " + Words.onTheNight(c);
         else s = "Pays in about " + Math.round(avg) + (Math.round(avg) == 1 ? " day" : " days") + " on average";
         if (paidLate > 0) s += " · paid late " + paidLate + (paidLate == 1 ? " time" : " times");
         return s;

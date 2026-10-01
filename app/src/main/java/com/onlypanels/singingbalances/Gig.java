@@ -54,7 +54,7 @@ final class Gig {
         return Dates.withWeekday(gigDay) + (startMin >= 0 ? " · " + Dates.time(startMin) : "");
     }
 
-    String status() {
+    String status(android.content.Context c) {
         if (isCancelled()) return "Cancelled";
         long today = Dates.today();
         if (gigDay > today) {
@@ -62,7 +62,7 @@ final class Gig {
         }
         if (isPaid()) return "Paid in full ✓";
         if (gigDay == today && dueDay >= today) {
-            return "Tonight" + (startMin >= 0 ? " at " + Dates.time(startMin) : "") + " · collect " + Money.fmt(balance());
+            return Words.tonight(c) + (startMin >= 0 ? " at " + Dates.time(startMin) : "") + " · collect " + Money.fmt(balance());
         }
         long days = dueDay - today;
         if (days < 0) {

@@ -24,6 +24,7 @@ public class GigActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Theme.apply(this);
         super.onCreate(savedInstanceState);
         gigId = getIntent().getLongExtra("id", 0);
         if (getActionBar() != null) getActionBar().setDisplayHomeAsUpEnabled(true);
@@ -31,6 +32,7 @@ public class GigActivity extends Activity {
         content = Ui.vbox(this, 16);
         scroll.addView(content);
         setContentView(scroll);
+        Theme.bars(this);
     }
 
     @Override
@@ -68,8 +70,9 @@ public class GigActivity extends Activity {
 
         // Money card
         LinearLayout card = Ui.card(this, g.isOverdue() ? Ui.RED_LIGHT : g.isPaid() && !g.isFuture() ? Ui.GREEN_LIGHT : Ui.PRIMARY_LIGHT);
+        card.setElevation(0);
         if (g.isCancelled() || g.isFuture()) {
-            card.addView(Ui.text(this, g.isCancelled() ? "Fee (cancelled)" : "Fee to collect on the night", 14, Ui.GREY, false));
+            card.addView(Ui.text(this, g.isCancelled() ? "Fee (cancelled)" : "Fee to collect " + Words.onTheNight(this), 14, Ui.GREY, false));
             card.addView(Ui.text(this, Money.fmt(g.feeCents), 32, g.isCancelled() ? Ui.GREY : Ui.DARK, true));
         } else {
             card.addView(Ui.text(this, g.isPaid() ? "Fully paid" : "Still owed", 14, Ui.GREY, false));
@@ -78,7 +81,7 @@ public class GigActivity extends Activity {
             card.addView(Ui.text(this, "Fee " + Money.fmt(g.feeCents) + "  ·  Received " + Money.fmt(g.paidCents),
                     14, Ui.GREY, false));
         }
-        TextView status = Ui.text(this, g.status(), 14, g.statusColor(), true);
+        TextView status = Ui.text(this, g.status(this), 14, g.statusColor(), true);
         status.setPadding(0, Ui.dp(this, 6), 0, 0);
         card.addView(status);
         content.addView(card);
@@ -92,14 +95,14 @@ public class GigActivity extends Activity {
         // Actions
         if (!g.isCancelled()) {
             if (!g.isPaid() && !g.isFuture()) {
-                action("Record a payment", Ui.PRIMARY, Ui.WHITE, () -> Forms.recordPayment(this, g, this::render));
-                action("Paid in full (" + Money.fmt(g.balance()) + ")", Ui.GREEN, Ui.WHITE, () -> {
+                action("Record a payment", Ui.PRIMARY, Ui.ON_PRIMARY, () -> Forms.recordPayment(this, g, this::render));
+                action("Paid in full (" + Money.fmt(g.balance()) + ")", Ui.GREEN, Theme.dark ? Ui.BG : Ui.WHITE, () -> {
                     Db.get(this).addPayment(g.id, g.balance(), Dates.today(), "Paid in full");
                     render();
                 });
             }
             if (g.isFuture()) {
-                action("Add gig to Google Calendar", Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> Google.calendarGig(this, g));
+                action("Add " + Words.one(this) + " to Google Calendar", Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> Google.calendarGig(this, g));
                 if (g.status == Gig.PENCILLED) {
                     action("Mark as confirmed", Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> setStatus(Gig.CONFIRMED));
                 }
@@ -111,7 +114,7 @@ public class GigActivity extends Activity {
                 action("Add chase-up to Google Calendar", Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> Google.calendarChase(this, g));
             }
             if (!Prefs.hasPaymentDetails(this) && !g.isPaid()) {
-                TextView hint = Ui.text(this, "Tip: add your IBAN / Revolut in Settings so they appear on invoices and reminders.",
+                TextView hint = Ui.text(this, "Tip: add how clients pay you (bank details, payment link) in Settings so it appears on invoices and reminders.",
                         13, Ui.ORANGE, false);
                 hint.setPadding(0, Ui.dp(this, 8), 0, 0);
                 content.addView(hint);
@@ -145,7 +148,7 @@ public class GigActivity extends Activity {
         }
 
         // Expenses for this gig
-        content.addView(Ui.section(this, "Expenses for this gig"));
+        content.addView(Ui.section(this, "Expenses for this " + Words.one(this)));
         List<Expense> expenses = Db.get(this).expensesForGig(g.id);
         long spent = 0;
         for (Expense e : expenses) {
@@ -160,15 +163,15 @@ public class GigActivity extends Activity {
             content.addView(row);
         }
         if (expenses.isEmpty()) {
-            content.addView(Ui.text(this, "Fuel, outfit, backing tracks... add them to see what you really took home.",
+            content.addView(Ui.text(this, "Travel, outfits, supplies... add them to see what you really took home.",
                     14, Ui.GREY, false));
         } else if (!g.isCancelled()) {
-            TextView net = Ui.text(this, "Take-home from this gig: " + Money.fmt(g.feeCents - spent), 15,
+            TextView net = Ui.text(this, "Take-home from this " + Words.one(this) + ": " + Money.fmt(g.feeCents - spent), 15,
                     g.feeCents - spent >= 0 ? Ui.PRIMARY : Ui.RED, true);
             net.setPadding(0, Ui.dp(this, 6), 0, 0);
             content.addView(net);
         }
-        Button addExp = Ui.button(this, "+  Add an expense", Ui.LIGHT_GREY, Ui.DARK);
+        Button addExp = Ui.quiet(this, "+  Add an expense");
         addExp.setOnClickListener(x -> Forms.editExpense(this, null, g, this::render));
         content.addView(addExp);
     }
@@ -182,8 +185,8 @@ public class GigActivity extends Activity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         menu.add(0, MENU_EDIT, 0, "Edit").setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
-        if (gig == null || !gig.isCancelled()) menu.add(0, MENU_CANCEL, 1, "Gig was cancelled");
-        menu.add(0, MENU_DELETE, 2, "Delete gig");
+        if (gig == null || !gig.isCancelled()) menu.add(0, MENU_CANCEL, 1, Words.One(this) + " was cancelled");
+        menu.add(0, MENU_DELETE, 2, "Delete " + Words.one(this));
         return true;
     }
 
@@ -210,7 +213,7 @@ public class GigActivity extends Activity {
         }
         if (id == MENU_DELETE) {
             new AlertDialog.Builder(this)
-                    .setTitle("Delete this gig?")
+                    .setTitle("Delete this " + Words.one(this) + "?")
                     .setMessage(gig.title() + "\nThis also removes its payments.")
                     .setPositiveButton("Delete", (d, w) -> {
                         Db.get(this).deleteGig(gig.id);

@@ -416,7 +416,7 @@ final class Db extends SQLiteOpenHelper {
 
     JSONObject exportAll() throws JSONException {
         JSONObject root = new JSONObject();
-        root.put("app", "Singing");
+        root.put("app", app.getString(R.string.app_name));
         root.put("version", 2);
         root.put("exported", Dates.iso(Dates.today()));
         for (String t : TABLES) {
@@ -440,12 +440,14 @@ final class Db extends SQLiteOpenHelper {
             settings.put(e.getKey(), e.getValue());
         }
         root.put("settings", settings);
+        String logo = Logo.toBase64(app);
+        if (!logo.isEmpty()) root.put("logo_png", logo);
         return root;
     }
 
     /** Replaces everything with the contents of a backup. */
     void importAll(JSONObject root) throws JSONException {
-        if (!root.has("gigs")) throw new JSONException("This isn't a Singing backup file");
+        if (!root.has("gigs")) throw new JSONException("This isn't a backup file from this app");
         SQLiteDatabase db = getWritableDatabase();
         db.beginTransaction();
         try {
@@ -487,6 +489,8 @@ final class Db extends SQLiteOpenHelper {
             }
             ed.apply();
         }
+        if (root.has("logo_png")) Logo.fromBase64(app, root.optString("logo_png"));
+        Theme.changed(app);
         changed();
     }
 }

@@ -10,22 +10,27 @@ texts() { $UI texts > "$OUT/$(printf %02d $n)-$1.txt"; }
 main() { adb shell am start -W -n $PKG/.MainActivity "$@" > /dev/null; }
 back() { adb shell input keyevent 4; sleep 1; }
 swipe() { adb shell input swipe 540 1800 540 600 500; }
+seeder() { adb shell am broadcast -n $PKG/.DemoSeeder "$@" > /dev/null; sleep 2; }
 
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 adb shell pm grant $PKG android.permission.POST_NOTIFICATIONS
 adb logcat -c
-adb shell am broadcast -n $PKG/.DemoSeeder --es task seed
-sleep 3
 
+# ---- 1. Brand-new user: welcome screen ----
+main;                                         shot welcome; texts welcome; swipe; shot welcome-2
+$UI tap "Photographer" 2;                     shot welcome-photographer; texts welcome-photographer
+adb shell am force-stop $PKG
+
+# ---- 2. Sample data, default look ----
+seeder --es task seed
 main;                                         shot gigs-unpaid; texts gigs-unpaid
 main --es page gigs --es gigsTab upcoming;    shot gigs-upcoming
 main --es page gigs --es gigsTab all;         shot gigs-all; swipe; shot gigs-all-scrolled
 main --es page gigs --es gigsTab unpaid
 $UI tap Calendar;                             shot calendar-by-tap; swipe; shot calendar-scrolled
 $UI tap Clients;                              shot clients-by-tap; texts clients
-$UI tap Money;                                shot money; texts money; swipe; shot money-2; swipe; shot money-3; swipe; shot money-4
+$UI tap Money;                                shot money; texts money; swipe; shot money-2; swipe; shot money-3
 
-# gig screens (ids from the seeder: 3 overdue part-paid, 4 yesterday, 5 tonight, 6 tomorrow, 7 pencilled, 9 cancelled, 1 paid)
 for id in 3 4 5 6 7 9 1; do
   adb shell am start -W -n $PKG/.GigActivity --el id $id > /dev/null
   shot gig-$id; swipe; shot gig-$id-scrolled
@@ -34,7 +39,11 @@ done
 
 adb shell am start -W -n $PKG/.ClientActivity --es name 'Hilton\ Malta' > /dev/null; shot client-hilton; swipe; shot client-hilton-scrolled; back
 
-adb shell am start -W -n $PKG/.SettingsActivity > /dev/null; shot settings; swipe; shot settings-2; swipe; shot settings-3; swipe; shot settings-4; back
+seeder --es task logo
+adb shell am start -W -n $PKG/.SettingsActivity > /dev/null
+shot settings; texts settings
+for i in 2 3 4 5 6 7; do swipe; shot settings-$i; done
+back
 
 # Forms
 main --es page gigs --es gigsTab unpaid
@@ -46,32 +55,47 @@ $UI tap "Add an expense" 4;                   shot form-expense; back; back
 main --es page clients
 $UI tap "Add a client";                       shot form-client; back; back
 
-# Actions that hand over to other apps (no Gmail sign-in on the emulator: expect a chooser or a message, not a crash)
+# Actions that hand over to other apps
 adb shell am start -W -n $PKG/.GigActivity --el id 4 > /dev/null
 $UI tap "Send invoice";                       shot action-send-invoice; back; back
-adb shell am start -W -n $PKG/.GigActivity --el id 4 > /dev/null
-$UI tap "payment reminder";                   shot action-reminder; back; back
 adb shell am start -W -n $PKG/.GigActivity --el id 6 > /dev/null
 $UI tap "calendar";                           shot action-calendar; back; back
 
-# Paid in full on the overdue gig, then check the home total changes
-adb shell am start -W -n $PKG/.GigActivity --el id 3 > /dev/null
-$UI tap "Paid in full";                       shot gig-3-after-paid; back
-main --es page gigs --es gigsTab unpaid;      shot gigs-unpaid-after-paid
-
-# Invoice PDF, reminders, backup round trip, client stats
-adb shell am broadcast -n $PKG/.DemoSeeder --es task invoice --el id 4
-adb shell am broadcast -n $PKG/.DemoSeeder --es task invoice --el id 1
-adb shell am broadcast -n $PKG/.DemoSeeder --es task notify
-sleep 3
+# Invoices (with logo), reminders
+seeder --es task invoice --el id 4
+seeder --es task invoice --el id 1
+seeder --es task notify
 adb shell cmd statusbar expand-notifications; shot notifications; adb shell cmd statusbar collapse
 adb shell dumpsys notification --noredact > $OUT/notifications.txt
-adb shell am broadcast -n $PKG/.DemoSeeder --es task backup
-adb shell am broadcast -n $PKG/.DemoSeeder --es task clientstats
-sleep 3
-adb pull /sdcard/Android/data/$PKG/files/ $OUT/files/
 
-# Rotate / relaunch after restore to be sure nothing crashes
+# ---- 3. Another user's look: photographer, dark mode, teal, pounds ----
+seeder --es task look --es profession photographer --es accent teal --es mode dark --es currency GBP --es tab -
+main --es page gigs --es gigsTab unpaid;      shot dark-gigs; texts dark-gigs
+main --es page gigs --es gigsTab upcoming;    shot dark-upcoming
+$UI tap Calendar;                             shot dark-calendar
+$UI tap Money;                                shot dark-money
+adb shell am start -W -n $PKG/.GigActivity --el id 4 > /dev/null; shot dark-gig-4; back
+adb shell am start -W -n $PKG/.SettingsActivity > /dev/null; shot dark-settings; swipe; shot dark-settings-2; back
+main --es page gigs --es gigsTab unpaid
+$UI tap "Add a shoot";                        shot dark-form-new; back; back
+seeder --es task invoice --el id 3
+
+# ---- 4. Light mode, rose, make-up artist, dollars ----
+seeder --es task look --es profession makeup --es accent rose --es mode light --es currency USD --es tab -
+main --es page gigs --es gigsTab unpaid;      shot rose-gigs; texts rose-gigs
+main --es page clients;                       shot rose-clients
+
+# ---- 5. Existing user upgrading (your phone): data kept, purple, "Singing", euro, no welcome screen ----
+seeder --es task migrate
+adb shell am force-stop $PKG
+main;                                         shot upgrade-gigs; texts upgrade-gigs
+$UI tap Money;                                shot upgrade-money
+
+# Backup round trip + client stats
+seeder --es task backup
+seeder --es task clientstats
+sleep 2
+adb pull /sdcard/Android/data/$PKG/files/ $OUT/files/
 main --es page money; shot money-after-restore
 
 adb logcat -d > $OUT/logcat.txt

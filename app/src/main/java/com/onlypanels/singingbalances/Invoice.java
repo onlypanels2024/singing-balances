@@ -1,7 +1,9 @@
 package com.onlypanels.singingbalances;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.RectF;
 import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.graphics.pdf.PdfDocument;
@@ -13,6 +15,8 @@ import java.io.IOException;
 /** Makes an A4 PDF invoice for a gig. */
 final class Invoice {
     private static final int W = 595, H = 842, M = 48;
+    // Invoices are always printed dark-on-white, whatever the app's light/dark setting.
+    private static final int INK = 0xFF1B1C20, MUTED = 0xFF6B6E76, RULE = 0xFFE3E3E8, PAID = 0xFF2E7D32;
 
     private Invoice() {}
 
@@ -39,23 +43,38 @@ final class Invoice {
 
     /** Creates (or re-creates) the PDF and returns the file. Assigns an invoice number if needed. */
     static File create(Context ctx, Gig g) throws IOException {
+        Money.load(ctx);
         Db.get(ctx).assignInvoice(g);
+        int accent = Theme.strong(ctx);
         PdfDocument doc = new PdfDocument();
         PdfDocument.Page page = doc.startPage(new PdfDocument.PageInfo.Builder(W, H, 1).create());
         Canvas c = page.getCanvas();
 
-        Paint title = paint(30, Ui.PRIMARY, true);
-        Paint big = paint(18, Ui.DARK, true);
-        Paint bold = paint(11, Ui.DARK, true);
-        Paint body = paint(11, Ui.DARK, false);
-        Paint grey = paint(10, Ui.GREY, false);
+        Paint title = paint(30, accent, true);
+        Paint big = paint(18, INK, true);
+        Paint bold = paint(11, INK, true);
+        Paint body = paint(11, INK, false);
+        Paint grey = paint(10, MUTED, false);
         Paint line = new Paint();
-        line.setColor(Ui.LINE);
+        line.setColor(RULE);
         line.setStrokeWidth(1);
 
-        // Your details (left)
+        // Accent strip along the top
+        Paint strip = new Paint();
+        strip.setColor(accent);
+        c.drawRect(0, 0, W, 6, strip);
+
+        // Your logo and details (left)
         String name = Prefs.get(ctx, Prefs.NAME);
         float y = M + 18;
+        Bitmap logo = Logo.bitmap(ctx);
+        if (logo != null) {
+            float maxW = 150, maxH = 64;
+            float s = Math.min(maxW / logo.getWidth(), maxH / logo.getHeight());
+            float lw = logo.getWidth() * s, lh = logo.getHeight() * s;
+            c.drawBitmap(logo, null, new RectF(M, M - 6, M + lw, M - 6 + lh), new Paint(Paint.FILTER_BITMAP_FLAG));
+            y = M - 6 + lh + 22;
+        }
         c.drawText(name.isEmpty() ? "Invoice" : name, M, y, big);
         y += 18;
         y = lines(c, Prefs.get(ctx, Prefs.ADDRESS), M, y, body, 14);
@@ -94,7 +113,7 @@ final class Invoice {
         y += 8;
         c.drawLine(M, y, W - M, y, line);
         y += 20;
-        String desc = "Live vocal performance";
+        String desc = Words.invoiceLine(ctx);
         c.drawText(desc, M, y, bold);
         c.drawText(Dates.fmt(g.gigDay), colDate, y, body);
         right(c, Money.fmt(g.feeCents), colAmt, y, body);
@@ -116,7 +135,7 @@ final class Invoice {
             right(c, "-" + Money.fmt(Math.min(g.paidCents, g.feeCents)), colAmt, y, body);
         }
         y += 22;
-        Paint due = paint(14, g.isPaid() ? Ui.GREEN : Ui.DARK, true);
+        Paint due = paint(14, g.isPaid() ? PAID : INK, true);
         c.drawText(g.isPaid() ? "PAID IN FULL" : "Balance due", lx, y, due);
         right(c, Money.fmt(g.balance()), colAmt, y, due);
 
@@ -131,7 +150,7 @@ final class Invoice {
             c.drawText("Please quote " + g.invoiceNo + " as the payment reference.", M, y, grey);
         }
 
-        c.drawText("Thank you!", M, H - M, paint(12, Ui.PRIMARY, true));
+        c.drawText("Thank you!", M, H - M, paint(12, accent, true));
         doc.finishPage(page);
 
         File dir = new File(ctx.getCacheDir(), "share");

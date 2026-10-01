@@ -15,6 +15,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ScrollView;
@@ -32,7 +33,8 @@ import java.util.Map;
 public class MainActivity extends Activity {
     private static final int MENU_SETTINGS = 1;
     private static final String[] PAGES = {"gigs", "calendar", "clients", "money"};
-    private static final String[] PAGE_LABELS = {"🎤\nSinging","📅\nCalendar", "👥\nClients", "💶\nMoney"};
+    private static final int[] PAGE_ICONS = {R.drawable.ic_nav_gigs, R.drawable.ic_nav_calendar,
+            R.drawable.ic_nav_clients, R.drawable.ic_nav_money};
 
     private String page = "gigs";
     private String gigsTab = "unpaid";
@@ -41,39 +43,60 @@ public class MainActivity extends Activity {
     private int moneyYear = LocalDate.now().getYear();
 
     private FrameLayout content;
-    private final TextView[] navItems = new TextView[4];
+    private final TextView[] navLabels = new TextView[4];
+    private final ImageView[] navIcons = new ImageView[4];
+    private int themeGeneration;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Theme.apply(this);
         super.onCreate(savedInstanceState);
+        themeGeneration = Theme.generation;
+        if (Prefs.needsSetup(this)) {
+            startActivity(new Intent(this, WelcomeActivity.class));
+            finish();
+            return;
+        }
+        Theme.apply(this); // the look may have just been set for an existing user
         if (savedInstanceState != null) {
             page = savedInstanceState.getString("page", page);
             gigsTab = savedInstanceState.getString("gigsTab", gigsTab);
         }
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setBackgroundColor(Ui.WHITE);
+        root.setBackgroundColor(Ui.BG);
         content = new FrameLayout(this);
         root.addView(content, new LinearLayout.LayoutParams(-1, 0, 1f));
         root.addView(Ui.divider(this));
 
         LinearLayout nav = Ui.hbox(this);
-        nav.setBackgroundColor(Ui.WHITE);
+        nav.setBackgroundColor(Ui.SURFACE);
+        int pad = Ui.dp(this, 8);
+        nav.setPadding(0, pad, 0, pad);
         for (int i = 0; i < 4; i++) {
             final String p = PAGES[i];
-            TextView t = Ui.text(this, PAGE_LABELS[i], 12, Ui.GREY, false);
+            LinearLayout item = new LinearLayout(this);
+            item.setOrientation(LinearLayout.VERTICAL);
+            item.setGravity(Gravity.CENTER_HORIZONTAL);
+            ImageView icon = Ui.icon(this, PAGE_ICONS[i], Ui.GREY, 22);
+            LinearLayout.LayoutParams ilp = new LinearLayout.LayoutParams(Ui.dp(this, 60), Ui.dp(this, 30));
+            icon.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+            item.addView(icon, ilp);
+            TextView t = Ui.text(this, label(i), 12, Ui.GREY, false);
             t.setGravity(Gravity.CENTER);
-            int pad = Ui.dp(this, 8);
-            t.setPadding(0, pad, 0, pad);
-            t.setOnClickListener(v -> {
+            t.setPadding(0, Ui.dp(this, 3), 0, 0);
+            item.addView(t);
+            item.setOnClickListener(v -> {
                 page = p;
                 render();
             });
-            navItems[i] = t;
-            nav.addView(t, Ui.weight(1f));
+            navIcons[i] = icon;
+            navLabels[i] = t;
+            nav.addView(item, Ui.weight(1f));
         }
         root.addView(nav);
         setContentView(root);
+        Theme.bars(this);
 
         handleIntent(getIntent());
         Nudges.schedule(this);
@@ -109,15 +132,32 @@ public class MainActivity extends Activity {
         out.putString("gigsTab", gigsTab);
     }
 
+    private String label(int i) {
+        switch (PAGES[i]) {
+            case "calendar": return "Calendar";
+            case "clients": return "Clients";
+            case "money": return "Money";
+            default: return Words.tab(this);
+        }
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
+        if (content == null) return;
+        if (themeGeneration != Theme.generation) {
+            recreate(); // colours or wording changed in Settings
+            return;
+        }
         render();
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        menu.add(0, MENU_SETTINGS, 0, "Settings & backup");
+        MenuItem s = menu.add(0, MENU_SETTINGS, 0, "Settings");
+        android.graphics.drawable.Drawable d = getDrawable(R.drawable.ic_settings).mutate();
+        d.setTint(Ui.GREY);
+        s.setIcon(d).setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
         return true;
     }
 
@@ -137,14 +177,15 @@ public class MainActivity extends Activity {
             case "calendar": v = calendarPage(); setTitle("Calendar"); break;
             case "clients": v = clientsPage(); setTitle("Clients"); break;
             case "money": v = moneyPage(); setTitle("Money"); break;
-            default: v = gigsPage(); setTitle("Singing"); break;
+            default: v = gigsPage(); setTitle(Words.tab(this)); break;
         }
         content.addView(v, new FrameLayout.LayoutParams(-1, -1));
         for (int i = 0; i < 4; i++) {
             boolean sel = PAGES[i].equals(page);
-            navItems[i].setTextColor(sel ? Ui.PRIMARY : Ui.GREY);
-            navItems[i].setTypeface(sel ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
-            navItems[i].setBackgroundColor(sel ? Ui.PRIMARY_LIGHT : Ui.WHITE);
+            navLabels[i].setTextColor(sel ? Ui.DARK : Ui.GREY);
+            navLabels[i].setTypeface(sel ? Ui.MEDIUM : Typeface.DEFAULT);
+            navIcons[i].getDrawable().setTint(sel ? Ui.PRIMARY : Ui.GREY);
+            navIcons[i].setBackground(sel ? Ui.rounded(this, Ui.PRIMARY_LIGHT, 15) : null);
         }
     }
 
@@ -171,45 +212,55 @@ public class MainActivity extends Activity {
                 overdueCount++;
             }
         }
-        LinearLayout header = Ui.vbox(this, 20);
-        header.setBackgroundColor(Ui.PRIMARY);
-        header.addView(Ui.text(this, "Still owed to you", 14, 0xDDFFFFFF, false));
-        header.addView(Ui.text(this, Money.fmt(total), 38, Ui.WHITE, true));
+        LinearLayout top = Ui.vbox(this, 16);
+        top.setPadding(Ui.dp(this, 16), Ui.dp(this, 4), Ui.dp(this, 16), Ui.dp(this, 8));
+        LinearLayout header = Ui.hero(this);
+        header.addView(Ui.text(this, "Still owed to you", 14, 0xD9FFFFFF, false));
+        TextView amount = Ui.text(this, Money.fmt(total), 36, Ui.WHITE, true);
+        amount.setPadding(0, Ui.dp(this, 2), 0, Ui.dp(this, 2));
+        header.addView(amount);
         String sub;
-        if (unpaid.isEmpty()) sub = "All paid up 🎉";
+        if (unpaid.isEmpty()) sub = "All paid up";
         else {
-            sub = unpaid.size() + (unpaid.size() == 1 ? " unpaid gig" : " unpaid gigs");
+            sub = unpaid.size() + " unpaid " + (unpaid.size() == 1 ? Words.one(this) : Words.many(this));
             if (overdueCount > 0) sub += "  ·  " + Money.fmt(overdue) + " overdue";
         }
-        header.addView(Ui.text(this, sub, 14, overdueCount > 0 ? 0xFFFFCDD2 : 0xDDFFFFFF, overdueCount > 0));
+        TextView subView = Ui.text(this, sub, 14, overdueCount > 0 ? 0xFFFFD5D5 : 0xD9FFFFFF, overdueCount > 0);
+        if (overdueCount > 0) {
+            subView.setBackground(Ui.rounded(this, 0x33000000, 8));
+            int hp = Ui.dp(this, 8), vp = Ui.dp(this, 3);
+            subView.setPadding(hp, vp, hp, vp);
+            LinearLayout.LayoutParams slp = new LinearLayout.LayoutParams(-2, -2);
+            slp.topMargin = Ui.dp(this, 2);
+            subView.setLayoutParams(slp);
+        }
+        header.addView(subView);
         List<Gig> upcoming = db.upcomingGigs();
         if (!upcoming.isEmpty()) {
             Gig n = upcoming.get(0);
-            TextView next = Ui.text(this, "Next gig: " + Dates.shortDay(n.gigDay)
-                    + (n.startMin >= 0 ? " " + Dates.time(n.startMin) : "") + " · " + n.title(), 13, 0xDDFFFFFF, false);
-            next.setPadding(0, Ui.dp(this, 6), 0, 0);
+            View line = new View(this);
+            line.setBackgroundColor(0x33FFFFFF);
+            LinearLayout.LayoutParams llp = new LinearLayout.LayoutParams(-1, Math.max(1, Ui.dp(this, 1)));
+            llp.topMargin = Ui.dp(this, 14);
+            llp.bottomMargin = Ui.dp(this, 10);
+            header.addView(line, llp);
+            header.addView(Ui.text(this, "NEXT " + Words.one(this).toUpperCase(), 11, 0xB3FFFFFF, true));
+            TextView next = Ui.text(this, Dates.shortDay(n.gigDay)
+                    + (n.startMin >= 0 ? " " + Dates.time(n.startMin) : "") + "  ·  " + n.title(), 14, Ui.WHITE, false);
+            next.setSingleLine(true);
+            next.setEllipsize(android.text.TextUtils.TruncateAt.END);
             header.addView(next);
         }
-        v.addView(header);
+        top.addView(header);
 
-        LinearLayout tabs = Ui.hbox(this);
-        String[][] t = {{"upcoming", "Upcoming"}, {"unpaid", "Unpaid"}, {"all", "All gigs"}};
-        for (String[] tab : t) {
-            TextView tv = Ui.text(this, tab[1], 15, Ui.GREY, false);
-            tv.setGravity(Gravity.CENTER);
-            int p = Ui.dp(this, 13);
-            tv.setPadding(p, p, p, p);
-            boolean sel = tab[0].equals(gigsTab);
-            tv.setBackgroundColor(sel ? Ui.PRIMARY_LIGHT : Ui.WHITE);
-            tv.setTextColor(sel ? Ui.PRIMARY : Ui.GREY);
-            tv.setTypeface(sel ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
-            tv.setOnClickListener(x -> {
-                gigsTab = tab[0];
-                render();
-            });
-            tabs.addView(tv, Ui.weight(1f));
-        }
-        v.addView(tabs);
+        String[][] t = {{"upcoming", "Upcoming"}, {"unpaid", "Unpaid"}, {"all", "All " + Words.many(this)}};
+        LinearLayout tabs = Ui.segmented(this, t, gigsTab, key -> {
+            gigsTab = key;
+            render();
+        });
+        tabs.setLayoutParams(Ui.matchWrap(this, 14));
+        top.addView(tabs);
+        v.addView(top);
 
         List<Object> rows = new ArrayList<>();
         if (Prefs.get(this, Prefs.NAME).isEmpty() || !Prefs.hasPaymentDetails(this)) rows.add("setup");
@@ -217,11 +268,11 @@ public class MainActivity extends Activity {
         switch (gigsTab) {
             case "upcoming":
                 groupByMonth(upcoming, rows);
-                empty = "No gigs booked yet.\nTap “Add a gig” to log a booking.";
+                empty = "Nothing booked yet.\nTap “Add " + Words.a(this) + "” to log a booking.";
                 break;
             case "all":
                 groupByMonth(db.allGigs(), rows);
-                empty = "No gigs yet.\nTap “Add a gig” to log your first one.";
+                empty = "No " + Words.many(this) + " yet.\nTap “Add " + Words.a(this) + "” to log your first one.";
                 break;
             default:
                 rows.addAll(unpaid);
@@ -252,7 +303,7 @@ public class MainActivity extends Activity {
 
         LinearLayout bottom = Ui.vbox(this, 0);
         bottom.setPadding(Ui.dp(this, 16), 0, Ui.dp(this, 16), Ui.dp(this, 12));
-        Button add = Ui.button(this, "+  Add a gig", Ui.PRIMARY, Ui.WHITE);
+        Button add = Ui.primary(this, "+  Add " + Words.a(this));
         add.setOnClickListener(x -> Forms.editGig(this, null, 0, id -> render()));
         bottom.addView(add);
         v.addView(bottom);
@@ -296,12 +347,16 @@ public class MainActivity extends Activity {
                 return wrap;
             }
             if ("setup".equals(o)) {
+                FrameLayout outer = new FrameLayout(c);
+                int m = Ui.dp(c, 16);
+                outer.setPadding(m, 0, m, Ui.dp(c, 8));
                 LinearLayout box = Ui.vbox(c, 14);
-                box.setBackgroundColor(0xFFFFF8E1);
-                box.addView(Ui.text(c, "✨ Add your details for invoices", 15, Ui.DARK, true));
-                box.addView(Ui.text(c, "Your name, IBAN and Revolut go on invoices and payment reminders. Tap to set up.",
+                box.setBackground(Ui.rounded(c, Ui.ORANGE_LIGHT, 14));
+                box.addView(Ui.text(c, "Add your details for invoices", 15, Ui.DARK, true));
+                box.addView(Ui.text(c, "Your name and how clients pay you go on invoices and payment reminders. Tap to set up.",
                         13, Ui.GREY, false));
-                return box;
+                outer.addView(box);
+                return outer;
             }
             return Ui.groupHeader(c, (String) o);
         }
@@ -375,7 +430,7 @@ public class MainActivity extends Activity {
                 int p = Ui.dp(this, 5);
                 cell.setPadding(0, p, 0, p);
                 TextView num = Ui.text(this, String.valueOf(ld.getDayOfMonth()), 15,
-                        !inMonth ? 0xFFBDBDBD : day == today ? Ui.PRIMARY : Ui.DARK, day == today);
+                        !inMonth ? Ui.FAINT : day == today ? Ui.PRIMARY : Ui.DARK, day == today);
                 num.setGravity(Gravity.CENTER);
                 cell.addView(num);
                 StringBuilder dots = new StringBuilder();
@@ -391,10 +446,10 @@ public class MainActivity extends Activity {
                         else if (g.isPaid() && !g.isFuture() && dotColor == Ui.PRIMARY) dotColor = Ui.GREEN;
                     }
                 }
-                TextView dt = Ui.text(this, dots.length() == 0 ? " " : dots.toString(), 8, inMonth ? dotColor : 0xFFBDBDBD, false);
+                TextView dt = Ui.text(this, dots.length() == 0 ? " " : dots.toString(), 8, inMonth ? dotColor : Ui.FAINT, false);
                 dt.setGravity(Gravity.CENTER);
                 cell.addView(dt);
-                if (day == calSelected) cell.setBackground(Ui.rounded(this, Ui.PRIMARY_LIGHT, 10));
+                if (day == calSelected) cell.setBackground(Ui.rounded(this, Ui.PRIMARY_LIGHT, 12));
                 cell.setOnClickListener(x -> {
                     calSelected = day;
                     if (!inMonth) calMonth = ld.withDayOfMonth(1);
@@ -405,8 +460,8 @@ public class MainActivity extends Activity {
             v.addView(week);
         }
 
-        TextView summary = Ui.text(this, monthGigs == 0 ? "No gigs this month"
-                : monthGigs + (monthGigs == 1 ? " gig" : " gigs") + " this month · " + Money.fmt(monthBooked) + " in fees",
+        TextView summary = Ui.text(this, monthGigs == 0 ? "No " + Words.many(this) + " this month"
+                : Words.count(this, monthGigs) + " this month · " + Money.fmt(monthBooked) + " in fees",
                 13, Ui.GREY, false);
         summary.setGravity(Gravity.CENTER);
         summary.setPadding(0, Ui.dp(this, 6), 0, 0);
@@ -429,7 +484,7 @@ public class MainActivity extends Activity {
             v.addView(r);
             v.addView(Ui.divider(this));
         }
-        Button add = Ui.button(this, "+  Add a gig on " + Dates.shortDay(calSelected), Ui.PRIMARY, Ui.WHITE);
+        Button add = Ui.primary(this, "+  Add " + Words.a(this) + " on " + Dates.shortDay(calSelected));
         add.setOnClickListener(x -> Forms.editGig(this, null, calSelected, id -> render()));
         v.addView(add);
         return scroll;
@@ -446,23 +501,23 @@ public class MainActivity extends Activity {
         List<Client> clients = Db.get(this).clientsWithStats();
 
         LinearLayout top = Ui.vbox(this, 16);
-        Button add = Ui.button(this, "+  Add a client", Ui.PRIMARY, Ui.WHITE);
+        Button add = Ui.primary(this, "+  Add a client");
         add.setOnClickListener(x -> Forms.editClient(this, null, id -> render(), null));
         top.addView(add);
         if (clients.isEmpty()) {
-            TextView e = Ui.text(this, "Your clients appear here automatically when you add gigs. "
-                    + "You can also save regulars (hotels, planners, restaurants) here first.", 15, Ui.GREY, false);
+            TextView e = Ui.text(this, "Your clients appear here automatically when you add " + Words.many(this) + ". "
+                    + "You can also save regulars (venues, planners, agencies) here first.", 15, Ui.GREY, false);
             e.setPadding(0, Ui.dp(this, 16), 0, 0);
             top.addView(e);
         }
         v.addView(top);
 
         for (Client k : clients) {
-            String line2 = k.gigCount + (k.gigCount == 1 ? " gig" : " gigs")
+            String line2 = Words.count(this, k.gigCount)
                     + (k.earnedCents > 0 ? " · " + Money.fmt(k.earnedCents) + " earned" : "")
                     + (k.upcoming > 0 ? " · " + k.upcoming + " coming up" : "");
             String amount = k.owedCents > 0 ? Money.fmt(k.owedCents) : null;
-            LinearLayout r = Ui.row(this, k.name, line2, k.payingHabit(),
+            LinearLayout r = Ui.row(this, k.name, k.name, line2, k.payingHabit(this),
                     k.overdueCents > 0 ? Ui.RED : k.paidLate > 0 ? Ui.ORANGE : Ui.GREY,
                     amount, k.overdueCents > 0 ? Ui.RED : Ui.DARK);
             r.setOnClickListener(x -> startActivity(new Intent(this, ClientActivity.class).putExtra("name", k.name)));
@@ -551,11 +606,11 @@ public class MainActivity extends Activity {
         }
 
         v.addView(Ui.section(this, "Expenses " + moneyYear));
-        Button add = Ui.button(this, "+  Add an expense", Ui.PRIMARY, Ui.WHITE);
+        Button add = Ui.tonal(this, "+  Add an expense");
         add.setOnClickListener(x -> Forms.editExpense(this, null, null, this::render));
         v.addView(add);
         if (!byCategory.isEmpty()) {
-            LinearLayout card = Ui.card(this, Ui.LIGHT_GREY);
+            LinearLayout card = Ui.card(this, Ui.SURFACE);
             for (Map.Entry<String, Long> e : byCategory.entrySet()) {
                 LinearLayout r = Ui.hbox(this);
                 r.addView(Ui.text(this, e.getKey(), 14, Ui.DARK, false), Ui.weight(1f));
@@ -565,8 +620,8 @@ public class MainActivity extends Activity {
             v.addView(card);
         }
         if (expenses.isEmpty()) {
-            TextView e = Ui.text(this, "No expenses logged for " + moneyYear + ". Fuel, outfits, backing tracks and "
-                    + "equipment all count – handy at tax time.", 14, Ui.GREY, false);
+            TextView e = Ui.text(this, "No expenses logged for " + moneyYear + ". Travel, outfits, equipment and "
+                    + "supplies all count – handy at tax time.", 14, Ui.GREY, false);
             e.setPadding(0, Ui.dp(this, 10), 0, 0);
             v.addView(e);
         }
