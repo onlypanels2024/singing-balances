@@ -141,6 +141,22 @@ public class SettingsActivity extends Activity {
         f.addView(logoRemove);
         showLogo();
 
+        // ---- Email ----
+        f = group(page, "Email", "Which app opens when you send an invoice or a payment reminder. "
+                + "You always see the email first and tap Send yourself.");
+        f.addView(Ui.label(this, "Send emails with"));
+        String[][] apps = new String[3][];
+        for (int i = 0; i < 3; i++) apps[i] = new String[]{Google.EMAIL_KEYS[i], Google.EMAIL_NAMES[i]};
+        LinearLayout emailBar = Ui.segmented(this, apps, Google.emailChoice(this), key -> {
+            save();
+            Prefs.set(this, Prefs.EMAIL_APP, key);
+            recreate();
+        });
+        emailBar.setLayoutParams(Ui.matchWrap(this, 6));
+        f.addView(emailBar);
+        f.addView(hint("If the chosen app isn't on the phone, you'll be offered your other email apps. "
+                + "Calendar entries still go to Google Calendar."));
+
         // ---- Payment ----
         f = group(page, "How clients pay you", "Added to invoices and payment reminders automatically.");
         add(f, Prefs.BANK_NAME, "Account holder name (if different)", TEXT);

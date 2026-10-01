@@ -13,27 +13,55 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 
 /**
- * Hands emails to Gmail and calendar entries to Google Calendar on the phone. No sign-in needed:
+ * Hands emails to Gmail or Outlook (the user's choice) and calendar entries to Google Calendar on the phone. No sign-in needed:
  * the app opens with everything filled in and you tap Send / Save. If it can't handle it,
  * Android offers your other apps instead.
  */
 final class Google {
     static final String GMAIL = "com.google.android.gm";
+    static final String OUTLOOK = "com.microsoft.office.outlook";
+    static final String[] EMAIL_KEYS = {"gmail", "outlook", "ask"};
+    static final String[] EMAIL_NAMES = {"Gmail", "Outlook", "Ask each time"};
+
+    static String emailChoice(android.content.Context c) {
+        String v = Prefs.get(c, Prefs.EMAIL_APP);
+        return v.isEmpty() ? "gmail" : v;
+    }
+
+    /** "Gmail", "Outlook", or "" when the user picks an app each time. */
+    static String emailAppName(android.content.Context c) {
+        switch (emailChoice(c)) {
+            case "outlook": return "Outlook";
+            case "ask": return "";
+            default: return "Gmail";
+        }
+    }
+
+    private static String emailPackage(android.content.Context c) {
+        switch (emailChoice(c)) {
+            case "outlook": return OUTLOOK;
+            case "ask": return null;
+            default: return GMAIL;
+        }
+    }
     static final String GOOGLE_CALENDAR = "com.google.android.calendar";
 
     private Google() {}
 
     private static void launch(Activity a, Intent i, String chooserTitle) {
-        launch(a, i, chooserTitle, GMAIL);
+        launch(a, i, chooserTitle, emailPackage(a));
     }
 
     /** Tries the preferred app first; if it isn't installed, offers the phone's other apps. */
     private static void launch(Activity a, Intent i, String chooserTitle, String preferredPackage) {
-        i.setPackage(preferredPackage);
-        try {
-            a.startActivity(i);
-            return;
-        } catch (ActivityNotFoundException ignored) {
+        if (preferredPackage != null) {
+            i.setPackage(preferredPackage);
+            try {
+                a.startActivity(i);
+                return;
+            } catch (ActivityNotFoundException ignored) {
+                // that app isn't installed: offer the phone's other apps instead
+            }
         }
         i.setPackage(null);
         try {
@@ -77,7 +105,7 @@ final class Google {
         i.putExtra(Intent.EXTRA_SUBJECT, subject);
         i.putExtra(Intent.EXTRA_TEXT, body);
         if (g.email.isEmpty()) {
-            Toast.makeText(a, "No email saved for " + g.client + " – add the address in Gmail", Toast.LENGTH_LONG).show();
+            Toast.makeText(a, "No email saved for " + g.client + " – add the address in your email app", Toast.LENGTH_LONG).show();
         }
         launch(a, i, "Send with");
     }

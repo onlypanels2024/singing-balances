@@ -81,9 +81,15 @@ $UI tap "Add a shoot";                        shot dark-form-new; back; back
 seeder --es task invoice --el id 3
 
 # ---- 4. Light mode, rose, make-up artist, dollars ----
-seeder --es task look --es profession makeup --es accent rose --es mode light --es currency USD --es tab -
+seeder --es task look --es profession makeup --es accent rose --es mode light --es currency USD --es tab - --es email outlook
 main --es page gigs --es gigsTab unpaid;      shot rose-gigs; texts rose-gigs
 main --es page clients;                       shot rose-clients
+adb shell am start -W -n $PKG/.GigActivity --el id 4 > /dev/null; shot outlook-gig-4; texts outlook-gig-4
+$UI tap "Send invoice";                       shot outlook-send-invoice; back; back
+adb shell am start -W -n $PKG/.SettingsActivity > /dev/null; $UI tap "Send emails with" 6; shot outlook-settings; back
+seeder --es task look --es email ask
+adb shell am start -W -n $PKG/.GigActivity --el id 4 > /dev/null; shot ask-gig-4; texts ask-gig-4
+$UI tap "Send invoice";                       shot ask-send-invoice; back; back
 
 # ---- 5. Existing user upgrading (your phone): data kept, purple, "Singing", euro, no welcome screen ----
 seeder --es task migrate

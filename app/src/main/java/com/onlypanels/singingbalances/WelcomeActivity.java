@@ -97,6 +97,17 @@ public class WelcomeActivity extends Activity {
         currency.setSelection(Money.index(this));
         v.addView(currency);
 
+        v.addView(heading("Send emails with"));
+        String[][] apps = new String[3][];
+        for (int i = 0; i < 3; i++) apps[i] = new String[]{Google.EMAIL_KEYS[i], Google.EMAIL_NAMES[i]};
+        LinearLayout emailBar = Ui.segmented(this, apps, Google.emailChoice(this), key -> {
+            keep();
+            Prefs.set(this, Prefs.EMAIL_APP, key);
+            recreate();
+        });
+        emailBar.setLayoutParams(Ui.matchWrap(this, 8));
+        v.addView(emailBar);
+
         v.addView(heading("Pick a colour"));
         v.addView(SettingsActivity.accentPicker(this, Theme.accentIndex(this), i -> {
             keep();
