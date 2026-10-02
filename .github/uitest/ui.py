@@ -17,7 +17,8 @@ def nodes():
 def tap(text, scroll=0):
     for attempt in range(scroll + 2):
         for t, x, y in nodes():
-            if text.lower() in t.lower():
+            hit = (t == text[1:]) if text.startswith("=") else (text.lower() in t.lower())
+            if hit:
                 adb("input", "tap", str(x), str(y))
                 print(f"tapped '{t}' at {x},{y}")
                 time.sleep(1.5)

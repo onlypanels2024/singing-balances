@@ -99,7 +99,7 @@ seeder --es task look --es google maria.sings@gmail.com
 adb shell am start -W -n $PKG/.SettingsActivity > /dev/null; $UI tap "Send straight from OutRo" 6; shot google-settings-signed-in; back
 adb shell am start -W -n $PKG/.GigActivity --el id 4 > /dev/null; shot google-gig-4; texts google-gig-4
 $UI tap "Send invoice";                       shot google-compose; texts google-compose
-$UI tap "Send";                               sleep 4; shot google-after-send; texts google-after-send; back; back; back
+$UI tap "=SEND";                              sleep 4; shot google-after-send; texts google-after-send; back; back; back
 seeder --es task look --es google -
 
 # ---- 5. Existing user upgrading (your phone): data kept, purple, "Singing", euro, no welcome screen ----
