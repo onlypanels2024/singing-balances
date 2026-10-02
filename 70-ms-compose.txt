@@ -1,0 +1,12 @@
+Send email
+From maria.sings@outlook.com (Outlook)
+To
+joanna.mark@example.com
+Subject
+Invoice INV-0001 – Wedding reception, Villa Arrigo (1 Oct 2026)
+Message
+Hi Joanna & Mark,  Please find attached my invoice for the booking at Wedding reception, Villa Arrigo on 1 Oct 2026. The amount due is $900.00, payable on receipt.  You can pay by: Bank transfer Account name: Maria Borg IBAN: MT84 MALT 0110 0001 2345 MTLC AST0 01S BIC/SWIFT: MALTMTMT  Revolut: @mariaborg Reference: INV-0001  Many thanks, Maria Borg
+📎  Invoice-INV-0001.pdf
+USE EMAIL APP
+CANCEL
+SEND

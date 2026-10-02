@@ -1,0 +1,16 @@
+Settings
+Your name / business name
+Maria Borg
+Your email
+maria.sings@example.com
+Your phone
++356 7900 1234
+Address (optional)
+12 Triq il-Kbira Sliema SLM 1234 Malta
+VAT / tax number (if you have one)
+Logo on invoices
+Change logo
+Remove logo
+EMAIL
+Send straight from OutRo
+Sign in once and OutRo sends invoices and reminders from your own email address, without opening another app. OutRo can only send – it can't read your emails.

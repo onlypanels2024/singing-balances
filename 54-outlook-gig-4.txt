@@ -1,0 +1,23 @@
+Joanna & Mark
+EDIT
+Joanna & Mark · Wedding reception, Villa Arrigo
+Thu 1 Oct 2026 · 19:00
+Confirmed
+joanna.mark@example.com
+Invoice INV-0001
+Still owed
+$900.00
+Fee $900.00  ·  Received $0.00
+Overdue 1 day · was due 1 Oct 2026
+Record a payment
+Paid in full ($900.00)
+Send invoice INV-0001 via Outlook
+Email payment reminder (Outlook)
+Add chase-up to Google Calendar
+Payments received
+Nothing received yet.
+Expenses for this booking
+Hair & make-up
+$60.00
+Fuel to Mdina · Fuel & transport
+$25.00

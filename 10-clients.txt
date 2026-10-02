@@ -1,0 +1,33 @@
+Clients
++  Add a client
+JM
+Joanna & Mark
+1 booking · €900.00 earned
+Hasn't paid yet – overdue
+€900.00
+RB
+Radisson Blu
+2 bookings · €600.00 earned · 1 coming up
+Part paid – rest overdue
+€400.00
+HM
+Hilton Malta
+3 bookings · €750.00 earned · 1 coming up
+Pays in about 5 days on average · paid late 1 time
+BB
+Bob's Bar
+1 booking · €150.00 earned
+No payment history yet
+€150.00
+CD
+Café del Mar
+2 bookings · €250.00 earned · 1 coming up
+Pays in about 5 days on average · paid late 1 time
+WP
+Wedding Planners Ltd
+0 bookings
+No payment history yet
+Bookings
+Calendar
+Clients
+Money
