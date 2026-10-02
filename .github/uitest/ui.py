@@ -31,6 +31,7 @@ def swipe():
     time.sleep(1)
 
 def find(text, scroll=0, field="text", nth=0):
+    time.sleep(0.8)  # let the screen settle after the last tap
     for attempt in range(scroll + 1):
         hits = [n for n in nodes() if match(n, text, field) and n["h"] > 0]
         if len(hits) > nth:

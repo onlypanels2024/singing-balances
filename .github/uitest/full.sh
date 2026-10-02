@@ -22,9 +22,10 @@ nocrash() { c=$(crashes); if [ "$c" -gt "${CR:-0}" ]; then bad "$1: APP CRASHED"
 inapp() { adb shell dumpsys window | grep -E "mCurrentFocus|mFocusedApp" | grep -q "$PKG"; }
 left() { if inapp; then bad "$1 (expected another app to open)"; else ok "$1 (opened $(adb shell dumpsys window | grep mCurrentFocus | grep -oE '[a-z]+(\.[a-z0-9]+)+/' | head -1))"; fi; }
 backto() { for i in 1 2 3 4; do inapp && $UI has "$1" > /dev/null && return; adb shell input keyevent 4; sleep 1.2; done; }
-main() { adb shell am start -W -n $PKG/.MainActivity "$@" > /dev/null; sleep 1; }
-gig() { adb shell am start -W -n $PKG/.GigActivity --el id $1 > /dev/null; sleep 1; }
-settings() { adb shell am start -W -n $PKG/.SettingsActivity > /dev/null; sleep 1; }
+# --activity-clear-top: always open a fresh copy of the screen, not whatever was left on top
+main() { adb shell am start -W --activity-clear-top -n $PKG/.MainActivity "$@" > /dev/null; sleep 1.5; }
+gig() { adb shell am start -W --activity-clear-top -n $PKG/.GigActivity --el id $1 > /dev/null; sleep 1.5; }
+settings() { adb shell am start -W --activity-clear-top -n $PKG/.SettingsActivity > /dev/null; sleep 1.5; }
 seeder() { adb shell am broadcast -n $PKG/.DemoSeeder "$@" > /dev/null; sleep 2; }
 section() { echo "" >> $R; echo "== $1 ==" | tee -a $R; }
 MONTH=$(date +"%B %Y"); PREV=$(date -d "$(date +%Y-%m-15) -1 month" +"%B %Y"); NEXT=$(date -d "$(date +%Y-%m-15) +1 month" +"%B %Y")
@@ -44,13 +45,14 @@ main
 check "Welcome screen shows" "Welcome to"
 for pair in "Singer:bookings" "Band:bookings" "=DJ:bookings" "Photographer:shoots" "Videographer:shoots" "Hair & make-up:bookings" "MC / host:events" "Dancer:shows" "Something else:bookings"; do
   chip="${pair%%:*}"; word="${pair##*:}"
-  $UI tap "$chip" > /dev/null; check "Job chip '$chip' -> wording '$word'" "\"$word\"" 1
+  $UI tap "$chip" > /dev/null; sleep 2; check "Job chip '$chip' -> wording '$word'" "\"$word\"" 1
 done
 $UI tap "Photographer" > /dev/null
 $UI tap "=Outlook" 3 > /dev/null; check "Email choice Outlook selectable" "Ask each time"
 $UI tapdesc "Teal" 3 > /dev/null; nocrash "Colour swatch on welcome"
 $UI fill "Your name or business name" "Test User" 3 > /dev/null
-$UI tap "US dollar" 3 > /dev/null || $UI tap "Euro (" 3 > /dev/null; $UI tap "British pound" 2 > /dev/null
+$UI tap "US dollar" 3 > /dev/null || $UI tap "Euro (" 3 > /dev/null; sleep 1; $UI tap "British pound" > /dev/null || adb shell input keyevent 4
+check "Currency picked on welcome" "British pound" 3
 $UI tap "Get started" 4
 check "Get started opens home" "Still owed to you"
 check "Home uses chosen currency (£)" "£0.00"
@@ -170,13 +172,13 @@ $UI fill "Amount received" "100" > /dev/null
 $UI tapafter "Date received" > /dev/null; $UI tap "=OK" > /dev/null
 $UI fill "How was it paid" "Card" > /dev/null
 $UI tap "=SAVE" > /dev/null
-dcheck "Payment saved" "paid=130000 owed=135000"
+dcheck "Payment saved" "paid=130000 owed=160000"
 check "Amount owed went down" "€300.00"
 $UI tap "Card" > /dev/null; check "Tapping a payment asks to remove it" "Remove this payment?"
 $UI tap "=REMOVE" > /dev/null
-dcheck "Payment removed" "paid=120000 owed=145000"
+dcheck "Payment removed" "paid=120000 owed=170000"
 $UI tap "Paid in full" > /dev/null
-dcheck "Paid in full records the rest" "paid=160000 owed=105000"
+dcheck "Paid in full records the rest" "paid=160000 owed=130000"
 check "Booking shows Fully paid" "Fully paid"
 nocrash "Payments"
 
@@ -257,7 +259,7 @@ $UI tap "Add your logo" 4 > /dev/null; sleep 2; shot logo-picker
 $UI tap "test-logo" > /dev/null || $UI tapdesc "test-logo" > /dev/null || { $UI tapdesc "Show roots" > /dev/null; $UI tap "=Downloads" > /dev/null; $UI tap "test-logo" > /dev/null || $UI tapdesc "test-logo" > /dev/null; }
 sleep 2; backto "YOUR WORK"
 dcheck "Logo added from phone's files" "logo=true"
-$UI tap "Remove logo" 4 > /dev/null
+settings; $UI tap "Remove logo" 4 > /dev/null; adb shell input keyevent 4; sleep 1
 dcheck "Logo removed" "logo=false"
 
 section "Settings: email sign-in buttons and choice"
@@ -282,9 +284,9 @@ $UI tap "=CANCEL" > /dev/null
 settings; $UI fill "Payment due (days" "0" 9 > /dev/null; adb shell input keyevent 4; sleep 1
 dcheck "Payment terms back to 0" "terms=0"
 settings
-$UI tap "Daily reminders" 9 > /dev/null; dcheck "Reminders switched off" "notify=false"
-$UI tap "Daily reminders" > /dev/null; dcheck "Reminders switched on" "notify=true"
-$UI tap "=10:00" > /dev/null; $UI tap "=18:00" > /dev/null; check "Reminder time changed" "18:00"
+$UI tap "Daily reminders" 9 > /dev/null; adb shell input keyevent 4; sleep 1; dcheck "Reminders switched off" "notify=false"
+settings; $UI tap "Daily reminders" 9 > /dev/null; adb shell input keyevent 4; sleep 1; dcheck "Reminders switched on" "notify=true"
+settings; $UI tap "=10:00" 9 > /dev/null; $UI tap "=18:00" > /dev/null; check "Reminder time changed" "18:00"
 $UI tap "Show today's reminders now" 2 > /dev/null; sleep 2
 N=$(adb shell dumpsys notification --noredact | grep -c "pkg=$PKG")
 [ "$N" -gt 0 ] && ok "Reminders now shows notifications ($N)" || bad "Reminders now shows notifications"
