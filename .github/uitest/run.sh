@@ -96,7 +96,7 @@ seeder --es task look --es email gmail --es google -
 adb shell am start -W -n $PKG/.SettingsActivity > /dev/null; $UI tap "Send straight from OutRo" 6; shot google-settings-signed-out; texts google-settings-signed-out
 $UI tap "Sign in with Google";                shot google-signin-tap; sleep 3; shot google-signin-tap-2; back; back; back
 adb shell am start -W -n $PKG/.SettingsActivity > /dev/null; $UI tap "Send straight from OutRo" 6
-$UI tap "Sign in with Microsoft";             sleep 6; shot ms-signin-tap; texts ms-signin-tap
+$UI tap "Sign in with Microsoft" 4;           sleep 6; shot ms-signin-tap; texts ms-signin-tap
 $UI tap "Use without an account";             sleep 3; $UI tap "No thanks"; $UI tap "No, thanks"; sleep 8
 shot ms-signin-page; texts ms-signin-page; sleep 6; shot ms-signin-page-2; texts ms-signin-page-2; back; back; back
 seeder --es task look --es google maria.sings@gmail.com
