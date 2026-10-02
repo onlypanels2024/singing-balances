@@ -1,0 +1,323 @@
+#!/bin/bash
+# FULL BUTTON TEST: taps every button, fills every form, and checks the result on screen and in the saved data.
+PKG=com.onlypanels.singingbalances
+OUT=full-results
+mkdir -p $OUT
+UI="python3 .github/uitest/ui.py"
+R=$OUT/report.txt
+: > $R
+n=0; pass=0; fail=0
+shot() { sleep 1.5; n=$((n+1)); adb exec-out screencap -p > "$(printf "%s/%03d-%s.png" $OUT $n "$1")"; }
+ok() { pass=$((pass+1)); echo "PASS  $1" | tee -a $R; }
+bad() { fail=$((fail+1)); echo "FAIL  $1" | tee -a $R; shot "FAIL-$(echo "$1" | tr -c 'a-zA-Z0-9' '-' | cut -c1-40)"; }
+# check "what" "text on screen" [scroll]
+check() { if $UI has "$2" ${3:-0} > /dev/null; then ok "$1"; else bad "$1 (expected to see: $2)"; fi; }
+nocheck() { if $UI has "$2" > /dev/null; then bad "$1 (should be gone: $2)"; else ok "$1"; fi; }
+# dump the saved data and check it matches a pattern
+data() { adb logcat -c; adb shell am broadcast -n $PKG/.DemoSeeder --es task dump > /dev/null; sleep 2;
+         D=$(adb logcat -d -s UITEST | grep "dump " | tail -1); echo "      data: ${D#*dump }" >> $R; }
+dcheck() { data; if echo "$D" | grep -qE "$2"; then ok "$1"; else bad "$1 (saved data should match: $2)"; fi; }
+crashes() { adb logcat -b crash -d | grep -c "FATAL EXCEPTION" ; }
+nocrash() { c=$(crashes); if [ "$c" -gt "${CR:-0}" ]; then bad "$1: APP CRASHED"; adb logcat -b crash -d >> $OUT/crash.txt; CR=$c; else ok "$1: no crash"; fi; }
+inapp() { adb shell dumpsys window | grep -E "mCurrentFocus|mFocusedApp" | grep -q "$PKG"; }
+left() { if inapp; then bad "$1 (expected another app to open)"; else ok "$1 (opened $(adb shell dumpsys window | grep mCurrentFocus | grep -oE '[a-z]+(\.[a-z0-9]+)+/' | head -1))"; fi; }
+backto() { for i in 1 2 3 4; do inapp && $UI has "$1" > /dev/null && return; adb shell input keyevent 4; sleep 1.2; done; }
+main() { adb shell am start -W -n $PKG/.MainActivity "$@" > /dev/null; sleep 1; }
+gig() { adb shell am start -W -n $PKG/.GigActivity --el id $1 > /dev/null; sleep 1; }
+settings() { adb shell am start -W -n $PKG/.SettingsActivity > /dev/null; sleep 1; }
+seeder() { adb shell am broadcast -n $PKG/.DemoSeeder "$@" > /dev/null; sleep 2; }
+section() { echo "" >> $R; echo "== $1 ==" | tee -a $R; }
+MONTH=$(date +"%B %Y"); PREV=$(date -d "$(date +%Y-%m-15) -1 month" +"%B %Y"); NEXT=$(date -d "$(date +%Y-%m-15) +1 month" +"%B %Y")
+YEAR=$(date +%Y); LASTYEAR=$((YEAR-1))
+
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+adb shell pm grant $PKG android.permission.POST_NOTIFICATIONS
+# No on-screen keyboard (typing still works) so it never hides buttons
+adb shell ime disable com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME > /dev/null 2>&1
+adb logcat -b crash -c; CR=0
+
+# ====================================================================
+section "Welcome screen (brand-new user)"
+main
+check "Welcome screen shows" "Welcome to"
+for pair in "Singer:bookings" "Band:bookings" "=DJ:bookings" "Photographer:shoots" "Videographer:shoots" "Hair & make-up:bookings" "MC / host:events" "Dancer:shows" "Something else:bookings"; do
+  chip="${pair%%:*}"; word="${pair##*:}"
+  $UI tap "$chip" > /dev/null; check "Job chip '$chip' -> wording '$word'" "\"$word\"" 1
+done
+$UI tap "Photographer" > /dev/null
+$UI tap "=Outlook" 3 > /dev/null; check "Email choice Outlook selectable" "Ask each time"
+$UI tapdesc "Teal" 3 > /dev/null; nocrash "Colour swatch on welcome"
+$UI fill "Your name or business name" "Test User" 3 > /dev/null
+$UI tap "US dollar" 3 > /dev/null || $UI tap "Euro (" 3 > /dev/null; $UI tap "British pound" 2 > /dev/null
+$UI tap "Get started" 4
+check "Get started opens home" "Still owed to you"
+check "Home uses chosen currency (£)" "£0.00"
+check "Home uses chosen wording (Shoots)" "Shoots"
+dcheck "Welcome choices saved" "currency=GBP accent=teal mode=.* profession=photographer"
+check "Empty home explains what to do" "Nobody owes you anything"
+$UI tap "=Upcoming" > /dev/null; check "Empty upcoming message" "Nothing booked yet"
+shot welcome-done
+
+# ====================================================================
+section "Sample data loaded"
+seeder --es task seed
+main --es page gigs --es gigsTab unpaid
+dcheck "Sample data in place" "gigs=10 cancelled=1 pencilled=1 paid=120000 owed=145000 expenses=5 expTotal=55000 clients=6"
+check "Total owed on home card" "€1,450.00"
+check "Overdue amount on home card" "€1,300.00 overdue"
+check "Next booking on home card" "NEXT BOOKING"
+
+section "Home: tabs and list"
+$UI tap "=Upcoming" > /dev/null; check "Upcoming tab shows future bookings" "Acoustic night"
+nocheck "Upcoming tab hides past bookings" "Summer terrace"
+$UI tap "All bookings" > /dev/null; check "All bookings tab shows old bookings" "Summer terrace" 3
+$UI tap "=Unpaid" > /dev/null; check "Unpaid tab shows overdue booking" "Company party"
+nocheck "Unpaid tab hides paid bookings" "Gala dinner"
+$UI tap "Company party" > /dev/null; check "Tapping a booking opens it" "Record a payment"; adb shell input keyevent 4; sleep 1
+$UI tapdesc "Settings" > /dev/null; check "Settings button (cog) opens Settings" "YOUR WORK"; adb shell input keyevent 4; sleep 1
+
+section "Add a booking (form, validation, pickers)"
+main --es page gigs --es gigsTab all
+$UI tap "Add a booking" > /dev/null; check "Add a booking opens form" "New booking"
+$UI tap "=SAVE" > /dev/null; check "Saving empty form is blocked" "New booking"
+$UI fill "Client (who pays you)" "Test Client" > /dev/null
+$UI fill "Client email" "test@example.com" > /dev/null
+$UI fill "Event / venue" "Garden Party" > /dev/null
+$UI tapafter "Booking date" > /dev/null; check "Date picker opens" "=OK"; $UI tap "=OK" > /dev/null
+$UI tapafter "Start time" > /dev/null; check "Time picker opens" "=OK"; $UI tap "=OK" > /dev/null
+check "Start time set to 20:00" "20:00"
+$UI tap "=Confirmed" > /dev/null; $UI tap "Pencilled in" > /dev/null; check "Booking status set to Pencilled in" "Pencilled in"
+$UI tap "=SAVE" > /dev/null; check "Saving without a fee is blocked" "New booking"
+$UI fill "Fee (" "250" 2 > /dev/null
+$UI tapafter "Payment due" 2 > /dev/null; $UI tap "=OK" > /dev/null
+$UI fill "Notes" "Bring cables" 2 > /dev/null
+$UI tap "=SAVE" 2 > /dev/null
+nocheck "Form closes after saving" "New booking"
+dcheck "New booking saved" "gigs=11 cancelled=1 pencilled=2 .*Test Client"
+check "New booking appears in list" "Test Client" 4
+nocrash "Add a booking"
+
+# ====================================================================
+section "Calendar"
+main --es page gigs --es gigsTab unpaid
+$UI tap "=Calendar" > /dev/null; check "Calendar tab opens on this month" "$MONTH"
+$UI tap "‹" > /dev/null; check "Previous month arrow" "$PREV"
+$UI tap "›" > /dev/null; $UI tap "›" > /dev/null; check "Next month arrow" "$NEXT"
+$UI tap "$NEXT" > /dev/null; check "Tapping month name jumps back to today" "$MONTH"
+$UI tap "=15" > /dev/null; check "Tapping a day selects it" "on $(date -d "$(date +%Y-%m-15)" +"%a %-d %b")" 2
+$UI tap "Add a booking on" 2 > /dev/null; check "Add booking on selected day opens form" "New booking"
+$UI tap "=CANCEL" > /dev/null; nocheck "Cancel closes form" "New booking"
+nocrash "Calendar"
+
+# ====================================================================
+section "Clients"
+$UI tap "=Clients" > /dev/null; check "Clients tab opens" "Add a client"
+$UI tap "Add a client" > /dev/null; $UI tap "=SAVE" > /dev/null; check "Client without a name is blocked" "New client"
+$UI fill "Name (person" "Zed Agency" > /dev/null; $UI fill "Email" "zed@example.com" > /dev/null; $UI fill "Phone" "35699999999" > /dev/null
+$UI tap "=SAVE" > /dev/null
+check "New client appears" "Zed Agency" 4
+dcheck "New client saved" "clients=8"
+main --es page clients
+$UI tap "Hilton Malta" 2 > /dev/null; check "Client page opens" "Earned from them"
+check "Client page lists their bookings" "Gala dinner" 3
+$UI tap "=Call" 0 > /dev/null || $UI tap "=Call" 2 > /dev/null; left "Call button opens the phone dialer"; backto "Earned from them"
+$UI tap "=WhatsApp" > /dev/null; left "WhatsApp button opens WhatsApp / browser"; backto "Earned from them"
+$UI tap "New booking for Hilton Malta" > /dev/null; check "New booking for client pre-fills client" "Hilton Malta"; $UI tap "=CANCEL" > /dev/null
+$UI tap "=EDIT" > /dev/null; check "Edit client opens" "Edit client"
+$UI fill "Notes" "Great venue" > /dev/null; $UI tap "=SAVE" > /dev/null
+check "Client notes saved" "Great venue"
+adb shell input keyevent 4; sleep 1
+main --es page clients
+$UI tap "Zed Agency" 4 > /dev/null; check "Zed Agency page opens" "Zed Agency"
+$UI tap "=EDIT" > /dev/null; $UI tap "=DELETE" > /dev/null; check "Delete asks to confirm" "Delete Zed Agency?"
+$UI tap "=DELETE" > /dev/null
+dcheck "Client deleted" "clients=7"
+nocrash "Clients"
+
+# ====================================================================
+section "Money"
+main --es page money
+check "Money tab shows this year" "=$YEAR"
+check "Received tile" "Received"
+check "Pending balance tile" "Pending balance"
+$UI tap "‹" > /dev/null; check "Previous year arrow" "=$LASTYEAR"
+$UI tap "›" > /dev/null; check "Next year arrow" "=$YEAR"
+$UI tap "Add an expense" 3 > /dev/null; check "Add expense opens form" "New expense"
+$UI tap "=SAVE" > /dev/null; check "Expense without amount is blocked" "New expense"
+$UI fill "Amount (" "40" > /dev/null
+$UI tap "Fuel & transport" > /dev/null; $UI tap "=Equipment" > /dev/null
+$UI tapafter "=Date" > /dev/null; $UI tap "=OK" > /dev/null
+$UI fill "Note (what was it?)" "Test strings" > /dev/null
+$UI tap "=SAVE" > /dev/null
+dcheck "Expense saved" "expenses=6 expTotal=59000"
+$UI tap "Test strings" 6 > /dev/null; check "Tapping an expense opens it" "Edit expense"
+$UI fill "Amount (" "45" > /dev/null; $UI tap "=SAVE" > /dev/null
+dcheck "Expense edited" "expenses=6 expTotal=59500"
+main --es page money
+$UI tap "Test strings" 6 > /dev/null; $UI tap "=DELETE" > /dev/null
+dcheck "Expense deleted" "expenses=5 expTotal=55000"
+nocrash "Money"
+
+# ====================================================================
+section "A booking: payments"
+gig 3
+check "Overdue booking shows amount owed" "€400.00"
+$UI tap "Record a payment" > /dev/null; check "Record payment opens" "Record payment"
+$UI fill "Amount received" "100" > /dev/null
+$UI tapafter "Date received" > /dev/null; $UI tap "=OK" > /dev/null
+$UI fill "How was it paid" "Card" > /dev/null
+$UI tap "=SAVE" > /dev/null
+dcheck "Payment saved" "paid=130000 owed=135000"
+check "Amount owed went down" "€300.00"
+$UI tap "Card" > /dev/null; check "Tapping a payment asks to remove it" "Remove this payment?"
+$UI tap "=REMOVE" > /dev/null
+dcheck "Payment removed" "paid=120000 owed=145000"
+$UI tap "Paid in full" > /dev/null
+dcheck "Paid in full records the rest" "paid=160000 owed=105000"
+check "Booking shows Fully paid" "Fully paid"
+nocrash "Payments"
+
+section "A booking: email, calendar, expense"
+gig 4
+$UI tap "Send invoice" > /dev/null; left "Send invoice opens email app"; backto "Record a payment"
+$UI tap "Email payment reminder" > /dev/null; left "Payment reminder opens email app"; backto "Record a payment"
+$UI tap "Add chase-up to Google Calendar" > /dev/null; left "Chase-up opens calendar"; backto "Record a payment"
+$UI tap "Add an expense" 4 > /dev/null; check "Expense from booking is linked" "For: Joanna"
+$UI fill "Amount (" "10" > /dev/null; $UI tap "=SAVE" > /dev/null
+dcheck "Booking expense saved" "expenses=6"
+check "Take-home shown" "Take-home from this booking" 4
+gig 6
+$UI tap "to Google Calendar" > /dev/null; left "Add booking to Google Calendar opens calendar"; backto "Fee to collect"
+gig 7
+$UI tap "Mark as confirmed" > /dev/null
+dcheck "Mark as confirmed" "pencilled=1 "
+nocrash "Booking actions"
+
+section "A booking: edit, cancel, restore, delete"
+ID=$(adb shell "run-as $PKG sqlite3 databases/balances.db \"select id from gigs where client='Test Client'\"" 2>/dev/null | tr -d '\r')
+[ -z "$ID" ] && ID=11
+gig $ID
+check "New booking page opens" "Garden Party"
+$UI tap "=EDIT" > /dev/null; check "Edit booking opens" "Edit booking"
+$UI fill "Fee (" "275" 2 > /dev/null; $UI tap "=SAVE" 2 > /dev/null
+check "Edited fee shows" "275.00"
+$UI tapdesc "More options" > /dev/null; $UI tap "was cancelled" > /dev/null; check "Cancel asks to confirm" "Mark as cancelled?"
+$UI tap "=CANCELLED" > /dev/null; check "Cancelled booking offers restore" "Restore booking"
+dcheck "Booking cancelled" "cancelled=2"
+$UI tap "Restore booking" > /dev/null
+dcheck "Booking restored" "cancelled=1"
+$UI tapdesc "More options" > /dev/null; $UI tap "Delete booking" > /dev/null; check "Delete asks to confirm" "Delete this booking?"
+$UI tap "=DELETE" > /dev/null
+dcheck "Booking deleted" "gigs=10 "
+nocrash "Edit/cancel/delete"
+
+# ====================================================================
+section "Settings: your work"
+settings
+$UI tap "=Singer" > /dev/null; $UI tap "=DJ" > /dev/null
+dcheck "Job changed to DJ" "profession=dj"
+$UI fill "Name of the first tab" "My Shows" > /dev/null
+adb shell input keyevent 4; sleep 1
+main --es page gigs; check "Custom tab name used" "My Shows"
+settings; $UI fill "Name of the first tab" "" > /dev/null; $UI tap "=DJ" > /dev/null; $UI tap "=Singer" > /dev/null
+adb shell input keyevent 4; sleep 1; main --es page gigs; check "Tab name back to default" "Bookings"
+
+section "Settings: look"
+settings
+for c in Plum Indigo Ocean Teal Rose Graphite Gold; do $UI tapdesc "$c" 2 > /dev/null; done
+dcheck "All 7 colours selectable" "accent=gold"
+nocrash "Colours"
+$UI tap "=Dark" 2 > /dev/null; dcheck "Dark mode" "mode=dark"
+$UI tap "Same as phone" 2 > /dev/null; dcheck "Same as phone mode" "mode=phone"
+$UI tap "=Light" 2 > /dev/null; dcheck "Light mode" "mode=light"
+$UI tapdesc "Indigo" 2 > /dev/null
+$UI tap "Euro (" 2 > /dev/null; $UI tap "British pound" 2 > /dev/null
+adb shell input keyevent 4; sleep 1; main --es page gigs --es gigsTab unpaid
+check "Currency change shows £" "£1,050.00"
+settings; $UI tap "British pound" 2 > /dev/null; $UI tap "Euro (" 0 > /dev/null || $UI tap "Euro (" 3 > /dev/null; adb shell input keyevent 4; sleep 1
+dcheck "Currency back to euro" "currency=EUR"
+nocrash "Look"
+
+section "Settings: logo"
+python3 - <<'PY'
+import zlib, struct
+w, h = 120, 60
+raw = b"".join(b"\x00" + bytes([40, 60, 200, 255] * w) for _ in range(h))
+def chunk(t, d): return struct.pack(">I", len(d)) + t + d + struct.pack(">I", zlib.crc32(t + d) & 0xffffffff)
+png = b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 6, 0, 0, 0)) + chunk(b"IDAT", zlib.compress(raw)) + chunk(b"IEND", b"")
+open("/tmp/test-logo.png", "wb").write(png)
+PY
+adb push /tmp/test-logo.png /sdcard/Download/test-logo.png > /dev/null
+adb shell am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file:///sdcard/Download/test-logo.png > /dev/null
+settings
+$UI tap "Add your logo" 4 > /dev/null; sleep 2; shot logo-picker
+$UI tap "test-logo" > /dev/null || { $UI tapdesc "Show roots" > /dev/null; $UI tap "=Downloads" > /dev/null; $UI tap "test-logo" > /dev/null; }
+sleep 2; backto "YOUR WORK"
+dcheck "Logo added from phone's files" "logo=true"
+$UI tap "Remove logo" 4 > /dev/null
+dcheck "Logo removed" "logo=false"
+
+section "Settings: email sign-in buttons and choice"
+settings
+$UI tap "Sign in with Google" 6 > /dev/null; sleep 3; left "Sign in with Google opens Google"; backto "YOUR WORK"
+settings
+$UI tap "Sign in with Microsoft" 6 > /dev/null; sleep 5; left "Sign in with Microsoft opens Microsoft"; backto "YOUR WORK"
+settings
+$UI tap "=Outlook" 6 > /dev/null; gig 4; check "Email choice Outlook changes button" "via Outlook"
+settings; $UI tap "Ask each time" 6 > /dev/null; gig 4; check "Email choice Ask each time" "by email"
+settings; $UI tap "=Gmail" 6 > /dev/null; gig 4; check "Email choice Gmail" "via Gmail"
+
+section "Settings: invoices, payment terms, reminders"
+settings
+$UI fill "Payment link or tag" "@tester" 7 > /dev/null
+$UI fill "Payment due (days" "7" 3 > /dev/null
+adb shell input keyevent 4; sleep 1
+dcheck "Payment terms saved (7 days)" "terms=7"
+main --es page gigs; $UI tap "Add a booking" > /dev/null
+nocheck "New booking due date uses 7-day terms" "(on the night)"
+$UI tap "=CANCEL" > /dev/null
+settings; $UI fill "Payment due (days" "0" 9 > /dev/null; adb shell input keyevent 4; sleep 1
+dcheck "Payment terms back to 0" "terms=0"
+settings
+$UI tap "Daily reminders" 9 > /dev/null; dcheck "Reminders switched off" "notify=false"
+$UI tap "Daily reminders" > /dev/null; dcheck "Reminders switched on" "notify=true"
+$UI tap "=10:00" > /dev/null; $UI tap "=18:00" > /dev/null; check "Reminder time changed" "18:00"
+$UI tap "Show today's reminders now" 2 > /dev/null; sleep 2
+N=$(adb shell dumpsys notification --noredact | grep -c "pkg=$PKG")
+[ "$N" -gt 0 ] && ok "Reminders now shows notifications ($N)" || bad "Reminders now shows notifications"
+nocrash "Reminders"
+
+section "Settings: backup, restore, export"
+settings
+$UI tap "Choose backup file" 10 > /dev/null; sleep 2; shot backup-save-screen
+$UI tap "=SAVE" > /dev/null || $UI tap "=Save" > /dev/null; sleep 4; backto "YOUR WORK"
+dcheck "Backup file chosen and written" "backup=true"
+settings; $UI tap "Back up now" 10 > /dev/null; sleep 3; nocrash "Back up now"
+check "Backup status shown" "ackup" 10
+settings; $UI tap "Restore from a backup file" 10 > /dev/null; sleep 2; shot restore-picker
+$UI tap "backup.json" > /dev/null || $UI tap "OutRo-backup" > /dev/null || { $UI tapdesc "Show roots" > /dev/null; $UI tap "=Downloads" > /dev/null; $UI tap "backup" > /dev/null; }
+sleep 2; check "Restore asks to confirm" "Restore this backup?"
+$UI tap "=RESTORE" > /dev/null; sleep 2
+dcheck "Restore keeps all data" "gigs=10 "
+settings; $UI tap "Export bookings" 11 > /dev/null; sleep 2; $UI tap "=SAVE" > /dev/null || $UI tap "=Save" > /dev/null; sleep 2; backto "YOUR WORK"
+settings; $UI tap "Export expenses" 11 > /dev/null; sleep 2; $UI tap "=SAVE" > /dev/null || $UI tap "=Save" > /dev/null; sleep 2; backto "YOUR WORK"
+adb shell ls -R /sdcard/Download /sdcard/Documents 2>/dev/null > $OUT/files-list.txt
+grep -q "outro-gigs" $OUT/files-list.txt && ok "Export bookings CSV saved" || bad "Export bookings CSV saved"
+grep -q "outro-expenses" $OUT/files-list.txt && ok "Export expenses CSV saved" || bad "Export expenses CSV saved"
+for f in $(grep -oE "outro-(gigs|expenses)-[0-9-]+\.csv" $OUT/files-list.txt | sort -u); do
+  adb pull "$(adb shell find /sdcard -name "$f" 2>/dev/null | head -1 | tr -d '\r')" $OUT/ > /dev/null 2>&1; done
+nocrash "Backup/export"
+
+section "Notifications, widget"
+seeder --es task notify
+adb shell cmd statusbar expand-notifications; sleep 2; shot notifications
+$UI tap "Did Joanna" > /dev/null || $UI tap "overdue" > /dev/null; sleep 2
+inapp && ok "Tapping a reminder opens OutRo" || bad "Tapping a reminder opens OutRo"
+adb shell cmd statusbar collapse
+seeder --es task widget; nocrash "Widget update"
+
+section "Done"
+nocrash "Whole run"
+echo "" >> $R; echo "TOTAL: $pass passed, $fail failed" | tee -a $R
+adb logcat -d > $OUT/logcat.txt
+exit 0

@@ -37,6 +37,11 @@ public class DemoSeeder extends BroadcastReceiver {
                         + " accent=" + Prefs.get(c, Prefs.ACCENT) + " currency=" + Prefs.get(c, Prefs.CURRENCY));
             }
             else if ("logo".equals(task)) logo(c);
+            else if ("dump".equals(task)) dump(c);
+            else if ("widget".equals(task)) {
+                Widget.updateAll(c);
+                Log.i(TAG, "widget updated");
+            }
             else if ("clientstats".equals(task)) {
                 for (Client k : Db.get(c).clientsWithStats()) {
                     Log.i(TAG, "client " + k.name + " gigs=" + k.gigCount + " earned=" + k.earnedCents + " owed=" + k.owedCents
@@ -116,6 +121,32 @@ public class DemoSeeder extends BroadcastReceiver {
         }
         Logo.save(c, android.net.Uri.fromFile(f));
         Log.i(TAG, "logo saved " + Logo.exists(c) + " size=" + Logo.file(c).length());
+    }
+
+    /** One line with everything the full test checks against. */
+    private static void dump(Context c) {
+        Db db = Db.get(c);
+        int gigs = 0, cancelled = 0, pencilled = 0;
+        long paid = 0, owed = 0;
+        StringBuilder names = new StringBuilder();
+        for (Gig g : db.allGigs()) {
+            gigs++;
+            if (g.isCancelled()) cancelled++;
+            if (g.status == Gig.PENCILLED) pencilled++;
+            paid += g.paidCents;
+            if (!g.isCancelled() && !g.isFuture()) owed += g.balance();
+            names.append(g.client).append('|');
+        }
+        java.util.List<Expense> ex = db.expensesBetween(0, 200000);
+        long exTotal = 0;
+        for (Expense e : ex) exTotal += e.cents;
+        int clients = db.clientsWithStats().size();
+        Log.i(TAG, "dump gigs=" + gigs + " cancelled=" + cancelled + " pencilled=" + pencilled + " paid=" + paid
+                + " owed=" + owed + " expenses=" + ex.size() + " expTotal=" + exTotal + " clients=" + clients
+                + " currency=" + Prefs.get(c, Prefs.CURRENCY) + " accent=" + Prefs.get(c, Prefs.ACCENT)
+                + " mode=" + Prefs.get(c, Prefs.THEME_MODE) + " profession=" + Prefs.get(c, Prefs.PROFESSION)
+                + " terms=" + Prefs.termsDays(c) + " notify=" + Prefs.notify(c) + " logo=" + Logo.exists(c)
+                + " backup=" + Backup.isSetUp(c) + " names=" + names);
     }
 
     private static void seed(Context c) {
