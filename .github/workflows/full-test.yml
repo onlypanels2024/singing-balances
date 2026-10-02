@@ -44,7 +44,7 @@ jobs:
           emulator-build: 16433917
           disable-animations: true
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          script: bash .github/uitest/full.sh
+          script: if [ -f .github/uitest/QUICK ]; then bash .github/uitest/quick.sh; else bash .github/uitest/full.sh; fi
 
       - name: Save results to branch full-results
         if: always()
