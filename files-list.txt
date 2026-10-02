@@ -1,0 +1,7 @@
+/sdcard/Documents:
+
+/sdcard/Download:
+OutRo-backup.json
+outro-expenses-2026-10-02.csv
+outro-gigs-2026-10-02.csv
+test-logo.png

@@ -1,0 +1,210 @@
+keyboards still on: 
+
+== Welcome screen (brand-new user) ==
+PASS  Welcome screen shows
+PASS  Job chip 'Singer' -> wording 'bookings'
+PASS  Job chip 'Band' -> wording 'bookings'
+PASS  Job chip '=DJ' -> wording 'bookings'
+PASS  Job chip 'Photographer' -> wording 'shoots'
+PASS  Job chip 'Videographer' -> wording 'shoots'
+PASS  Job chip 'Hair & make-up' -> wording 'bookings'
+PASS  Job chip 'MC / host' -> wording 'events'
+PASS  Job chip 'Dancer' -> wording 'shows'
+PASS  Job chip 'Something else' -> wording 'bookings'
+PASS  Email choice Outlook selectable
+PASS  Colour swatch on welcome: no crash
+PASS  Currency picked on welcome
+PASS  Get started opens home
+PASS  Home uses chosen currency (£)
+PASS  Home uses chosen wording (Shoots)
+      data: gigs=0 cancelled=0 pencilled=0 paid=0 owed=0 expenses=0 expTotal=0 clients=0 currency=GBP accent=teal mode= profession=photographer terms=0 notify=true logo=false backup=false names=
+PASS  Welcome choices saved
+PASS  Empty home explains what to do
+PASS  Empty upcoming message
+
+== Sample data loaded ==
+      data: gigs=10 cancelled=1 pencilled=1 paid=120000 owed=145000 expenses=5 expTotal=55000 clients=6 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=false names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Sample data in place
+PASS  Total owed on home card
+PASS  Overdue amount on home card
+PASS  Next booking on home card
+
+== Home: tabs and list ==
+PASS  Upcoming tab shows future bookings
+PASS  Upcoming tab hides past bookings
+PASS  All bookings tab shows old bookings
+PASS  Unpaid tab shows overdue booking
+PASS  Unpaid tab hides paid bookings
+PASS  Tapping a booking opens it
+PASS  Settings button (cog) opens Settings
+
+== Add a booking (form, validation, pickers) ==
+PASS  Add a booking opens form
+PASS  Saving empty form is blocked
+PASS  Date picker opens
+PASS  Time picker opens
+PASS  Start time set to 20:00
+PASS  Booking status set to Pencilled in
+PASS  Saving without a fee is blocked
+PASS  Form closes after saving
+      data: gigs=11 cancelled=1 pencilled=2 paid=120000 owed=170000 expenses=5 expTotal=55000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=false names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Test Client|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  New booking saved
+PASS  New booking appears in list
+PASS  Add a booking: no crash
+
+== Calendar ==
+PASS  Calendar tab opens on this month
+PASS  Previous month arrow
+PASS  Next month arrow
+PASS  Tapping month name jumps back to today
+PASS  Tapping a day selects it
+PASS  Add booking on selected day opens form
+PASS  Cancel closes form
+PASS  Calendar: no crash
+
+== Clients ==
+PASS  Clients tab opens
+PASS  Client without a name is blocked
+PASS  New client appears
+      data: gigs=11 cancelled=1 pencilled=2 paid=120000 owed=170000 expenses=5 expTotal=55000 clients=8 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=false names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Test Client|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  New client saved
+PASS  Client page opens
+PASS  Client page lists their bookings
+PASS  Call button opens the phone dialer (opened com.google.android.dialer/)
+PASS  WhatsApp button opens WhatsApp / browser (opened com.android.chrome/)
+PASS  New booking for client pre-fills client
+PASS  Edit client opens
+PASS  Client notes saved
+PASS  Zed Agency page opens
+PASS  Delete asks to confirm
+      data: gigs=11 cancelled=1 pencilled=2 paid=120000 owed=170000 expenses=5 expTotal=55000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=false names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Test Client|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Client deleted
+PASS  Clients: no crash
+
+== Money ==
+PASS  Money tab shows this year
+PASS  Received tile
+PASS  Pending balance tile
+PASS  Previous year arrow
+PASS  Next year arrow
+PASS  Add expense opens form
+PASS  Expense without amount is blocked
+      data: gigs=11 cancelled=1 pencilled=2 paid=120000 owed=170000 expenses=6 expTotal=59000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=false names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Test Client|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Expense saved
+PASS  Tapping an expense opens it
+      data: gigs=11 cancelled=1 pencilled=2 paid=120000 owed=170000 expenses=6 expTotal=59500 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=false names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Test Client|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Expense edited
+      data: gigs=11 cancelled=1 pencilled=2 paid=120000 owed=170000 expenses=5 expTotal=55000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=false names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Test Client|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Expense deleted
+PASS  Money: no crash
+
+== A booking: payments ==
+PASS  Overdue booking shows amount owed
+PASS  Record payment opens
+      data: gigs=11 cancelled=1 pencilled=2 paid=130000 owed=160000 expenses=5 expTotal=55000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=false names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Test Client|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Payment saved
+PASS  Amount owed went down
+PASS  Tapping a payment asks to remove it
+      data: gigs=11 cancelled=1 pencilled=2 paid=120000 owed=170000 expenses=5 expTotal=55000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=false names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Test Client|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Payment removed
+      data: gigs=11 cancelled=1 pencilled=2 paid=160000 owed=130000 expenses=5 expTotal=55000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=false names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Test Client|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Paid in full records the rest
+PASS  Booking shows Fully paid
+PASS  Payments: no crash
+
+== A booking: email, calendar, expense ==
+PASS  Send invoice opens email app (opened com.android.intentresolver/)
+PASS  Payment reminder opens email app (opened com.android.intentresolver/)
+PASS  Chase-up opens calendar (opened com.google.android.calendar/)
+PASS  Expense from booking is linked
+      data: gigs=11 cancelled=1 pencilled=2 paid=160000 owed=130000 expenses=6 expTotal=56000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=false names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Test Client|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Booking expense saved
+PASS  Take-home shown
+PASS  Add booking to Google Calendar opens calendar (opened com.google.android.calendar/)
+      data: gigs=11 cancelled=1 pencilled=1 paid=160000 owed=130000 expenses=6 expTotal=56000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=false names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Test Client|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Mark as confirmed
+PASS  Booking actions: no crash
+
+== A booking: edit, cancel, restore, delete ==
+PASS  New booking page opens
+PASS  Edit booking opens
+PASS  Edited fee shows
+PASS  Cancel asks to confirm
+PASS  Cancelled booking offers restore
+      data: gigs=11 cancelled=2 pencilled=0 paid=160000 owed=105000 expenses=6 expTotal=56000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=false names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Test Client|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Booking cancelled
+      data: gigs=11 cancelled=1 pencilled=0 paid=160000 owed=132500 expenses=6 expTotal=56000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=false names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Test Client|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Booking restored
+PASS  Delete asks to confirm
+      data: gigs=10 cancelled=1 pencilled=0 paid=160000 owed=105000 expenses=6 expTotal=56000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=false names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Booking deleted
+PASS  Edit/cancel/delete: no crash
+
+== Settings: your work ==
+      data: gigs=10 cancelled=1 pencilled=0 paid=160000 owed=105000 expenses=6 expTotal=56000 clients=7 currency=EUR accent=indigo mode=light profession=dj terms=0 notify=true logo=false backup=false names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Job changed to DJ
+PASS  Custom tab name used
+PASS  Tab name back to default
+
+== Settings: look ==
+      data: gigs=10 cancelled=1 pencilled=0 paid=160000 owed=105000 expenses=6 expTotal=56000 clients=7 currency=EUR accent=gold mode=light profession=singer terms=0 notify=true logo=false backup=false names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  All 7 colours selectable
+PASS  Colours: no crash
+      data: gigs=10 cancelled=1 pencilled=0 paid=160000 owed=105000 expenses=6 expTotal=56000 clients=7 currency=EUR accent=gold mode=dark profession=singer terms=0 notify=true logo=false backup=false names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Dark mode
+      data: gigs=10 cancelled=1 pencilled=0 paid=160000 owed=105000 expenses=6 expTotal=56000 clients=7 currency=EUR accent=gold mode=phone profession=singer terms=0 notify=true logo=false backup=false names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Same as phone mode
+      data: gigs=10 cancelled=1 pencilled=0 paid=160000 owed=105000 expenses=6 expTotal=56000 clients=7 currency=EUR accent=gold mode=light profession=singer terms=0 notify=true logo=false backup=false names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Light mode
+PASS  Currency change shows £
+      data: gigs=10 cancelled=1 pencilled=0 paid=160000 owed=105000 expenses=6 expTotal=56000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=false names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Currency back to euro
+PASS  Look: no crash
+
+== Settings: logo ==
+      data: gigs=10 cancelled=1 pencilled=0 paid=160000 owed=105000 expenses=6 expTotal=56000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=true backup=false names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Logo added from phone's files
+      data: gigs=10 cancelled=1 pencilled=0 paid=160000 owed=105000 expenses=6 expTotal=56000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=false names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Logo removed
+
+== Settings: email sign-in buttons and choice ==
+PASS  Sign in with Google opens Google (opened com.google.android.gms/)
+PASS  Sign in with Microsoft opens Microsoft (opened com.android.chrome/)
+PASS  Email choice Outlook changes button
+PASS  Email choice Ask each time
+PASS  Email choice Gmail
+
+== Settings: invoices, payment terms, reminders ==
+      data: gigs=10 cancelled=1 pencilled=0 paid=160000 owed=105000 expenses=6 expTotal=56000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=7 notify=true logo=false backup=false names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Payment terms saved (7 days)
+PASS  New booking due date uses 7-day terms
+      data: gigs=10 cancelled=1 pencilled=0 paid=160000 owed=105000 expenses=6 expTotal=56000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=false names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Payment terms back to 0
+      data: gigs=10 cancelled=1 pencilled=0 paid=160000 owed=105000 expenses=6 expTotal=56000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=false logo=false backup=false names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Reminders switched off
+      data: gigs=10 cancelled=1 pencilled=0 paid=160000 owed=105000 expenses=6 expTotal=56000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=false names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Reminders switched on
+PASS  Reminder time changed
+PASS  Reminders now shows notifications (8)
+PASS  Reminders: no crash
+
+== Settings: backup, restore, export ==
+      data: gigs=10 cancelled=1 pencilled=0 paid=160000 owed=105000 expenses=6 expTotal=56000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=true names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Backup file chosen and written
+PASS  Back up now: no crash
+PASS  Backup status shown
+PASS  Restore asks to confirm
+      data: gigs=10 cancelled=1 pencilled=0 paid=160000 owed=105000 expenses=6 expTotal=56000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=true names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Restore keeps all data
+PASS  Export bookings CSV saved
+PASS  Export expenses CSV saved
+PASS  Backup/export: no crash
+
+== Notifications, widget ==
+PASS  Tapping a reminder opens OutRo
+PASS  Widget update: no crash
+
+== Done ==
+PASS  Whole run: no crash
+
+TOTAL: 141 passed, 0 failed
