@@ -9,7 +9,9 @@ def nodes():
     xml = adb("cat", "/sdcard/ui.xml")
     out = []
     for m in re.finditer(r'<node ([^>]*?)/?>', xml):
-        attrs = dict(re.findall(r'([\w-]+)="([^"]*)"', m.group(1)))
+        # Android writes attributes in "double" quotes, or 'single' quotes when the text itself contains "
+        attrs = {k: (a if a != "" or b == "" else b) for k, a, b in
+                 re.findall(r'([\w-]+)=(?:"([^"]*)"|\'([^\']*)\')', m.group(1))}
         b = re.match(r'\[(\d+),(\d+)\]\[(\d+),(\d+)\]', attrs.get("bounds", ""))
         if not b:
             continue
@@ -26,18 +28,22 @@ def match(n, text, field="text"):
         return v == text[1:]
     return text.lower() in v.lower()
 
-def swipe():
-    adb("input", "swipe", "540", "1700", "540", "800", "400")
+def swipe(up=False):
+    if up:
+        adb("input", "swipe", "540", "800", "540", "1700", "400")
+    else:
+        adb("input", "swipe", "540", "1700", "540", "800", "400")
     time.sleep(1)
 
 def find(text, scroll=0, field="text", nth=0):
+    """scroll > 0 swipes down the page to look further; scroll < 0 swipes up (e.g. in a dropdown list)."""
     time.sleep(0.8)  # let the screen settle after the last tap
-    for attempt in range(scroll + 1):
+    for attempt in range(abs(scroll) + 1):
         hits = [n for n in nodes() if match(n, text, field) and n["h"] > 0]
         if len(hits) > nth:
             return hits[nth]
-        if attempt < scroll:
-            swipe()
+        if attempt < abs(scroll):
+            swipe(up=scroll < 0)
     return None
 
 def tap(text, scroll=0, field="text", nth=0):

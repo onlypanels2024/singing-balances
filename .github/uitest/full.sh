@@ -51,7 +51,7 @@ $UI tap "Photographer" > /dev/null
 $UI tap "=Outlook" 3 > /dev/null; check "Email choice Outlook selectable" "Ask each time"
 $UI tapdesc "Teal" 3 > /dev/null; nocrash "Colour swatch on welcome"
 $UI fill "Your name or business name" "Test User" 3 > /dev/null
-$UI tap "US dollar" 3 > /dev/null || $UI tap "Euro (" 3 > /dev/null; sleep 1; $UI tap "British pound" > /dev/null || adb shell input keyevent 4
+$UI tap "US dollar" 3 > /dev/null || $UI tap "Euro (" 3 > /dev/null; sleep 1; $UI tap "British pound" -3 > /dev/null || adb shell input keyevent 4
 check "Currency picked on welcome" "British pound" 3
 $UI tap "Get started" 4
 check "Get started opens home" "Still owed to you"
@@ -239,7 +239,7 @@ $UI tapdesc "Indigo" 2 > /dev/null
 $UI tap "Euro (" 2 > /dev/null; $UI tap "British pound" 2 > /dev/null
 adb shell input keyevent 4; sleep 1; main --es page gigs --es gigsTab unpaid
 check "Currency change shows £" "£1,050.00"
-settings; $UI tap "British pound" 2 > /dev/null; $UI tap "Euro (" 0 > /dev/null || $UI tap "Euro (" 3 > /dev/null; adb shell input keyevent 4; sleep 1
+settings; $UI tap "British pound" 2 > /dev/null; sleep 1; $UI tap "Euro (" -3 > /dev/null; adb shell input keyevent 4; sleep 1
 dcheck "Currency back to euro" "currency=EUR"
 nocrash "Look"
 
