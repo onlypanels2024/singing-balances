@@ -250,7 +250,7 @@ final class Forms {
      */
     static void composeEmail(Activity a, String to, String subject, String body, java.io.File pdf, Runnable useEmailApp) {
         LinearLayout form = Ui.vbox(a, 20);
-        form.addView(Ui.text(a, "From " + GoogleAccount.email(a), 13, Ui.GREY, false));
+        form.addView(Ui.text(a, "From " + Mail.email(a) + " (" + Mail.service(a) + ")", 13, Ui.GREY, false));
         EditText toField = Ui.field(form, "To", to, EMAIL);
         EditText subj = Ui.field(form, "Subject", subject, TEXT_SENTENCE);
         EditText msg = Ui.field(form, "Message", body, NOTES);
@@ -284,14 +284,14 @@ final class Forms {
 
     private static void sendNow(Activity a, String to, String subject, String body, java.io.File pdf,
                                 Runnable useEmailApp, boolean firstTry) {
-        GoogleAccount.authorize(a, true, new GoogleAccount.TokenCallback() {
+        Mail.authorize(a, new GoogleAccount.TokenCallback() {
             @Override
             public void ok(String token) {
                 new Thread(() -> {
                     String err = null;
                     boolean expired = false;
                     try {
-                        GmailSender.send(token, to, subject, body, pdf);
+                        Mail.send(a, token, to, subject, body, pdf);
                     } catch (GmailSender.AuthExpired e) {
                         expired = true;
                     } catch (Exception e) {
@@ -303,10 +303,10 @@ final class Forms {
                         if (fExpired && firstTry) {
                             sendNow(a, to, subject, body, pdf, useEmailApp, false);
                         } else if (fErr == null && !fExpired) {
-                            android.widget.Toast.makeText(a, "Sent ✓  A copy is in your Gmail Sent folder.",
+                            android.widget.Toast.makeText(a, "Sent ✓  A copy is in your " + Mail.service(a) + " Sent folder.",
                                     android.widget.Toast.LENGTH_LONG).show();
                         } else {
-                            failed(a, fExpired ? "Google sign-in expired." : fErr, useEmailApp);
+                            failed(a, fExpired ? Mail.service(a) + " sign-in expired." : fErr, useEmailApp);
                         }
                     });
                 }).start();

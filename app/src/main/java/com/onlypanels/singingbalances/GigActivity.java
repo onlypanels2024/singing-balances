@@ -107,12 +107,12 @@ public class GigActivity extends Activity {
                     action("Mark as confirmed", Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> setStatus(Gig.CONFIRMED));
                 }
             }
-            String via = GoogleAccount.isConnected(this) ? "" 
+            String via = Mail.isConnected(this) ? "" 
                     : Google.emailAppName(this).isEmpty() ? " by email" : " via " + Google.emailAppName(this);
             action(g.invoiceNo.isEmpty() ? "Send invoice (PDF)" + via : "Send invoice " + g.invoiceNo + via,
                     Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> Google.emailInvoice(this, g));
             if (g.isOwed()) {
-                action("Email payment reminder" + (GoogleAccount.isConnected(this) || Google.emailAppName(this).isEmpty()
+                action("Email payment reminder" + (Mail.isConnected(this) || Google.emailAppName(this).isEmpty()
                         ? "" : " (" + Google.emailAppName(this) + ")"), Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> Google.emailReminder(this, g));
                 action("Add chase-up to Google Calendar", Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> Google.calendarChase(this, g));
             }

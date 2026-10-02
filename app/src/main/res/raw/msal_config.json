@@ -1,0 +1,16 @@
+{
+  "client_id": "84aee170-c859-438f-8b91-c1747b4ebd35",
+  "authorization_user_agent": "DEFAULT",
+  "redirect_uri": "msauth://com.onlypanels.singingbalances/4Y%2Banr53U%2Fy8bSlzpzy%2FMWNi4vs%3D",
+  "account_mode": "SINGLE",
+  "broker_redirect_uri_registered": true,
+  "authorities": [
+    {
+      "type": "AAD",
+      "audience": {
+        "type": "AzureADandPersonalMicrosoftAccount",
+        "tenant_id": "common"
+      }
+    }
+  ]
+}

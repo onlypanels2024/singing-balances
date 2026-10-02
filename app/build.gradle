@@ -51,4 +51,6 @@ android {
 dependencies {
     // Google sign-in, used only to send invoices and reminders from the user's own Gmail
     implementation 'com.google.android.gms:play-services-auth:21.2.0'
+    // Microsoft sign-in, used only to send invoices and reminders from the user's own Outlook / Hotmail
+    implementation 'com.microsoft.identity.client:msal:8.+'
 }

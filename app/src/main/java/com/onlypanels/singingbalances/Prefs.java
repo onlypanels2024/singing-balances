@@ -34,6 +34,7 @@ final class Prefs {
     static final String ACCENT = "accent";
     static final String THEME_MODE = "theme_mode";
     static final String EMAIL_APP = "email_app";  // gmail, outlook or ask
+    static final String MS_EMAIL = "ms_email";         // signed-in Microsoft account that OutRo sends from
     static final String GOOGLE_EMAIL = "google_email"; // signed-in Google account that OutRo sends from
 
     /**

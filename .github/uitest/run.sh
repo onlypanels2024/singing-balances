@@ -95,12 +95,19 @@ $UI tap "Send invoice";                       shot ask-send-invoice; back; back
 seeder --es task look --es email gmail --es google -
 adb shell am start -W -n $PKG/.SettingsActivity > /dev/null; $UI tap "Send straight from OutRo" 6; shot google-settings-signed-out; texts google-settings-signed-out
 $UI tap "Sign in with Google";                shot google-signin-tap; sleep 3; shot google-signin-tap-2; back; back; back
+adb shell am start -W -n $PKG/.SettingsActivity > /dev/null; $UI tap "Send straight from OutRo" 6
+$UI tap "Sign in with Microsoft";             sleep 6; shot ms-signin-tap; texts ms-signin-tap; sleep 6; shot ms-signin-tap-2; texts ms-signin-tap-2; back; back; back
 seeder --es task look --es google maria.sings@gmail.com
 adb shell am start -W -n $PKG/.SettingsActivity > /dev/null; $UI tap "Send straight from OutRo" 6; shot google-settings-signed-in; back
 adb shell am start -W -n $PKG/.GigActivity --el id 4 > /dev/null; shot google-gig-4; texts google-gig-4
 $UI tap "Send invoice";                       shot google-compose; texts google-compose
 $UI tap "=SEND";                              sleep 4; shot google-after-send; texts google-after-send; back; back; back
-seeder --es task look --es google -
+seeder --es task look --es google - --es microsoft maria.sings@outlook.com
+adb shell am start -W -n $PKG/.SettingsActivity > /dev/null; $UI tap "Send straight from OutRo" 6; shot ms-settings-signed-in; back
+adb shell am start -W -n $PKG/.GigActivity --el id 4 > /dev/null
+$UI tap "Send invoice";                       shot ms-compose; texts ms-compose
+$UI tap "=SEND";                              sleep 8; shot ms-after-send; texts ms-after-send; back; back; back
+seeder --es task look --es microsoft -
 
 # ---- 5. Existing user upgrading (your phone): data kept, purple, "Singing", euro, no welcome screen ----
 seeder --es task migrate

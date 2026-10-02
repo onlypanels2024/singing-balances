@@ -95,7 +95,7 @@ final class Google {
             Toast.makeText(a, "Couldn't make the invoice: " + e.getMessage(), Toast.LENGTH_LONG).show();
             return;
         }
-        if (GoogleAccount.isConnected(a)) {
+        if (Mail.isConnected(a)) {
             Forms.composeEmail(a, g.email, subject, body, pdf, () -> openInEmailApp(a, g, subject, body, pdf));
             return;
         }

@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
@@ -45,6 +46,21 @@
             android:label="Settings"
             android:windowSoftInputMode="adjustResize"
             android:parentActivityName=".MainActivity" />
+
+        <!-- Microsoft sign-in returns here after the user approves OutRo -->
+        <activity
+            android:name="com.microsoft.identity.client.BrowserTabActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:host="com.onlypanels.singingbalances"
+                    android:path="/4Y+anr53U/y8bSlzpzy/MWNi4vs="
+                    android:scheme="msauth" />
+            </intent-filter>
+        </activity>
 
         <provider
             android:name=".ShareProvider"

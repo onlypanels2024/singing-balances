@@ -146,18 +146,20 @@ public class SettingsActivity extends Activity {
         TextView signTitle = Ui.text(this, "Send straight from OutRo", 15, Ui.DARK, true);
         signTitle.setPadding(0, Ui.dp(this, 10), 0, 0);
         f.addView(signTitle);
-        if (GoogleAccount.isConnected(this)) {
-            f.addView(Ui.text(this, "Signed in as " + GoogleAccount.email(this) + ". Invoices and reminders are sent "
-                    + "from this Gmail address – you see a preview first, and a copy lands in your Sent folder.",
+        if (Mail.isConnected(this)) {
+            f.addView(Ui.text(this, "Signed in as " + Mail.email(this) + " (" + Mail.service(this) + "). Invoices and "
+                    + "reminders are sent from this address – you see a preview first, and a copy lands in your Sent folder.",
                     13, Ui.GREY, false));
-            Button out = Ui.quiet(this, "Sign out of Google");
-            out.setOnClickListener(v -> GoogleAccount.signOut(this, this::recreate));
+            Button out = Ui.quiet(this, "Sign out of " + (Mail.isMicrosoft(this) ? "Microsoft" : "Google"));
+            out.setOnClickListener(v -> {
+                if (Mail.isMicrosoft(this)) MicrosoftAccount.signOut(this, this::recreate);
+                else GoogleAccount.signOut(this, this::recreate);
+            });
             f.addView(out);
         } else {
-            f.addView(Ui.text(this, "Sign in once and OutRo sends invoices and reminders from your own Gmail address, "
+            f.addView(Ui.text(this, "Sign in once and OutRo sends invoices and reminders from your own email address, "
                     + "without opening another app. OutRo can only send – it can't read your emails.", 13, Ui.GREY, false));
-            Button in = Ui.primary(this, "Sign in with Google");
-            in.setOnClickListener(v -> GoogleAccount.authorize(this, true, new GoogleAccount.TokenCallback() {
+            GoogleAccount.TokenCallback signedIn = new GoogleAccount.TokenCallback() {
                 @Override
                 public void ok(String token) {
                     Toast.makeText(SettingsActivity.this, "Signed in ✓", Toast.LENGTH_SHORT).show();
@@ -168,10 +170,15 @@ public class SettingsActivity extends Activity {
                 public void fail(String reason) {
                     Toast.makeText(SettingsActivity.this, reason, Toast.LENGTH_LONG).show();
                 }
-            }));
+            };
+            Button in = Ui.primary(this, "Sign in with Google (Gmail)");
+            in.setOnClickListener(v -> GoogleAccount.authorize(this, true, signedIn));
             f.addView(in);
+            Button ms = Ui.primary(this, "Sign in with Microsoft (Outlook, Hotmail)");
+            ms.setOnClickListener(v -> MicrosoftAccount.authorize(this, true, signedIn));
+            f.addView(ms);
         }
-        f.addView(Ui.label(this, GoogleAccount.isConnected(this)
+        f.addView(Ui.label(this, Mail.isConnected(this)
                 ? "If you choose \"Use email app\", open it in" : "Otherwise, open emails in"));
         String[][] apps = new String[3][];
         for (int i = 0; i < 3; i++) apps[i] = new String[]{Google.EMAIL_KEYS[i], Google.EMAIL_NAMES[i]};
