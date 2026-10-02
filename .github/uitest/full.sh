@@ -33,7 +33,9 @@ YEAR=$(date +%Y); LASTYEAR=$((YEAR-1))
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 adb shell pm grant $PKG android.permission.POST_NOTIFICATIONS
 # No on-screen keyboard (typing still works) so it never hides buttons
-adb shell ime disable com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME > /dev/null 2>&1
+for ime in $(adb shell ime list -s | tr -d '\r'); do adb shell ime disable "$ime" > /dev/null 2>&1; done
+adb shell settings put secure show_ime_with_hard_keyboard 0
+echo "keyboards still on: $(adb shell ime list -s | tr -d '\r' | tr '\n' ' ')" >> $R
 adb logcat -b crash -c; CR=0
 
 # ====================================================================
@@ -60,6 +62,7 @@ shot welcome-done
 
 # ====================================================================
 section "Sample data loaded"
+adb shell am force-stop $PKG
 seeder --es task seed
 main --es page gigs --es gigsTab unpaid
 dcheck "Sample data in place" "gigs=10 cancelled=1 pencilled=1 paid=120000 owed=145000 expenses=5 expTotal=55000 clients=6"
@@ -251,7 +254,7 @@ adb push /tmp/test-logo.png /sdcard/Download/test-logo.png > /dev/null
 adb shell am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file:///sdcard/Download/test-logo.png > /dev/null
 settings
 $UI tap "Add your logo" 4 > /dev/null; sleep 2; shot logo-picker
-$UI tap "test-logo" > /dev/null || { $UI tapdesc "Show roots" > /dev/null; $UI tap "=Downloads" > /dev/null; $UI tap "test-logo" > /dev/null; }
+$UI tap "test-logo" > /dev/null || $UI tapdesc "test-logo" > /dev/null || { $UI tapdesc "Show roots" > /dev/null; $UI tap "=Downloads" > /dev/null; $UI tap "test-logo" > /dev/null || $UI tapdesc "test-logo" > /dev/null; }
 sleep 2; backto "YOUR WORK"
 dcheck "Logo added from phone's files" "logo=true"
 $UI tap "Remove logo" 4 > /dev/null
