@@ -436,7 +436,8 @@ final class Db extends SQLiteOpenHelper {
         }
         JSONObject settings = new JSONObject();
         for (Map.Entry<String, ?> e : Prefs.sp(app).getAll().entrySet()) {
-            if (Prefs.BACKUP_URI.equals(e.getKey()) || e.getKey().startsWith("backup_")) continue;
+            if (Prefs.BACKUP_URI.equals(e.getKey()) || e.getKey().startsWith("backup_")
+                    || Prefs.GOOGLE_EMAIL.equals(e.getKey())) continue; // sign-ins belong to one phone
             settings.put(e.getKey(), e.getValue());
         }
         root.put("settings", settings);

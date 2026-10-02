@@ -82,7 +82,7 @@ public class DemoSeeder extends BroadcastReceiver {
     /** Switch the look: --es profession photographer --es accent teal --es mode dark --es currency GBP --es tab "" */
     private static void look(Context c, Intent i) {
         String[][] map = {{"profession", Prefs.PROFESSION}, {"accent", Prefs.ACCENT}, {"mode", Prefs.THEME_MODE},
-                {"currency", Prefs.CURRENCY}, {"tab", Prefs.TAB_TITLE}, {"email", Prefs.EMAIL_APP}};
+                {"currency", Prefs.CURRENCY}, {"tab", Prefs.TAB_TITLE}, {"email", Prefs.EMAIL_APP}, {"google", Prefs.GOOGLE_EMAIL}};
         for (String[] m : map) {
             String v = i.getStringExtra(m[0]);
             if (v != null) Prefs.set(c, m[1], v.equals("-") ? "" : v);

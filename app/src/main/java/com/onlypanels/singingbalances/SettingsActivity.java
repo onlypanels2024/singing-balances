@@ -142,9 +142,37 @@ public class SettingsActivity extends Activity {
         showLogo();
 
         // ---- Email ----
-        f = group(page, "Email", "Which app opens when you send an invoice or a payment reminder. "
-                + "You always see the email first and tap Send yourself.");
-        f.addView(Ui.label(this, "Send emails with"));
+        f = group(page, "Email", null);
+        TextView signTitle = Ui.text(this, "Send straight from OutRo", 15, Ui.DARK, true);
+        signTitle.setPadding(0, Ui.dp(this, 10), 0, 0);
+        f.addView(signTitle);
+        if (GoogleAccount.isConnected(this)) {
+            f.addView(Ui.text(this, "Signed in as " + GoogleAccount.email(this) + ". Invoices and reminders are sent "
+                    + "from this Gmail address – you see a preview first, and a copy lands in your Sent folder.",
+                    13, Ui.GREY, false));
+            Button out = Ui.quiet(this, "Sign out of Google");
+            out.setOnClickListener(v -> GoogleAccount.signOut(this, this::recreate));
+            f.addView(out);
+        } else {
+            f.addView(Ui.text(this, "Sign in once and OutRo sends invoices and reminders from your own Gmail address, "
+                    + "without opening another app. OutRo can only send – it can't read your emails.", 13, Ui.GREY, false));
+            Button in = Ui.primary(this, "Sign in with Google");
+            in.setOnClickListener(v -> GoogleAccount.authorize(this, true, new GoogleAccount.TokenCallback() {
+                @Override
+                public void ok(String token) {
+                    Toast.makeText(SettingsActivity.this, "Signed in ✓", Toast.LENGTH_SHORT).show();
+                    recreate();
+                }
+
+                @Override
+                public void fail(String reason) {
+                    Toast.makeText(SettingsActivity.this, reason, Toast.LENGTH_LONG).show();
+                }
+            }));
+            f.addView(in);
+        }
+        f.addView(Ui.label(this, GoogleAccount.isConnected(this)
+                ? "If you choose \"Use email app\", open it in" : "Otherwise, open emails in"));
         String[][] apps = new String[3][];
         for (int i = 0; i < 3; i++) apps[i] = new String[]{Google.EMAIL_KEYS[i], Google.EMAIL_NAMES[i]};
         LinearLayout emailBar = Ui.segmented(this, apps, Google.emailChoice(this), key -> {
@@ -365,6 +393,7 @@ public class SettingsActivity extends Activity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        if (GoogleAccount.handleResult(this, requestCode, resultCode, data)) return;
         if (resultCode != RESULT_OK || data == null || data.getData() == null) return;
         Uri uri = data.getData();
         switch (requestCode) {

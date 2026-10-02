@@ -107,11 +107,13 @@ public class GigActivity extends Activity {
                     action("Mark as confirmed", Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> setStatus(Gig.CONFIRMED));
                 }
             }
-            String via = Google.emailAppName(this).isEmpty() ? " by email" : " via " + Google.emailAppName(this);
+            String via = GoogleAccount.isConnected(this) ? "" 
+                    : Google.emailAppName(this).isEmpty() ? " by email" : " via " + Google.emailAppName(this);
             action(g.invoiceNo.isEmpty() ? "Send invoice (PDF)" + via : "Send invoice " + g.invoiceNo + via,
                     Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> Google.emailInvoice(this, g));
             if (g.isOwed()) {
-                action("Email payment reminder" + (Google.emailAppName(this).isEmpty() ? "" : " (" + Google.emailAppName(this) + ")"), Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> Google.emailReminder(this, g));
+                action("Email payment reminder" + (GoogleAccount.isConnected(this) || Google.emailAppName(this).isEmpty()
+                        ? "" : " (" + Google.emailAppName(this) + ")"), Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> Google.emailReminder(this, g));
                 action("Add chase-up to Google Calendar", Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> Google.calendarChase(this, g));
             }
             if (!Prefs.hasPaymentDetails(this) && !g.isPaid()) {
@@ -181,6 +183,12 @@ public class GigActivity extends Activity {
         gig.status = status;
         Db.get(this).save(gig);
         render();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, android.content.Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        GoogleAccount.handleResult(this, requestCode, resultCode, data);
     }
 
     @Override

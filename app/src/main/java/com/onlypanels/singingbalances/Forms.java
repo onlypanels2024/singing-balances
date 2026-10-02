@@ -244,6 +244,91 @@ final class Forms {
         dialog.show();
     }
 
+    /**
+     * Preview of an email OutRo is about to send from the signed-in Google account.
+     * Everything is editable; nothing goes until the user taps Send.
+     */
+    static void composeEmail(Activity a, String to, String subject, String body, java.io.File pdf, Runnable useEmailApp) {
+        LinearLayout form = Ui.vbox(a, 20);
+        form.addView(Ui.text(a, "From " + GoogleAccount.email(a), 13, Ui.GREY, false));
+        EditText toField = Ui.field(form, "To", to, EMAIL);
+        EditText subj = Ui.field(form, "Subject", subject, TEXT_SENTENCE);
+        EditText msg = Ui.field(form, "Message", body, NOTES);
+        msg.setMinLines(6);
+        msg.setGravity(android.view.Gravity.TOP | android.view.Gravity.START);
+        if (pdf != null) {
+            android.widget.TextView att = Ui.text(a, "📎  " + pdf.getName(), 14, Ui.PRIMARY, true);
+            att.setPadding(0, Ui.dp(a, 12), 0, 0);
+            form.addView(att);
+        }
+        AlertDialog dialog = new AlertDialog.Builder(a)
+                .setTitle("Send email")
+                .setView(wrap(form))
+                .setPositiveButton("Send", null)
+                .setNegativeButton("Cancel", null)
+                .setNeutralButton("Use email app", (d, w) -> useEmailApp.run())
+                .create();
+        dialog.setOnShowListener(x -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+            String t = toField.getText().toString().trim();
+            if (!t.matches("[^@\\s]+@[^@\\s]+\\.[^@\\s]+")) {
+                toField.setError("Enter the client's email address");
+                return;
+            }
+            dialog.dismiss();
+            String s = subj.getText().toString().trim(), b = msg.getText().toString();
+            android.widget.Toast.makeText(a, "Sending…", android.widget.Toast.LENGTH_SHORT).show();
+            sendNow(a, t, s, b, pdf, useEmailApp, true);
+        }));
+        dialog.show();
+    }
+
+    private static void sendNow(Activity a, String to, String subject, String body, java.io.File pdf,
+                                Runnable useEmailApp, boolean firstTry) {
+        GoogleAccount.authorize(a, true, new GoogleAccount.TokenCallback() {
+            @Override
+            public void ok(String token) {
+                new Thread(() -> {
+                    String err = null;
+                    boolean expired = false;
+                    try {
+                        GmailSender.send(token, to, subject, body, pdf);
+                    } catch (GmailSender.AuthExpired e) {
+                        expired = true;
+                    } catch (Exception e) {
+                        err = e.getMessage() == null ? "Couldn't send" : e.getMessage();
+                    }
+                    final String fErr = err;
+                    final boolean fExpired = expired;
+                    a.runOnUiThread(() -> {
+                        if (fExpired && firstTry) {
+                            sendNow(a, to, subject, body, pdf, useEmailApp, false);
+                        } else if (fErr == null && !fExpired) {
+                            android.widget.Toast.makeText(a, "Sent ✓  A copy is in your Gmail Sent folder.",
+                                    android.widget.Toast.LENGTH_LONG).show();
+                        } else {
+                            failed(a, fExpired ? "Google sign-in expired." : fErr, useEmailApp);
+                        }
+                    });
+                }).start();
+            }
+
+            @Override
+            public void fail(String reason) {
+                failed(a, reason, useEmailApp);
+            }
+        });
+    }
+
+    private static void failed(Activity a, String reason, Runnable useEmailApp) {
+        if (a.isFinishing()) return;
+        new AlertDialog.Builder(a)
+                .setTitle("Not sent")
+                .setMessage(reason + "\n\nNothing was sent. You can open it in your email app instead.")
+                .setPositiveButton("Use email app", (d, w) -> useEmailApp.run())
+                .setNegativeButton("Close", null)
+                .show();
+    }
+
     /** existing == null for a new client. */
     static void editClient(Activity a, Client existing, Saved onSaved, Runnable onDeleted) {
         final boolean isNew = existing == null || existing.id == 0;

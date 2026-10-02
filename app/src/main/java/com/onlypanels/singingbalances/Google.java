@@ -86,7 +86,7 @@ final class Google {
         return (g.event.isEmpty() ? "" : " at " + g.event) + " on " + Dates.fmt(g.gigDay);
     }
 
-    /** Email with the invoice PDF attached. */
+    /** Email with the invoice PDF attached: sent directly if signed in with Google, otherwise via an email app. */
     private static void sendWithInvoice(Activity a, Gig g, String subject, String body) {
         File pdf;
         try {
@@ -95,6 +95,14 @@ final class Google {
             Toast.makeText(a, "Couldn't make the invoice: " + e.getMessage(), Toast.LENGTH_LONG).show();
             return;
         }
+        if (GoogleAccount.isConnected(a)) {
+            Forms.composeEmail(a, g.email, subject, body, pdf, () -> openInEmailApp(a, g, subject, body, pdf));
+            return;
+        }
+        openInEmailApp(a, g, subject, body, pdf);
+    }
+
+    static void openInEmailApp(Activity a, Gig g, String subject, String body, File pdf) {
         Uri uri = ShareProvider.uriFor(pdf);
         Intent i = new Intent(Intent.ACTION_SEND);
         i.setType("application/pdf");
