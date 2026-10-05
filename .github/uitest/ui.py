@@ -6,7 +6,7 @@ def adb(*a):
 
 def nodes():
     ns = _nodes()
-    # A system "<app> isn't responding" box (not OutRo's) can cover the screen on the virtual phone: dismiss it
+    # A system "<app> isn't responding" box (not ShowFee's) can cover the screen on the virtual phone: dismiss it
     for n in ns:
         if "isn't responding" in n["text"] or "isn’t responding" in n["text"]:
             for m in ns:

@@ -14,8 +14,8 @@ import com.google.android.gms.common.api.Scope;
 import java.util.Arrays;
 
 /**
- * "Sign in with Google" so OutRo can send emails from the user's own Gmail address.
- * Only the permission to SEND email is requested – OutRo can't read anyone's inbox.
+ * "Sign in with Google" so ShowFee can send emails from the user's own Gmail address.
+ * Only the permission to SEND email is requested – ShowFee can't read anyone's inbox.
  * Nothing is stored except the email address, for display; Google hands out a fresh
  * short-lived key each time something is sent.
  */
@@ -101,7 +101,7 @@ final class GoogleAccount {
         Prefs.set(a, Prefs.GOOGLE_EMAIL, email);
     }
 
-    /** Disconnects OutRo from the Google account (removes its permission to send). */
+    /** Disconnects ShowFee from the Google account (removes its permission to send). */
     static void signOut(Activity a, Runnable done) {
         Prefs.set(a, Prefs.GOOGLE_EMAIL, "");
         GoogleSignInOptions o = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).requestEmail().build();
@@ -111,7 +111,7 @@ final class GoogleAccount {
     private static String friendly(Exception e) {
         String m = e.getMessage() == null ? "" : e.getMessage();
         if (m.contains("10:") || m.contains("DEVELOPER_ERROR")) {
-            return "Google didn't recognise this copy of OutRo (setup mismatch). Use your email app for now.";
+            return "Google didn't recognise this copy of ShowFee (setup mismatch). Use your email app for now.";
         }
         if (m.contains("7:") || m.toLowerCase().contains("network")) return "No internet connection.";
         return m.isEmpty() ? "Google sign-in failed." : m;

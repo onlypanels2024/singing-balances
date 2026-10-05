@@ -246,7 +246,7 @@ final class Forms {
     }
 
     /**
-     * Preview of an email OutRo is about to send from the signed-in Google account.
+     * Preview of an email ShowFee is about to send from the signed-in Google account.
      * Everything is editable; nothing goes until the user taps Send.
      */
     static void composeEmail(Activity a, String to, String subject, String body, java.io.File pdf, Runnable useEmailApp) {

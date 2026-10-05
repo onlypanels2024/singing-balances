@@ -233,7 +233,7 @@ settings
 for row in "Your work" "Appearance" "Business details" "Getting paid" "Email" "Reminders" "Backup & export"; do
   check "Menu row: $row" "$row" 2
 done
-for pair in "Your work:Choose what you do" "Appearance:Pick a colour" "Business details:Shown on your invoices" "Getting paid:How clients pay you" "Email:Send straight from OutRo" "Reminders:Remind me at" "Backup & export:Choose a backup file"; do
+for pair in "Your work:Choose what you do" "Appearance:Pick a colour" "Business details:Shown on your invoices" "Getting paid:How clients pay you" "Email:Send straight from ShowFee" "Reminders:Remind me at" "Backup & export:Choose a backup file"; do
   settings; $UI tap "${pair%%:*}" 2 > /dev/null; check "Menu row opens page: ${pair%%:*}" "${pair##*:}"
 done
 settings; check "Menu shows summaries" "Daily at" 2
@@ -286,9 +286,9 @@ dcheck "Logo removed" "logo=false"
 
 section "Settings: email sign-in buttons and choice"
 settings email
-$UI tap "Sign in with Google" 2 > /dev/null; sleep 3; left "Sign in with Google opens Google"; backto "Send straight from OutRo"
+$UI tap "Sign in with Google" 2 > /dev/null; sleep 3; left "Sign in with Google opens Google"; backto "Send straight from ShowFee"
 settings email
-$UI tap "Sign in with Microsoft" 2 > /dev/null; sleep 5; left "Sign in with Microsoft opens Microsoft"; backto "Send straight from OutRo"
+$UI tap "Sign in with Microsoft" 2 > /dev/null; sleep 5; left "Sign in with Microsoft opens Microsoft"; backto "Send straight from ShowFee"
 settings email
 $UI tap "=Outlook" 2 > /dev/null; gig 4; check "Email choice Outlook changes button" "via Outlook"
 settings email; $UI tap "Ask each time" 2 > /dev/null; gig 4; check "Email choice Ask each time" "by email"
@@ -326,16 +326,16 @@ dcheck "Backup file chosen and written" "backup=true"
 settings backup; $UI tap "Back up now" 2 > /dev/null; sleep 3; nocrash "Back up now"
 check "Backup status shown" "ackup" 2
 settings backup; $UI tap "Restore from a backup file" 2 > /dev/null; sleep 2; shot restore-picker
-$UI tap "backup.json" > /dev/null || $UI tap "OutRo-backup" > /dev/null || { $UI tapdesc "Show roots" > /dev/null; $UI tap "=Downloads" > /dev/null; $UI tap "backup" > /dev/null; }
+$UI tap "backup.json" > /dev/null || $UI tap "ShowFee-backup" > /dev/null || { $UI tapdesc "Show roots" > /dev/null; $UI tap "=Downloads" > /dev/null; $UI tap "backup" > /dev/null; }
 sleep 2; check "Restore asks to confirm" "Restore this backup?"
 $UI tap "=RESTORE" > /dev/null; sleep 2
 dcheck "Restore keeps all data" "gigs=11 "
 settings backup; $UI tap "Export bookings" 3 > /dev/null; sleep 2; $UI tap "=SAVE" > /dev/null || $UI tap "=Save" > /dev/null; sleep 2; backto "Backup (Google Drive)"
 settings backup; $UI tap "Export expenses" 3 > /dev/null; sleep 2; $UI tap "=SAVE" > /dev/null || $UI tap "=Save" > /dev/null; sleep 2; backto "Backup (Google Drive)"
 adb shell ls -R /sdcard/Download /sdcard/Documents 2>/dev/null > $OUT/files-list.txt
-grep -q "outro-gigs" $OUT/files-list.txt && ok "Export bookings CSV saved" || bad "Export bookings CSV saved"
-grep -q "outro-expenses" $OUT/files-list.txt && ok "Export expenses CSV saved" || bad "Export expenses CSV saved"
-for f in $(grep -oE "outro-(gigs|expenses)-[0-9-]+\.csv" $OUT/files-list.txt | sort -u); do
+grep -q "showfee-gigs" $OUT/files-list.txt && ok "Export bookings CSV saved" || bad "Export bookings CSV saved"
+grep -q "showfee-expenses" $OUT/files-list.txt && ok "Export expenses CSV saved" || bad "Export expenses CSV saved"
+for f in $(grep -oE "showfee-(gigs|expenses)-[0-9-]+\.csv" $OUT/files-list.txt | sort -u); do
   adb pull "$(adb shell find /sdcard -name "$f" 2>/dev/null | head -1 | tr -d '\r')" $OUT/ > /dev/null 2>&1; done
 nocrash "Backup/export"
 
@@ -343,7 +343,7 @@ section "Notifications, widget"
 seeder --es task notify
 adb shell cmd statusbar expand-notifications; sleep 2; shot notifications
 $UI tap "Did Joanna" > /dev/null || $UI tap "overdue" > /dev/null; sleep 2
-inapp && ok "Tapping a reminder opens OutRo" || bad "Tapping a reminder opens OutRo"
+inapp && ok "Tapping a reminder opens ShowFee" || bad "Tapping a reminder opens ShowFee"
 adb shell cmd statusbar collapse
 seeder --es task widget; nocrash "Widget update"
 

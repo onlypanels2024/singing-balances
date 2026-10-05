@@ -77,7 +77,7 @@ public class SettingsActivity extends Activity {
 
         // ---- Your work ----
         if (is(WORK)) {
-        f = group(page, null, "Choose what you do and OutRo uses your words everywhere.");
+        f = group(page, null, "Choose what you do and ShowFee uses your words everywhere.");
         f.addView(Ui.label(this, "What do you do?"));
         profession = new Spinner(this);
         ArrayAdapter<String> pa = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, Words.NAMES);
@@ -162,7 +162,7 @@ public class SettingsActivity extends Activity {
         // ---- Email ----
         if (is(EMAIL_S)) {
         f = group(page, null, null);
-        TextView signTitle = Ui.text(this, "Send straight from OutRo", 15, Ui.DARK, true);
+        TextView signTitle = Ui.text(this, "Send straight from ShowFee", 15, Ui.DARK, true);
         signTitle.setPadding(0, Ui.dp(this, 10), 0, 0);
         f.addView(signTitle);
         if (Mail.isConnected(this)) {
@@ -176,8 +176,8 @@ public class SettingsActivity extends Activity {
             });
             f.addView(out);
         } else {
-            f.addView(Ui.text(this, "Sign in once and OutRo sends invoices and reminders from your own email address, "
-                    + "without opening another app. OutRo can only send – it can't read your emails.", 13, Ui.GREY, false));
+            f.addView(Ui.text(this, "Sign in once and ShowFee sends invoices and reminders from your own email address, "
+                    + "without opening another app. ShowFee can only send – it can't read your emails.", 13, Ui.GREY, false));
             GoogleAccount.TokenCallback signedIn = new GoogleAccount.TokenCallback() {
                 @Override
                 public void ok(String token) {

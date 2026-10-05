@@ -21,7 +21,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * "Sign in with Microsoft" so OutRo can send emails from the user's own Outlook / Hotmail / Microsoft 365
+ * "Sign in with Microsoft" so ShowFee can send emails from the user's own Outlook / Hotmail / Microsoft 365
  * address. Only permission to SEND mail is requested. Microsoft's library keeps the sign-in on the phone.
  */
 final class MicrosoftAccount {
@@ -153,7 +153,7 @@ final class MicrosoftAccount {
         cb.ok(r.getAccessToken());
     }
 
-    /** Disconnects OutRo from the Microsoft account on this phone. */
+    /** Disconnects ShowFee from the Microsoft account on this phone. */
     static void signOut(Activity a, Runnable done) {
         Prefs.set(a, Prefs.MS_EMAIL, "");
         withApp(a, app -> app.signOut(new ISingleAccountPublicClientApplication.SignOutCallback() {

@@ -6,7 +6,7 @@ import android.content.Context;
 import java.io.File;
 import java.io.IOException;
 
-/** Whichever account the user signed in with (Google or Microsoft) – OutRo sends from that address. */
+/** Whichever account the user signed in with (Google or Microsoft) – ShowFee sends from that address. */
 final class Mail {
     private Mail() {}
 

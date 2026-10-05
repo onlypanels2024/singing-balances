@@ -35,8 +35,8 @@ final class Prefs {
     static final String THEME_MODE = "theme_mode";
     static final String EMAIL_APP = "email_app";  // gmail, outlook or ask
     static final String ASK_CALENDAR = "ask_calendar"; // offer "Add to calendar?" after each new booking
-    static final String MS_EMAIL = "ms_email";         // signed-in Microsoft account that OutRo sends from
-    static final String GOOGLE_EMAIL = "google_email"; // signed-in Google account that OutRo sends from
+    static final String MS_EMAIL = "ms_email";         // signed-in Microsoft account that ShowFee sends from
+    static final String GOOGLE_EMAIL = "google_email"; // signed-in Google account that ShowFee sends from
 
     /**
      * Existing users (who had the app before personalisation) keep exactly what they had:

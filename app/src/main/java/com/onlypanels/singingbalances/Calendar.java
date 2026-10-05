@@ -46,7 +46,7 @@ final class Calendar {
             new AlertDialog.Builder(a)
                     .setTitle("Sign in with Microsoft")
                     .setMessage("To add " + Words.many(a) + " straight to your Outlook calendar, sign in with your "
-                            + "Microsoft account (Outlook, Hotmail).\n\nOutRo will then also send your invoices and "
+                            + "Microsoft account (Outlook, Hotmail).\n\nShowFee will then also send your invoices and "
                             + "reminders from that Outlook address. You can change this in Settings › Email.")
                     .setPositiveButton("Sign in", (d, w) -> addToOutlook(a, g, true))
                     .setNegativeButton("Cancel", null)
