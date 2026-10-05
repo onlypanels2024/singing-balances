@@ -1,0 +1,14 @@
+Business details
+Shown on your invoices and emails.
+Your name / business name
+Maria Borg
+Your email
+maria.sings@example.com
+Your phone
++356 7900 1234
+Address (optional)
+12 Triq il-Kbira Sliema SLM 1234 Malta
+VAT / tax number (if you have one)
+Logo on invoices
+Change logo
+Remove logo

@@ -1,0 +1,19 @@
+Getting paid
+CURRENCY
+Euro (€)
+Changing currency only changes the symbol – amounts you've already logged aren't converted.
+HOW CLIENTS PAY YOU
+Added to invoices and payment reminders automatically.
+Account holder name (if different)
+IBAN / account number
+MT84 MALT 0110 0001 2345 MTLC AST0 01S
+BIC / SWIFT / sort code (optional)
+MALTMTMT
+Payment link or tag – Revolut, PayPal… (optional)
+@mariaborg
+INVOICES & PAYMENT TERMS
+Invoice number starts with
+INV-
+Next invoice number
+1
+Payment due (days after the booking) – 0 means paid on the night

@@ -1,0 +1,10 @@
+Backup & export
+BACKUP (GOOGLE DRIVE)
+Choose a backup file once – pick Google Drive in the file picker. After every change the app updates that file, so a lost or broken phone doesn't mean lost records.
+Not set up – your data is only on this phone.
+Choose backup file
+Back up now
+Restore from a backup file
+EXPORT TO SPREADSHEET
+Export bookings (CSV for Excel)
+Export expenses (CSV for Excel)

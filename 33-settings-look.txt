@@ -1,0 +1,7 @@
+Appearance
+Pick a colour and light or dark mode. Your invoices use the colour too.
+Colour
+Mode
+Light
+Dark
+Same as phone

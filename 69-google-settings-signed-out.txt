@@ -1,0 +1,10 @@
+Email
+Send straight from ShowFee
+Sign in once and ShowFee sends invoices and reminders from your own email address, without opening another app. ShowFee can only send – it can't read your emails.
+Sign in with Google (Gmail)
+Sign in with Microsoft (Outlook, Hotmail)
+Otherwise, open emails in
+Gmail
+Outlook
+Ask each time
+If the chosen app isn't on the phone, you'll be offered your other email apps. Calendar entries still go to Google Calendar.

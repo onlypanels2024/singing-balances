@@ -1,0 +1,13 @@
+Your work
+Choose what you do and ShowFee uses your words everywhere.
+What do you do?
+Singer
+Name of the first tab
+Bookings
+Word for one job
+booking
+Word for several
+bookings
+Description on invoices
+Live vocal performance
+Leave a box empty to use the suggestion shown in grey.

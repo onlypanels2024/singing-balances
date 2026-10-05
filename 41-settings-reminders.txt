@@ -1,0 +1,9 @@
+Reminders & calendar
+Daily reminders about bookings and late payments
+Remind me at
+10:00
+You'll get a heads-up on the day and the day before, a nudge the day after if it isn't marked paid, and a daily overdue total.
+Show today's reminders now
+CALENDAR
+Ask to add new bookings to your calendar
+After you save a new booking, choose Google Calendar (opens filled in – tap Save) or Outlook (added straight away when you're signed in with Microsoft).

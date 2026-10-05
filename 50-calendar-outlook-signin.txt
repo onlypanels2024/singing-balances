@@ -1,0 +1,19 @@
+New booking
+Client (who pays you) *
+Garden Party Ltd
+Client email (for invoices & reminders)
+Event / venue
+Summer garden party
+Booking date
+Mon 5 Oct 2026
+Start time
+20:00
+Booking
+Confirmed
+Fee (€) *
+350
+Payment due
+5 Oct 2026 (on the night)
+Notes (contact on the night, parking, special requests...)
+CANCEL
+SAVE
