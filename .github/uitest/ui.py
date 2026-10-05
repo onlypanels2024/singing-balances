@@ -29,11 +29,12 @@ def match(n, text, field="text"):
     return text.lower() in v.lower()
 
 def swipe(up=False):
+    # slow drag (no fling) so the page has stopped moving before we read it again
     if up:
-        adb("input", "swipe", "540", "800", "540", "1700", "400")
+        adb("input", "swipe", "540", "900", "540", "1500", "900")
     else:
-        adb("input", "swipe", "540", "1700", "540", "800", "400")
-    time.sleep(1)
+        adb("input", "swipe", "540", "1500", "540", "900", "900")
+    time.sleep(1.8)
 
 def find(text, scroll=0, field="text", nth=0):
     """scroll > 0 swipes down the page to look further; scroll < 0 swipes up (e.g. in a dropdown list)."""

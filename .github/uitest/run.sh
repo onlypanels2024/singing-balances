@@ -61,7 +61,8 @@ $UI tap "Add a client";                       shot form-client; back; back
 # Calendar prompt after saving a new booking
 main --es page gigs --es gigsTab upcoming
 $UI tap "Add a booking"
-$UI fill "Client (who pays you)" "Garden Party Ltd"; $UI fill "Event / venue" "Summer garden party"; $UI fill "Fee (" "350" 2
+$UI fill "Client (who pays you)" "Garden Party Ltd"; $UI fill "Event / venue" "Summer garden party"
+$UI tapafter "Start time"; $UI tap "=OK"; $UI fill "Fee (" "350" 2
 $UI tap "=SAVE" 2;                            shot calendar-prompt; texts calendar-prompt
 $UI tap "=OUTLOOK";                           shot calendar-outlook-signin; texts calendar-outlook-signin
 $UI tap "=CANCEL"
