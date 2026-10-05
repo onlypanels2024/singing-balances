@@ -5,6 +5,19 @@ def adb(*a):
     return subprocess.run(["adb", "shell", *a], capture_output=True, text=True).stdout
 
 def nodes():
+    ns = _nodes()
+    # A system "<app> isn't responding" box (not OutRo's) can cover the screen on the virtual phone: dismiss it
+    for n in ns:
+        if "isn't responding" in n["text"] or "isn’t responding" in n["text"]:
+            for m in ns:
+                if m["text"] in ("Wait", "Close app"):
+                    adb("input", "tap", str(m["x"]), str(m["y"]))
+                    print("dismissed a system 'not responding' box")
+                    time.sleep(1.5)
+                    return _nodes()
+    return ns
+
+def _nodes():
     adb("uiautomator", "dump", "/sdcard/ui.xml")
     xml = adb("cat", "/sdcard/ui.xml")
     out = []
