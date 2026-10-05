@@ -157,6 +157,7 @@ final class Forms {
             long id = db.save(g);
             dialog.dismiss();
             onSaved.onSaved(id);
+            if (isNew && !g.isCancelled() && Prefs.askCalendar(a)) Calendar.offer(a, g, true);
         }));
         dialog.show();
     }

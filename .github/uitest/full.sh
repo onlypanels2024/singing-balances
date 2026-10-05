@@ -100,6 +100,9 @@ $UI tapafter "Payment due" 2 > /dev/null; $UI tap "=OK" > /dev/null
 $UI fill "Notes" "Bring cables" 2 > /dev/null
 $UI tap "=SAVE" 2 > /dev/null
 nocheck "Form closes after saving" "New booking"
+check "Calendar prompt appears after a new booking" "Add to your calendar?"
+check "Calendar prompt offers Google and Outlook" "=OUTLOOK"
+$UI tap "=NOT NOW" > /dev/null; nocheck "Not now closes the prompt" "Add to your calendar?"
 dcheck "New booking saved" "gigs=11 cancelled=1 pencilled=2 .*Test Client"
 check "New booking appears in list" "Test Client" 4
 nocrash "Add a booking"
@@ -194,7 +197,10 @@ $UI fill "Amount (" "10" > /dev/null; $UI tap "=SAVE" > /dev/null
 dcheck "Booking expense saved" "expenses=6"
 check "Take-home shown" "Take-home from this booking" 4
 gig 6
-$UI tap "to Google Calendar" > /dev/null; left "Add booking to Google Calendar opens calendar"; backto "Fee to collect"
+$UI tap "Add to calendar" > /dev/null; check "Add to calendar asks which calendar" "=GOOGLE CALENDAR"
+$UI tap "=OUTLOOK" > /dev/null; check "Outlook without Microsoft sign-in explains it" "Sign in with Microsoft"
+$UI tap "=CANCEL" > /dev/null
+$UI tap "Add to calendar" > /dev/null; $UI tap "=GOOGLE CALENDAR" > /dev/null; left "Google Calendar opens with the booking"; backto "Fee to collect"
 gig 7
 $UI tap "Mark as confirmed" > /dev/null
 dcheck "Mark as confirmed" "pencilled=1 "
@@ -227,7 +233,7 @@ done
 for pair in "Your work:Choose what you do" "Appearance:Pick a colour" "Business details:Shown on your invoices" "Getting paid:How clients pay you" "Email:Send straight from OutRo" "Reminders:Remind me at" "Backup & export:Choose a backup file"; do
   settings; $UI tap "${pair%%:*}" 2 > /dev/null; check "Menu row opens page: ${pair%%:*}" "${pair##*:}"
 done
-check "Menu shows summaries" "Daily at" 2
+settings; check "Menu shows summaries" "Daily at" 2
 nocrash "Settings menu"
 
 section "Settings: your work"
@@ -303,6 +309,10 @@ settings reminders; $UI tap "=10:00" 1 > /dev/null; $UI tap "=18:00" > /dev/null
 $UI tap "Show today's reminders now" 2 > /dev/null; sleep 2
 N=$(adb shell dumpsys notification --noredact | grep -c "pkg=$PKG")
 [ "$N" -gt 0 ] && ok "Reminders now shows notifications ($N)" || bad "Reminders now shows notifications"
+settings reminders; $UI tap "Ask to add new" 3 > /dev/null; adb shell input keyevent 4; sleep 1
+main --es page gigs; $UI tap "Add a booking" > /dev/null; $UI fill "Client (who pays you)" "Prompt Off" > /dev/null; $UI fill "Fee (" "100" 2 > /dev/null; $UI tap "=SAVE" 2 > /dev/null
+nocheck "Calendar prompt can be switched off" "Add to your calendar?"
+settings reminders; $UI tap "Ask to add new" 3 > /dev/null; adb shell input keyevent 4; sleep 1
 nocrash "Reminders"
 
 section "Settings: backup, restore, export"
@@ -316,7 +326,7 @@ settings backup; $UI tap "Restore from a backup file" 2 > /dev/null; sleep 2; sh
 $UI tap "backup.json" > /dev/null || $UI tap "OutRo-backup" > /dev/null || { $UI tapdesc "Show roots" > /dev/null; $UI tap "=Downloads" > /dev/null; $UI tap "backup" > /dev/null; }
 sleep 2; check "Restore asks to confirm" "Restore this backup?"
 $UI tap "=RESTORE" > /dev/null; sleep 2
-dcheck "Restore keeps all data" "gigs=10 "
+dcheck "Restore keeps all data" "gigs=11 "
 settings backup; $UI tap "Export bookings" 3 > /dev/null; sleep 2; $UI tap "=SAVE" > /dev/null || $UI tap "=Save" > /dev/null; sleep 2; backto "Backup (Google Drive)"
 settings backup; $UI tap "Export expenses" 3 > /dev/null; sleep 2; $UI tap "=SAVE" > /dev/null || $UI tap "=Save" > /dev/null; sleep 2; backto "Backup (Google Drive)"
 adb shell ls -R /sdcard/Download /sdcard/Documents 2>/dev/null > $OUT/files-list.txt

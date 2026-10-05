@@ -102,7 +102,7 @@ public class GigActivity extends Activity {
                 });
             }
             if (g.isFuture()) {
-                action("Add " + Words.one(this) + " to Google Calendar", Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> Google.calendarGig(this, g));
+                action("Add to calendar", Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> Calendar.offer(this, g, false));
                 if (g.status == Gig.PENCILLED) {
                     action("Mark as confirmed", Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> setStatus(Gig.CONFIRMED));
                 }

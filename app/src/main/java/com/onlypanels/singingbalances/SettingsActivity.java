@@ -37,7 +37,7 @@ public class SettingsActivity extends Activity {
 
     private final Map<String, EditText> fields = new LinkedHashMap<>();
     private EditText terms, nextInvoice;
-    private Switch notify;
+    private Switch notify, askCal;
     private Spinner hour;
     private TextView backupStatus;
     private Spinner profession, currency;
@@ -268,6 +268,17 @@ public class SettingsActivity extends Activity {
                     Toast.LENGTH_SHORT).show();
         });
         f.addView(test);
+
+        f = group(page, "Calendar", null);
+        askCal = new Switch(this);
+        askCal.setText("Ask to add new " + Words.many(this) + " to your calendar");
+        askCal.setTextSize(15);
+        askCal.setTextColor(Ui.DARK);
+        askCal.setChecked(Prefs.askCalendar(this));
+        askCal.setPadding(0, Ui.dp(this, 12), 0, Ui.dp(this, 8));
+        f.addView(askCal);
+        f.addView(hint("After you save a new " + Words.one(this) + ", choose Google Calendar (opens filled in – tap Save) "
+                + "or Outlook (added straight away when you're signed in with Microsoft)."));
         }
 
         // ---- Backup & export ----
@@ -415,6 +426,7 @@ public class SettingsActivity extends Activity {
             ed.putInt(Prefs.NEXT_INVOICE, Math.max(1, n));
         }
         if (notify != null) ed.putBoolean(Prefs.NOTIFY, notify.isChecked());
+        if (askCal != null) ed.putBoolean(Prefs.ASK_CALENDAR, askCal.isChecked());
         if (hour != null) ed.putInt(Prefs.NOTIFY_HOUR, hour.getSelectedItemPosition() + 7);
         ed.apply();
         Nudges.schedule(this);
@@ -429,7 +441,7 @@ public class SettingsActivity extends Activity {
             case BUSINESS: return "Business details";
             case PAY: return "Getting paid";
             case EMAIL_S: return "Email";
-            case REMIND: return "Reminders";
+            case REMIND: return "Reminders & calendar";
             default: return "Backup & export";
         }
     }
@@ -465,8 +477,9 @@ public class SettingsActivity extends Activity {
                 EMAIL_S, true);
 
         g = menuGroup(page, "App");
-        menuRow(g, R.drawable.ic_set_bell, "Reminders",
-                Prefs.notify(this) ? "Daily at " + Dates.time(Prefs.notifyHour(this) * 60) : "Off", REMIND, false);
+        menuRow(g, R.drawable.ic_set_bell, "Reminders & calendar",
+                (Prefs.notify(this) ? "Daily at " + Dates.time(Prefs.notifyHour(this) * 60) : "Off")
+                        + (Prefs.askCalendar(this) ? " · calendar prompt on" : ""), REMIND, false);
         menuRow(g, R.drawable.ic_set_backup, "Backup & export",
                 Backup.isSetUp(this) ? "Backing up automatically" : "Not set up – your data is only on this phone", BACKUP, true);
 

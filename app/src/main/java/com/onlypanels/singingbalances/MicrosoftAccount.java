@@ -26,6 +26,8 @@ import java.util.List;
  */
 final class MicrosoftAccount {
     static final List<String> SCOPES = Collections.singletonList("Mail.Send");
+    /** Asked for only when the user first adds a booking to their Outlook calendar. */
+    static final List<String> CALENDAR_SCOPES = Collections.singletonList("Calendars.ReadWrite");
     private static ISingleAccountPublicClientApplication app;
 
     private MicrosoftAccount() {}
@@ -64,6 +66,10 @@ final class MicrosoftAccount {
 
     /** Gets a sending key: silently if already signed in, otherwise Microsoft's sign-in screen (if interactive). */
     static void authorize(Activity a, boolean interactive, GoogleAccount.TokenCallback cb) {
+        authorize(a, interactive, SCOPES, cb);
+    }
+
+    static void authorize(Activity a, boolean interactive, List<String> scopes, GoogleAccount.TokenCallback cb) {
         withApp(a, app -> new Thread(() -> {
             IAccount acc = null;
             try {
@@ -73,14 +79,14 @@ final class MicrosoftAccount {
             final IAccount account = acc;
             a.runOnUiThread(() -> {
                 if (account == null) {
-                    if (interactive) signIn(a, app, cb);
+                    if (interactive) signIn(a, app, scopes, cb);
                     else cb.fail("Please sign in with Microsoft again in Settings.");
                     return;
                 }
                 app.acquireTokenSilentAsync(new AcquireTokenSilentParameters.Builder()
                         .forAccount(account)
                         .fromAuthority(account.getAuthority())
-                        .withScopes(SCOPES)
+                        .withScopes(scopes)
                         .withCallback(new SilentAuthenticationCallback() {
                             @Override
                             public void onSuccess(IAuthenticationResult r) {
@@ -91,7 +97,7 @@ final class MicrosoftAccount {
                             public void onError(MsalException e) {
                                 a.runOnUiThread(() -> {
                                     if (e instanceof MsalUiRequiredException && interactive) {
-                                        interactive(a, app, account, cb);
+                                        interactive(a, app, account, scopes, cb);
                                     } else {
                                         cb.fail(friendly(e));
                                     }
@@ -122,20 +128,21 @@ final class MicrosoftAccount {
         };
     }
 
-    private static void signIn(Activity a, ISingleAccountPublicClientApplication app, GoogleAccount.TokenCallback cb) {
+    private static void signIn(Activity a, ISingleAccountPublicClientApplication app, List<String> scopes,
+                               GoogleAccount.TokenCallback cb) {
         app.acquireToken(new AcquireTokenParameters.Builder()
                 .startAuthorizationFromActivity(a)
-                .withScopes(SCOPES)
+                .withScopes(scopes)
                 .withCallback(callback(a, cb))
                 .build());
     }
 
     private static void interactive(Activity a, ISingleAccountPublicClientApplication app, IAccount account,
-                                    GoogleAccount.TokenCallback cb) {
+                                    List<String> scopes, GoogleAccount.TokenCallback cb) {
         app.acquireToken(new AcquireTokenParameters.Builder()
                 .startAuthorizationFromActivity(a)
                 .forAccount(account)
-                .withScopes(SCOPES)
+                .withScopes(scopes)
                 .withCallback(callback(a, cb))
                 .build());
     }
