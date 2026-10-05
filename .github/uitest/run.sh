@@ -40,9 +40,11 @@ done
 adb shell am start -W -n $PKG/.ClientActivity --es name 'Hilton\ Malta' > /dev/null; shot client-hilton; swipe; shot client-hilton-scrolled; back
 
 seeder --es task logo
-adb shell am start -W -n $PKG/.SettingsActivity > /dev/null
-shot settings; texts settings
-for i in 2 3 4 5 6 7; do swipe; shot settings-$i; done
+S() { adb shell am start -W --activity-clear-top -n $PKG/.SettingsActivity "$@" > /dev/null; sleep 1; }
+S;                          shot settings-menu; texts settings-menu
+for p in work look business pay email reminders backup; do
+  S --es section $p;        shot settings-$p; texts settings-$p; swipe; shot settings-$p-2
+done
 back
 
 # Forms
@@ -75,7 +77,7 @@ main --es page gigs --es gigsTab upcoming;    shot dark-upcoming
 $UI tap Calendar;                             shot dark-calendar
 $UI tap Money;                                shot dark-money
 adb shell am start -W -n $PKG/.GigActivity --el id 4 > /dev/null; shot dark-gig-4; back
-adb shell am start -W -n $PKG/.SettingsActivity > /dev/null; shot dark-settings; swipe; shot dark-settings-2; back
+S; shot dark-settings; S --es section look; shot dark-settings-2; back
 main --es page gigs --es gigsTab unpaid
 $UI tap "Add a shoot";                        shot dark-form-new; back; back
 seeder --es task invoice --el id 3
@@ -86,26 +88,26 @@ main --es page gigs --es gigsTab unpaid;      shot rose-gigs; texts rose-gigs
 main --es page clients;                       shot rose-clients
 adb shell am start -W -n $PKG/.GigActivity --el id 4 > /dev/null; shot outlook-gig-4; texts outlook-gig-4
 $UI tap "Send invoice";                       shot outlook-send-invoice; back; back
-adb shell am start -W -n $PKG/.SettingsActivity > /dev/null; $UI tap "Send emails with" 6; shot outlook-settings; back
+S --es section email; shot outlook-settings; back
 seeder --es task look --es email ask
 adb shell am start -W -n $PKG/.GigActivity --el id 4 > /dev/null; shot ask-gig-4; texts ask-gig-4
 $UI tap "Send invoice";                       shot ask-send-invoice; back; back
 
 # ---- Google sign-in: settings when signed out, then the send preview when signed in ----
 seeder --es task look --es email gmail --es google -
-adb shell am start -W -n $PKG/.SettingsActivity > /dev/null; $UI tap "Send straight from OutRo" 6; shot google-settings-signed-out; texts google-settings-signed-out
+S --es section email; shot google-settings-signed-out; texts google-settings-signed-out
 $UI tap "Sign in with Google";                shot google-signin-tap; sleep 3; shot google-signin-tap-2; back; back; back
-adb shell am start -W -n $PKG/.SettingsActivity > /dev/null; $UI tap "Send straight from OutRo" 6
+S --es section email
 $UI tap "Sign in with Microsoft" 4;           sleep 6; shot ms-signin-tap; texts ms-signin-tap
 $UI tap "Use without an account";             sleep 3; $UI tap "No thanks"; $UI tap "No, thanks"; sleep 8
 shot ms-signin-page; texts ms-signin-page; sleep 6; shot ms-signin-page-2; texts ms-signin-page-2; back; back; back
 seeder --es task look --es google maria.sings@gmail.com
-adb shell am start -W -n $PKG/.SettingsActivity > /dev/null; $UI tap "Send straight from OutRo" 6; shot google-settings-signed-in; back
+S --es section email; shot google-settings-signed-in; back
 adb shell am start -W -n $PKG/.GigActivity --el id 4 > /dev/null; shot google-gig-4; texts google-gig-4
 $UI tap "Send invoice";                       shot google-compose; texts google-compose
 $UI tap "=SEND";                              sleep 4; shot google-after-send; texts google-after-send; back; back; back
 seeder --es task look --es google - --es microsoft maria.sings@outlook.com
-adb shell am start -W -n $PKG/.SettingsActivity > /dev/null; $UI tap "Send straight from OutRo" 6; shot ms-settings-signed-in; back
+S --es section email; shot ms-settings-signed-in; back
 adb shell am start -W -n $PKG/.GigActivity --el id 4 > /dev/null
 $UI tap "Send invoice";                       shot ms-compose; texts ms-compose
 $UI tap "=SEND";                              sleep 8; shot ms-after-send; texts ms-after-send; back; back; back

@@ -289,7 +289,7 @@ public class MainActivity extends Activity {
         list.setOnItemClickListener((parent, view, pos, id) -> {
             Object o = rows.get(pos);
             if (o instanceof Gig) openGig(((Gig) o).id);
-            else if ("setup".equals(o)) startActivity(new Intent(this, SettingsActivity.class));
+            else if ("setup".equals(o)) SettingsActivity.open(this, SettingsActivity.BUSINESS);
         });
         TextView emptyView = Ui.text(this, empty, 16, Ui.GREY, false);
         emptyView.setGravity(Gravity.CENTER);

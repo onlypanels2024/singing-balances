@@ -25,7 +25,9 @@ backto() { for i in 1 2 3 4; do inapp && $UI has "$1" > /dev/null && return; adb
 # --activity-clear-top: always open a fresh copy of the screen, not whatever was left on top
 main() { adb shell am start -W --activity-clear-top -n $PKG/.MainActivity "$@" > /dev/null; sleep 1.5; }
 gig() { adb shell am start -W --activity-clear-top -n $PKG/.GigActivity --el id $1 > /dev/null; sleep 1.5; }
-settings() { adb shell am start -W --activity-clear-top -n $PKG/.SettingsActivity > /dev/null; sleep 1.5; }
+# settings [page]: opens the Settings menu, or one of its pages (work, look, business, pay, email, reminders, backup)
+settings() { if [ -n "$1" ]; then adb shell am start -W --activity-clear-top -n $PKG/.SettingsActivity --es section "$1" > /dev/null;
+             else adb shell am start -W --activity-clear-top -n $PKG/.SettingsActivity > /dev/null; fi; sleep 1.5; }
 seeder() { adb shell am broadcast -n $PKG/.DemoSeeder "$@" > /dev/null; sleep 2; }
 section() { echo "" >> $R; echo "== $1 ==" | tee -a $R; }
 MONTH=$(date +"%B %Y"); PREV=$(date -d "$(date +%Y-%m-15) -1 month" +"%B %Y"); NEXT=$(date -d "$(date +%Y-%m-15) +1 month" +"%B %Y")
@@ -79,7 +81,7 @@ $UI tap "All bookings" > /dev/null; check "All bookings tab shows old bookings" 
 $UI tap "=Unpaid" > /dev/null; check "Unpaid tab shows overdue booking" "Company party"
 nocheck "Unpaid tab hides paid bookings" "Gala dinner"
 $UI tap "Company party" > /dev/null; check "Tapping a booking opens it" "Record a payment"; adb shell input keyevent 4; sleep 1
-$UI tapdesc "Settings" > /dev/null; check "Settings button (cog) opens Settings" "YOUR WORK"; adb shell input keyevent 4; sleep 1
+$UI tapdesc "Settings" > /dev/null; check "Settings button (cog) opens Settings" "Backup & export"; adb shell input keyevent 4; sleep 1
 
 section "Add a booking (form, validation, pickers)"
 main --es page gigs --es gigsTab all
@@ -217,18 +219,29 @@ dcheck "Booking deleted" "gigs=10 "
 nocrash "Edit/cancel/delete"
 
 # ====================================================================
-section "Settings: your work"
+section "Settings: menu"
 settings
+for row in "Your work" "Appearance" "Business details" "Getting paid" "Email" "Reminders" "Backup & export"; do
+  check "Menu row: $row" "$row" 2
+done
+for pair in "Your work:Choose what you do" "Appearance:Pick a colour" "Business details:Shown on your invoices" "Getting paid:How clients pay you" "Email:Send straight from OutRo" "Reminders:Remind me at" "Backup & export:Choose a backup file"; do
+  settings; $UI tap "${pair%%:*}" 2 > /dev/null; check "Menu row opens page: ${pair%%:*}" "${pair##*:}"
+done
+check "Menu shows summaries" "Daily at" 2
+nocrash "Settings menu"
+
+section "Settings: your work"
+settings work
 $UI tap "=Singer" > /dev/null; $UI tap "=DJ" > /dev/null
 dcheck "Job changed to DJ" "profession=dj"
 $UI fill "Name of the first tab" "My Shows" > /dev/null
 adb shell input keyevent 4; sleep 1
 main --es page gigs; check "Custom tab name used" "My Shows"
-settings; $UI fill "Name of the first tab" "" > /dev/null; $UI tap "=DJ" > /dev/null; $UI tap "=Singer" > /dev/null
+settings work; $UI fill "Name of the first tab" "" > /dev/null; $UI tap "=DJ" > /dev/null; $UI tap "=Singer" > /dev/null
 adb shell input keyevent 4; sleep 1; main --es page gigs; check "Tab name back to default" "Bookings"
 
 section "Settings: look"
-settings
+settings look
 for c in Plum Indigo Ocean Teal Rose Graphite Gold; do $UI tapdesc "$c" 2 > /dev/null; done
 dcheck "All 7 colours selectable" "accent=gold"
 nocrash "Colours"
@@ -236,10 +249,10 @@ $UI tap "=Dark" 2 > /dev/null; dcheck "Dark mode" "mode=dark"
 $UI tap "Same as phone" 2 > /dev/null; dcheck "Same as phone mode" "mode=phone"
 $UI tap "=Light" 2 > /dev/null; dcheck "Light mode" "mode=light"
 $UI tapdesc "Indigo" 2 > /dev/null
-$UI tap "Euro (" 2 > /dev/null; $UI tap "British pound" 2 > /dev/null
+settings pay; $UI tap "Euro (" 2 > /dev/null; $UI tap "British pound" 2 > /dev/null
 adb shell input keyevent 4; sleep 1; main --es page gigs --es gigsTab unpaid
 check "Currency change shows £" "£1,050.00"
-settings; $UI tap "British pound" 2 > /dev/null; sleep 1; $UI tap "Euro (" -3 > /dev/null; adb shell input keyevent 4; sleep 1
+settings pay; $UI tap "British pound" 2 > /dev/null; sleep 1; $UI tap "Euro (" -3 > /dev/null; adb shell input keyevent 4; sleep 1
 dcheck "Currency back to euro" "currency=EUR"
 nocrash "Look"
 
@@ -254,58 +267,58 @@ open("/tmp/test-logo.png", "wb").write(png)
 PY
 adb push /tmp/test-logo.png /sdcard/Download/test-logo.png > /dev/null
 adb shell am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file:///sdcard/Download/test-logo.png > /dev/null
-settings
+settings business
 $UI tap "Add your logo" 4 > /dev/null; sleep 2; shot logo-picker
 $UI tap "test-logo" > /dev/null || $UI tapdesc "test-logo" > /dev/null || { $UI tapdesc "Show roots" > /dev/null; $UI tap "=Downloads" > /dev/null; $UI tap "test-logo" > /dev/null || $UI tapdesc "test-logo" > /dev/null; }
-sleep 2; backto "YOUR WORK"
+sleep 2; backto "Shown on your invoices"
 dcheck "Logo added from phone's files" "logo=true"
-settings; $UI tap "Remove logo" 4 > /dev/null; adb shell input keyevent 4; sleep 1
+settings business; $UI tap "Remove logo" 4 > /dev/null; adb shell input keyevent 4; sleep 1
 dcheck "Logo removed" "logo=false"
 
 section "Settings: email sign-in buttons and choice"
-settings
-$UI tap "Sign in with Google" 6 > /dev/null; sleep 3; left "Sign in with Google opens Google"; backto "YOUR WORK"
-settings
-$UI tap "Sign in with Microsoft" 6 > /dev/null; sleep 5; left "Sign in with Microsoft opens Microsoft"; backto "YOUR WORK"
-settings
-$UI tap "=Outlook" 6 > /dev/null; gig 4; check "Email choice Outlook changes button" "via Outlook"
-settings; $UI tap "Ask each time" 6 > /dev/null; gig 4; check "Email choice Ask each time" "by email"
-settings; $UI tap "=Gmail" 6 > /dev/null; gig 4; check "Email choice Gmail" "via Gmail"
+settings email
+$UI tap "Sign in with Google" 2 > /dev/null; sleep 3; left "Sign in with Google opens Google"; backto "Send straight from OutRo"
+settings email
+$UI tap "Sign in with Microsoft" 2 > /dev/null; sleep 5; left "Sign in with Microsoft opens Microsoft"; backto "Send straight from OutRo"
+settings email
+$UI tap "=Outlook" 2 > /dev/null; gig 4; check "Email choice Outlook changes button" "via Outlook"
+settings email; $UI tap "Ask each time" 2 > /dev/null; gig 4; check "Email choice Ask each time" "by email"
+settings email; $UI tap "=Gmail" 2 > /dev/null; gig 4; check "Email choice Gmail" "via Gmail"
 
 section "Settings: invoices, payment terms, reminders"
-settings
-$UI fill "Payment link or tag" "@tester" 7 > /dev/null
+settings pay
+$UI fill "Payment link or tag" "@tester" 2 > /dev/null
 $UI fill "Payment due (days" "7" 3 > /dev/null
 adb shell input keyevent 4; sleep 1
 dcheck "Payment terms saved (7 days)" "terms=7"
 main --es page gigs; $UI tap "Add a booking" > /dev/null
 nocheck "New booking due date uses 7-day terms" "(on the night)"
 $UI tap "=CANCEL" > /dev/null
-settings; $UI fill "Payment due (days" "0" 9 > /dev/null; adb shell input keyevent 4; sleep 1
+settings pay; $UI fill "Payment due (days" "0" 4 > /dev/null; adb shell input keyevent 4; sleep 1
 dcheck "Payment terms back to 0" "terms=0"
-settings
-$UI tap "Daily reminders" 9 > /dev/null; adb shell input keyevent 4; sleep 1; dcheck "Reminders switched off" "notify=false"
-settings; $UI tap "Daily reminders" 9 > /dev/null; adb shell input keyevent 4; sleep 1; dcheck "Reminders switched on" "notify=true"
-settings; $UI tap "=10:00" 9 > /dev/null; $UI tap "=18:00" > /dev/null; check "Reminder time changed" "18:00"
+settings reminders
+$UI tap "Daily reminders" 1 > /dev/null; adb shell input keyevent 4; sleep 1; dcheck "Reminders switched off" "notify=false"
+settings reminders; $UI tap "Daily reminders" 1 > /dev/null; adb shell input keyevent 4; sleep 1; dcheck "Reminders switched on" "notify=true"
+settings reminders; $UI tap "=10:00" 1 > /dev/null; $UI tap "=18:00" > /dev/null; check "Reminder time changed" "18:00"
 $UI tap "Show today's reminders now" 2 > /dev/null; sleep 2
 N=$(adb shell dumpsys notification --noredact | grep -c "pkg=$PKG")
 [ "$N" -gt 0 ] && ok "Reminders now shows notifications ($N)" || bad "Reminders now shows notifications"
 nocrash "Reminders"
 
 section "Settings: backup, restore, export"
-settings
-$UI tap "Choose backup file" 10 > /dev/null; sleep 2; shot backup-save-screen
-$UI tap "=SAVE" > /dev/null || $UI tap "=Save" > /dev/null; sleep 4; backto "YOUR WORK"
+settings backup
+$UI tap "Choose backup file" 2 > /dev/null; sleep 2; shot backup-save-screen
+$UI tap "=SAVE" > /dev/null || $UI tap "=Save" > /dev/null; sleep 4; backto "Backup (Google Drive)"
 dcheck "Backup file chosen and written" "backup=true"
-settings; $UI tap "Back up now" 10 > /dev/null; sleep 3; nocrash "Back up now"
-check "Backup status shown" "ackup" 10
-settings; $UI tap "Restore from a backup file" 10 > /dev/null; sleep 2; shot restore-picker
+settings backup; $UI tap "Back up now" 2 > /dev/null; sleep 3; nocrash "Back up now"
+check "Backup status shown" "ackup" 2
+settings backup; $UI tap "Restore from a backup file" 2 > /dev/null; sleep 2; shot restore-picker
 $UI tap "backup.json" > /dev/null || $UI tap "OutRo-backup" > /dev/null || { $UI tapdesc "Show roots" > /dev/null; $UI tap "=Downloads" > /dev/null; $UI tap "backup" > /dev/null; }
 sleep 2; check "Restore asks to confirm" "Restore this backup?"
 $UI tap "=RESTORE" > /dev/null; sleep 2
 dcheck "Restore keeps all data" "gigs=10 "
-settings; $UI tap "Export bookings" 11 > /dev/null; sleep 2; $UI tap "=SAVE" > /dev/null || $UI tap "=Save" > /dev/null; sleep 2; backto "YOUR WORK"
-settings; $UI tap "Export expenses" 11 > /dev/null; sleep 2; $UI tap "=SAVE" > /dev/null || $UI tap "=Save" > /dev/null; sleep 2; backto "YOUR WORK"
+settings backup; $UI tap "Export bookings" 3 > /dev/null; sleep 2; $UI tap "=SAVE" > /dev/null || $UI tap "=Save" > /dev/null; sleep 2; backto "Backup (Google Drive)"
+settings backup; $UI tap "Export expenses" 3 > /dev/null; sleep 2; $UI tap "=SAVE" > /dev/null || $UI tap "=Save" > /dev/null; sleep 2; backto "Backup (Google Drive)"
 adb shell ls -R /sdcard/Download /sdcard/Documents 2>/dev/null > $OUT/files-list.txt
 grep -q "outro-gigs" $OUT/files-list.txt && ok "Export bookings CSV saved" || bad "Export bookings CSV saved"
 grep -q "outro-expenses" $OUT/files-list.txt && ok "Export expenses CSV saved" || bad "Export expenses CSV saved"
