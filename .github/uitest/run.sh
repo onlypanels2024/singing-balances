@@ -14,6 +14,8 @@ seeder() { adb shell am broadcast -n $PKG/.DemoSeeder "$@" > /dev/null; sleep 2;
 
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 adb shell pm grant $PKG android.permission.POST_NOTIFICATIONS
+# No on-screen keyboard (typing still works) so it never covers fields or buttons
+for ime in $(adb shell ime list -s | tr -d '\r'); do adb shell ime disable "$ime" > /dev/null 2>&1; done
 adb logcat -c
 
 # ---- 1. Brand-new user: welcome screen ----
