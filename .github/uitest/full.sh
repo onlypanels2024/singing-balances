@@ -103,7 +103,7 @@ $UI fill "Notes" "Bring cables" 2 > /dev/null
 $UI tap "=SAVE" 2 > /dev/null
 nocheck "Form closes after saving" "New booking"
 check "Calendar prompt appears after a new booking" "Add to your calendar?"
-check "Calendar prompt offers Google and Outlook" "=OUTLOOK"
+check "Calendar prompt offers Google and Outlook" "=OUTLOOK"; shot REVIEW-calendar-prompt
 $UI tap "=NOT NOW" > /dev/null; nocheck "Not now closes the prompt" "Add to your calendar?"
 dcheck "New booking saved" "gigs=11 cancelled=1 pencilled=2 .*Test Client"
 check "New booking appears in list" "Test Client" 4
@@ -200,7 +200,8 @@ dcheck "Booking expense saved" "expenses=6"
 check "Take-home shown" "Take-home from this booking" 4
 gig 6
 $UI tap "Add to calendar" > /dev/null; check "Add to calendar asks which calendar" "=GOOGLE CALENDAR"
-$UI tap "=OUTLOOK" > /dev/null; check "Outlook without Microsoft sign-in explains it" "Sign in with Microsoft"
+shot REVIEW-add-to-calendar-button
+$UI tap "=OUTLOOK" > /dev/null; check "Outlook without Microsoft sign-in explains it" "Sign in with Microsoft"; shot REVIEW-outlook-signin
 $UI tap "=CANCEL" > /dev/null
 $UI tap "Add to calendar" > /dev/null; $UI tap "=GOOGLE CALENDAR" > /dev/null; left "Google Calendar opens with the booking"; backto "Fee to collect"
 gig 7
@@ -311,7 +312,7 @@ settings reminders; $UI tap "=10:00" 1 > /dev/null; $UI tap "=18:00" > /dev/null
 $UI tap "Show today's reminders now" 2 > /dev/null; sleep 2
 N=$(adb shell dumpsys notification --noredact | grep -c "pkg=$PKG")
 [ "$N" -gt 0 ] && ok "Reminders now shows notifications ($N)" || bad "Reminders now shows notifications"
-settings reminders; $UI tap "Ask to add new" 3 > /dev/null; adb shell input keyevent 4; sleep 1
+settings reminders; shot REVIEW-reminders-calendar-page; $UI tap "Ask to add new" 3 > /dev/null; adb shell input keyevent 4; sleep 1
 main --es page gigs; $UI tap "Add a booking" > /dev/null; $UI fill "Client (who pays you)" "Prompt Off" > /dev/null; $UI fill "Fee (" "100" 2 > /dev/null; $UI tap "=SAVE" 2 > /dev/null
 nocheck "Calendar prompt can be switched off" "Add to your calendar?"
 settings reminders; $UI tap "Ask to add new" 3 > /dev/null; adb shell input keyevent 4; sleep 1
