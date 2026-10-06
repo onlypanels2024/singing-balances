@@ -86,7 +86,7 @@ final class Google {
             if (!PayLink.fillsAmount(a)) sb.append("\n(Amount: ").append(Money.fmt(g.balance())).append(")");
         }
         if (!bank.isEmpty()) {
-            sb.append("\n\n").append(url.isEmpty() ? "You can pay by:" : "Or by bank transfer:").append("\n").append(bank);
+            sb.append("\n\n").append(url.isEmpty() ? "You can pay by bank transfer:" : "Or by bank transfer:").append("\n").append(bank);
         }
         sb.append("\nReference: ").append(g.invoiceNo);
         return sb.toString();

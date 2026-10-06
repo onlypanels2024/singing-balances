@@ -108,7 +108,6 @@ final class Prefs {
         StringBuilder sb = new StringBuilder();
         String holder = get(c, BANK_NAME).isEmpty() ? get(c, NAME) : get(c, BANK_NAME);
         if (!get(c, IBAN).isEmpty()) {
-            sb.append("Bank transfer\n");
             if (!holder.isEmpty()) sb.append("Account name: ").append(holder).append('\n');
             sb.append("IBAN: ").append(get(c, IBAN)).append('\n');
             if (!get(c, BIC).isEmpty()) sb.append("BIC/SWIFT: ").append(get(c, BIC)).append('\n');

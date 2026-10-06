@@ -192,10 +192,8 @@ final class Invoice {
                 y = Math.max(y + 10, qy + q + 26);
             }
             if (!pay.isEmpty()) {
-                if (!url.isEmpty()) {
-                    c.drawText("Or by bank transfer", M, y, bold);
-                    y += 15;
-                }
+                c.drawText(url.isEmpty() ? "Bank transfer" : "Or by bank transfer", M, y, bold);
+                y += 15;
                 y = lines(c, pay, M, y, body, 15);
             }
             y += 2;
