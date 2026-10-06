@@ -41,6 +41,27 @@ final class Invoice {
         c.drawText(s, xRight - p.measureText(s), y, p);
     }
 
+    /** Draws a QR code as sharp squares (stays crisp when printed). */
+    private static void drawQr(Canvas c, String text, float x, float y, float size) {
+        try {
+            java.util.Map<com.google.zxing.EncodeHintType, Object> hints = new java.util.EnumMap<>(com.google.zxing.EncodeHintType.class);
+            hints.put(com.google.zxing.EncodeHintType.MARGIN, 0);
+            hints.put(com.google.zxing.EncodeHintType.ERROR_CORRECTION, com.google.zxing.qrcode.decoder.ErrorCorrectionLevel.M);
+            com.google.zxing.common.BitMatrix m = new com.google.zxing.qrcode.QRCodeWriter()
+                    .encode(text, com.google.zxing.BarcodeFormat.QR_CODE, 0, 0, hints);
+            float cell = size / m.getWidth();
+            Paint ink = new Paint();
+            ink.setColor(INK);
+            for (int r = 0; r < m.getHeight(); r++) {
+                for (int col = 0; col < m.getWidth(); col++) {
+                    if (m.get(col, r)) c.drawRect(x + col * cell, y + r * cell, x + (col + 1) * cell + 0.3f, y + (r + 1) * cell + 0.3f, ink);
+                }
+            }
+        } catch (Exception ignored) {
+            // no QR code is better than no invoice
+        }
+    }
+
     /** Creates (or re-creates) the PDF and returns the file. Assigns an invoice number if needed. */
     static File create(Context ctx, Gig g) throws IOException {
         Money.load(ctx);
@@ -139,13 +160,44 @@ final class Invoice {
         c.drawText(g.isPaid() ? "PAID IN FULL" : "Balance due", lx, y, due);
         right(c, Money.fmt(g.balance()), colAmt, y, due);
 
-        // Payment details
+        // How to pay: the one-tap link (button + QR code) and/or bank details
+        String url = g.isPaid() ? "" : PayLink.url(ctx, g);
         String pay = Prefs.paymentDetails(ctx);
-        if (!g.isPaid() && !pay.isEmpty()) {
+        if (!g.isPaid() && (!url.isEmpty() || !pay.isEmpty())) {
             y += 44;
             c.drawText("HOW TO PAY", M, y, grey);
-            y += 16;
-            y = lines(c, pay, M, y, body, 15);
+            y += 14;
+            if (!url.isEmpty()) {
+                float q = 92, qx = W - M - q, qy = y - 6;
+                drawQr(c, url, qx, qy, q);
+                Paint cap = paint(9, MUTED, false);
+                c.drawText("Scan to pay", qx + (q - cap.measureText("Scan to pay")) / 2, qy + q + 12, cap);
+
+                String label = PayLink.label(ctx, g);
+                Paint btnText = paint(13, 0xFFFFFFFF, true);
+                float bw = btnText.measureText(label) + 36, bh = 32;
+                Paint btn = new Paint(Paint.ANTI_ALIAS_FLAG);
+                btn.setColor(accent);
+                c.drawRoundRect(new RectF(M, y, M + bw, y + bh), 9, 9, btn);
+                c.drawText(label, M + 18, y + 21, btnText);
+                y += bh + 16;
+                Paint link = paint(9.5f, accent, false);
+                link.setUnderlineText(true);
+                c.drawText(url, M, y, link);
+                y += 13;
+                if (!PayLink.fillsAmount(ctx)) {
+                    c.drawText("Please enter " + Money.fmt(g.balance()) + " when you pay.", M, y, grey);
+                    y += 13;
+                }
+                y = Math.max(y + 10, qy + q + 26);
+            }
+            if (!pay.isEmpty()) {
+                if (!url.isEmpty()) {
+                    c.drawText("Or by bank transfer", M, y, bold);
+                    y += 15;
+                }
+                y = lines(c, pay, M, y, body, 15);
+            }
             y += 2;
             c.drawText("Please quote " + g.invoiceNo + " as the payment reference.", M, y, grey);
         }

@@ -114,6 +114,9 @@ public class GigActivity extends Activity {
             if (g.isOwed()) {
                 action("Email payment reminder" + (Mail.isConnected(this) || Google.emailAppName(this).isEmpty()
                         ? "" : " (" + Google.emailAppName(this) + ")"), Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> Google.emailReminder(this, g));
+                if (!PayLink.url(this, g).isEmpty()) {
+                    action("Send pay link (WhatsApp, SMS…)", Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> Google.sharePayLink(this, g));
+                }
                 action("Add chase-up to Google Calendar", Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> Google.calendarChase(this, g));
             }
             if (!Prefs.hasPaymentDetails(this) && !g.isPaid()) {

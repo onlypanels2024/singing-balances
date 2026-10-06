@@ -77,9 +77,32 @@ final class Google {
     }
 
     private static String payBlock(Activity a, Gig g) {
-        String pay = Prefs.paymentDetails(a);
-        if (pay.isEmpty()) return "";
-        return "\n\nYou can pay by:\n" + pay + "\nReference: " + g.invoiceNo;
+        String url = PayLink.url(a, g);
+        String bank = Prefs.paymentDetails(a);
+        if (url.isEmpty() && bank.isEmpty()) return "";
+        StringBuilder sb = new StringBuilder();
+        if (!url.isEmpty()) {
+            sb.append("\n\n").append(PayLink.label(a, g)).append(" – just tap:\n").append(url);
+            if (!PayLink.fillsAmount(a)) sb.append("\n(Amount: ").append(Money.fmt(g.balance())).append(")");
+        }
+        if (!bank.isEmpty()) {
+            sb.append("\n\n").append(url.isEmpty() ? "You can pay by:" : "Or by bank transfer:").append("\n").append(bank);
+        }
+        sb.append("\nReference: ").append(g.invoiceNo);
+        return sb.toString();
+    }
+
+    /** A short message with the pay link, to send by WhatsApp, SMS or any app. */
+    static void sharePayLink(Activity a, Gig g) {
+        Db.get(a).assignInvoice(g);
+        String url = PayLink.url(a, g);
+        if (url.isEmpty()) return;
+        String text = "Hi " + g.client + ", here's the link to pay " + Money.fmt(g.balance()) + " for the "
+                + Words.one(a) + gigDesc(g) + ":\n" + url
+                + (PayLink.fillsAmount(a) ? "" : "\n(Amount: " + Money.fmt(g.balance()) + ")")
+                + "\nReference: " + g.invoiceNo + "\nThank you!\n" + Prefs.get(a, Prefs.NAME);
+        Intent i = new Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text.trim());
+        launch(a, i, "Send pay link with");
     }
 
     private static String gigDesc(Gig g) {

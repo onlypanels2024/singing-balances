@@ -32,6 +32,11 @@ final class Money {
         return 0;
     }
 
+    /** "EUR", "GBP" … */
+    static String code(Context c) {
+        return CODES[index(c)];
+    }
+
     static void load(Context c) {
         int i = index(c);
         SYMBOL = SYMBOLS[i];

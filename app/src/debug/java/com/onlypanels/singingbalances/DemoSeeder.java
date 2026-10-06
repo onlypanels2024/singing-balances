@@ -146,7 +146,7 @@ public class DemoSeeder extends BroadcastReceiver {
                 + " currency=" + Prefs.get(c, Prefs.CURRENCY) + " accent=" + Prefs.get(c, Prefs.ACCENT)
                 + " mode=" + Prefs.get(c, Prefs.THEME_MODE) + " profession=" + Prefs.get(c, Prefs.PROFESSION)
                 + " terms=" + Prefs.termsDays(c) + " notify=" + Prefs.notify(c) + " logo=" + Logo.exists(c)
-                + " backup=" + Backup.isSetUp(c) + " names=" + names);
+                + " backup=" + Backup.isSetUp(c) + " pay=" + PayLink.service(c) + ":" + PayLink.url(c, null) + " names=" + names);
     }
 
     private static void seed(Context c) {

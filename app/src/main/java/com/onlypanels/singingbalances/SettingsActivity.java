@@ -7,6 +7,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.text.InputType;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -40,7 +41,7 @@ public class SettingsActivity extends Activity {
     private Switch notify, askCal;
     private Spinner hour;
     private TextView backupStatus;
-    private Spinner profession, currency;
+    private Spinner profession, currency, payService;
     private ImageView logoPreview;
     private Button logoButton, logoRemove;
 
@@ -229,7 +230,52 @@ public class SettingsActivity extends Activity {
         add(f, Prefs.BANK_NAME, "Account holder name (if different)", TEXT);
         add(f, Prefs.IBAN, "IBAN / account number", PLAIN);
         add(f, Prefs.BIC, "BIC / SWIFT / sort code (optional)", PLAIN);
-        add(f, Prefs.REVOLUT, "Payment link or tag – Revolut, PayPal… (optional)", InputType.TYPE_CLASS_TEXT);
+
+        f = group(page, "Pay-now link", "Clients tap it to pay you straight away – it goes on invoices, "
+                + "reminders and as a QR code on the PDF.");
+        f.addView(Ui.label(this, "I get paid with"));
+        payService = new Spinner(this);
+        ArrayAdapter<String> pa = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, PayLink.NAMES);
+        pa.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        payService.setAdapter(pa);
+        payService.setSelection(java.util.Arrays.asList(PayLink.KEYS).indexOf(PayLink.service(this)));
+        f.addView(payService);
+        add(f, Prefs.REVOLUT, "Username or link", InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
+        final EditText payField = fields.get(Prefs.REVOLUT);
+        final View payLabel = f.getChildAt(f.indexOfChild(payField) - 1);
+        final TextView payNote = hint("");
+        f.addView(payNote);
+        Button tryLink = Ui.quiet(this, "Open my pay link to check it");
+        tryLink.setOnClickListener(v -> {
+            save();
+            String url = PayLink.url(this, null);
+            if (url.isEmpty()) {
+                Toast.makeText(this, "Pick a service and add your username or link first", Toast.LENGTH_LONG).show();
+                return;
+            }
+            try {
+                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+            } catch (Exception e) {
+                Toast.makeText(this, "Couldn't open " + url, Toast.LENGTH_LONG).show();
+            }
+        });
+        f.addView(tryLink);
+        payService.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(android.widget.AdapterView<?> parent, View view, int pos, long id) {
+                String k = PayLink.KEYS[pos];
+                boolean on = !PayLink.NONE.equals(k);
+                payField.setEnabled(on);
+                payField.setHint(PayLink.hint(k));
+                payField.setVisibility(on ? View.VISIBLE : View.GONE);
+                payLabel.setVisibility(on ? View.VISIBLE : View.GONE);
+                tryLink.setVisibility(on ? View.VISIBLE : View.GONE);
+                payNote.setText(PayLink.note(k));
+            }
+
+            @Override
+            public void onNothingSelected(android.widget.AdapterView<?> parent) {}
+        });
 
         f = group(page, "Invoices & payment terms", null);
         add(f, Prefs.INVOICE_PREFIX, "Invoice number starts with", PLAIN);
@@ -415,6 +461,7 @@ public class SettingsActivity extends Activity {
         }
         android.content.SharedPreferences.Editor ed = Prefs.sp(this).edit();
         if (currency != null) ed.putString(Prefs.CURRENCY, Money.CODES[currency.getSelectedItemPosition()]);
+        if (payService != null) ed.putString(Prefs.PAY_SERVICE, PayLink.KEYS[payService.getSelectedItemPosition()]);
         if (terms != null) {
             int t = 0;
             try { t = Integer.parseInt(terms.getText().toString().trim()); } catch (NumberFormatException ignored) { }

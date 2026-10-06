@@ -297,11 +297,32 @@ settings email; $UI tap "=Gmail" 2 > /dev/null; gig 4; check "Email choice Gmail
 
 section "Settings: invoices, payment terms, reminders"
 settings pay
-$UI fill "Payment link or tag" "@tester" 2 > /dev/null
+check "Old Revolut tag kept as Revolut pay link" "=Revolut" 2
+$UI tap "=Revolut" 2 > /dev/null; $UI tap "=PayPal" > /dev/null
+$UI fill "Username or link" "paypal.me/tester" 1 > /dev/null
+check "PayPal note shown" "amount is filled in" 1
 $UI fill "Payment due (days" "7" 3 > /dev/null
 leave() { adb shell input keyevent 4; sleep 1; if $UI has "$1" > /dev/null; then adb shell input keyevent 4; sleep 1; fi; }
 leave "Payment due (days"
 dcheck "Payment terms saved (7 days)" "terms=7"
+dcheck "PayPal pay link saved" "pay=paypal:https://paypal.me/tester "
+gig 4; check "Send pay link button" "Send pay link" 3
+$UI tap "Send pay link" 3 > /dev/null; sleep 2; shot "REVIEW-pay-link-share"; left "Send pay link opens share apps"; backto "Record a payment"
+seeder --es task invoice --el id 4
+adb pull "/sdcard/Android/data/$PKG/files/invoice-4.pdf" $OUT/invoice-paypal.pdf > /dev/null 2>&1 && ok "Invoice with pay link made" || bad "Invoice with pay link made"
+seeder --es task look --es google maria.sings@gmail.com; gig 4
+$UI tap "Send invoice" 3 > /dev/null; sleep 2; check "Email preview has PayPal link" "paypal.me/tester/" 2; shot "REVIEW-email-pay-link"
+$UI tap "=CANCEL" > /dev/null || $UI tap "=Cancel" > /dev/null
+$UI tap "Email payment reminder" 3 > /dev/null; sleep 2; shot "REVIEW-reminder-pay-link"
+$UI tap "=CANCEL" > /dev/null || $UI tap "=Cancel" > /dev/null
+seeder --es task look --es google -
+settings pay; $UI tap "=PayPal" 2 > /dev/null; $UI tap "=Stripe" > /dev/null
+$UI fill "Username or link" "https://buy.stripe.com/test_abc123" 1 > /dev/null; shot "REVIEW-settings-stripe"; leave "Username or link"
+dcheck "Stripe pay link saved" "pay=stripe:https://buy.stripe.com/test_abc123 "
+seeder --es task invoice --el id 4
+adb pull "/sdcard/Android/data/$PKG/files/invoice-4.pdf" $OUT/invoice-stripe.pdf > /dev/null 2>&1
+settings pay; $UI tap "=Stripe" 2 > /dev/null; $UI tap "=PayPal" > /dev/null
+$UI fill "Username or link" "paypal.me/tester" 1 > /dev/null; shot "REVIEW-settings-paypal"; leave "Username or link"
 main --es page gigs; $UI tap "Add a booking" > /dev/null
 nocheck "New booking due date uses 7-day terms" "(on the night)"
 $UI tap "=CANCEL" > /dev/null

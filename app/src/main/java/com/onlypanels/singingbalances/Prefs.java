@@ -13,7 +13,8 @@ final class Prefs {
     static final String IBAN = "iban";
     static final String BIC = "bic";
     static final String BANK_NAME = "bank_name"; // account holder name
-    static final String REVOLUT = "revolut";     // Revolut tag or payment link
+    static final String REVOLUT = "revolut";     // pay-link username or link (see PayLink)
+    static final String PAY_SERVICE = "pay_service"; // paypal, revolut, stripe, link or none
     static final String INVOICE_PREFIX = "invoice_prefix";
     static final String NEXT_INVOICE = "next_invoice";
     static final String TERMS = "terms_days";
@@ -99,10 +100,10 @@ final class Prefs {
     }
 
     static boolean hasPaymentDetails(Context c) {
-        return !get(c, IBAN).isEmpty() || !get(c, REVOLUT).isEmpty();
+        return !get(c, IBAN).isEmpty() || !PayLink.url(c, null).isEmpty();
     }
 
-    /** Lines describing how to pay you, for emails and invoices. Empty if none set. */
+    /** Bank transfer lines for emails and invoices. Empty if none set. */
     static String paymentDetails(Context c) {
         StringBuilder sb = new StringBuilder();
         String holder = get(c, BANK_NAME).isEmpty() ? get(c, NAME) : get(c, BANK_NAME);
@@ -112,10 +113,8 @@ final class Prefs {
             sb.append("IBAN: ").append(get(c, IBAN)).append('\n');
             if (!get(c, BIC).isEmpty()) sb.append("BIC/SWIFT: ").append(get(c, BIC)).append('\n');
         }
-        if (!get(c, REVOLUT).isEmpty()) {
-            if (sb.length() > 0) sb.append('\n');
-            sb.append("Revolut: ").append(get(c, REVOLUT)).append('\n');
-        }
+        return sb.toString().trim();
+    }
         return sb.toString().trim();
     }
 }
