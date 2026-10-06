@@ -299,12 +299,13 @@ section "Settings: invoices, payment terms, reminders"
 settings pay
 $UI fill "Payment link or tag" "@tester" 2 > /dev/null
 $UI fill "Payment due (days" "7" 3 > /dev/null
-adb shell input keyevent 4; sleep 1
+leave() { adb shell input keyevent 4; sleep 1; if $UI has "$1" > /dev/null; then adb shell input keyevent 4; sleep 1; fi; }
+leave "Payment due (days"
 dcheck "Payment terms saved (7 days)" "terms=7"
 main --es page gigs; $UI tap "Add a booking" > /dev/null
 nocheck "New booking due date uses 7-day terms" "(on the night)"
 $UI tap "=CANCEL" > /dev/null
-settings pay; $UI fill "Payment due (days" "0" 4 > /dev/null; adb shell input keyevent 4; sleep 1
+settings pay; $UI fill "Payment due (days" "0" 4 > /dev/null; leave "Payment due (days"
 dcheck "Payment terms back to 0" "terms=0"
 settings reminders
 $UI tap "Daily reminders" 1 > /dev/null; adb shell input keyevent 4; sleep 1; dcheck "Reminders switched off" "notify=false"
@@ -347,6 +348,16 @@ $UI tap "Did Joanna" > /dev/null || $UI tap "overdue" > /dev/null; sleep 2
 inapp && ok "Tapping a reminder opens ShowFee" || bad "Tapping a reminder opens ShowFee"
 adb shell cmd statusbar collapse
 seeder --es task widget; nocrash "Widget update"
+
+section "Review pictures (Android 15 edge-to-edge)"
+for pg in gigs calendar clients money; do main --es page $pg; shot "REVIEW-e2e-$pg"; done
+gig 4; shot "REVIEW-e2e-booking"
+settings; shot "REVIEW-e2e-settings"
+settings pay; shot "REVIEW-e2e-settings-pay"
+seeder --es task look --es mode dark; main --es page gigs; shot "REVIEW-e2e-dark-home"
+settings; shot "REVIEW-e2e-dark-settings"
+seeder --es task look --es mode light
+nocrash "Review pictures"
 
 section "Done"
 nocrash "Whole run"
