@@ -1,6 +1,7 @@
 #!/bin/bash
 # FULL BUTTON TEST: taps every button, fills every form, and checks the result on screen and in the saved data.
-PKG=com.onlypanels.singingbalances
+PKG=com.showfee.app
+NS=com.onlypanels.singingbalances
 OUT=full-results
 mkdir -p $OUT
 UI="python3 .github/uitest/ui.py"
@@ -14,7 +15,7 @@ bad() { fail=$((fail+1)); echo "FAIL  $1" | tee -a $R; shot "FAIL-$(echo "$1" | 
 check() { if $UI has "$2" ${3:-0} > /dev/null; then ok "$1"; else bad "$1 (expected to see: $2)"; fi; }
 nocheck() { if $UI has "$2" > /dev/null; then bad "$1 (should be gone: $2)"; else ok "$1"; fi; }
 # dump the saved data and check it matches a pattern
-data() { adb logcat -c; adb shell am broadcast -n $PKG/.DemoSeeder --es task dump > /dev/null; sleep 2;
+data() { adb logcat -c; adb shell am broadcast -n $PKG/$NS.DemoSeeder --es task dump > /dev/null; sleep 2;
          D=$(adb logcat -d -s UITEST | grep "dump " | tail -1); echo "      data: ${D#*dump }" >> $R; }
 dcheck() { data; if echo "$D" | grep -qE "$2"; then ok "$1"; else bad "$1 (saved data should match: $2)"; fi; }
 crashes() { adb logcat -b crash -d | grep -c "FATAL EXCEPTION" ; }
@@ -23,12 +24,12 @@ inapp() { adb shell dumpsys window | grep -E "mCurrentFocus|mFocusedApp" | grep 
 left() { if inapp; then bad "$1 (expected another app to open)"; else ok "$1 (opened $(adb shell dumpsys window | grep mCurrentFocus | grep -oE '[a-z]+(\.[a-z0-9]+)+/' | head -1))"; fi; }
 backto() { for i in 1 2 3 4; do inapp && $UI has "$1" > /dev/null && return; adb shell input keyevent 4; sleep 1.2; done; }
 # --activity-clear-top: always open a fresh copy of the screen, not whatever was left on top
-main() { adb shell am start -W --activity-clear-top -n $PKG/.MainActivity "$@" > /dev/null; sleep 1.5; }
-gig() { adb shell am start -W --activity-clear-top -n $PKG/.GigActivity --el id $1 > /dev/null; sleep 1.5; }
+main() { adb shell am start -W --activity-clear-top -n $PKG/$NS.MainActivity "$@" > /dev/null; sleep 1.5; }
+gig() { adb shell am start -W --activity-clear-top -n $PKG/$NS.GigActivity --el id $1 > /dev/null; sleep 1.5; }
 # settings [page]: opens the Settings menu, or one of its pages (work, look, business, pay, email, reminders, backup)
-settings() { if [ -n "$1" ]; then adb shell am start -W --activity-clear-top -n $PKG/.SettingsActivity --es section "$1" > /dev/null;
-             else adb shell am start -W --activity-clear-top -n $PKG/.SettingsActivity > /dev/null; fi; sleep 1.5; }
-seeder() { adb shell am broadcast -n $PKG/.DemoSeeder "$@" > /dev/null; sleep 2; }
+settings() { if [ -n "$1" ]; then adb shell am start -W --activity-clear-top -n $PKG/$NS.SettingsActivity --es section "$1" > /dev/null;
+             else adb shell am start -W --activity-clear-top -n $PKG/$NS.SettingsActivity > /dev/null; fi; sleep 1.5; }
+seeder() { adb shell am broadcast -n $PKG/$NS.DemoSeeder "$@" > /dev/null; sleep 2; }
 section() { echo "" >> $R; echo "== $1 ==" | tee -a $R; }
 MONTH=$(date +"%B %Y"); PREV=$(date -d "$(date +%Y-%m-15) -1 month" +"%B %Y"); NEXT=$(date -d "$(date +%Y-%m-15) +1 month" +"%B %Y")
 YEAR=$(date +%Y); LASTYEAR=$((YEAR-1))

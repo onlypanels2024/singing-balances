@@ -49,7 +49,14 @@ final class MicrosoftAccount {
             r.ready(app);
             return;
         }
-        PublicClientApplication.createSingleAccountPublicClientApplication(a.getApplicationContext(), R.raw.msal_config,
+        java.io.File config;
+        try {
+            config = configFile(a.getApplicationContext());
+        } catch (Exception e) {
+            cb.fail("Couldn't start Microsoft sign-in (" + e.getMessage() + ")");
+            return;
+        }
+        PublicClientApplication.createSingleAccountPublicClientApplication(a.getApplicationContext(), config,
                 new IPublicClientApplication.ISingleAccountApplicationCreatedListener() {
                     @Override
                     public void onCreated(ISingleAccountPublicClientApplication created) {
@@ -62,6 +69,43 @@ final class MicrosoftAccount {
                         a.runOnUiThread(() -> cb.fail(friendly(e)));
                     }
                 });
+    }
+
+    /**
+     * Microsoft checks that the sign-in comes back to an address made from the app's signature. Copies installed
+     * from Google Play are signed by Google and test copies by us, so the address is worked out on the phone.
+     */
+    private static java.io.File configFile(Context c) throws Exception {
+        StringBuilder sb = new StringBuilder();
+        try (java.io.InputStream in = c.getResources().openRawResource(R.raw.msal_config)) {
+            byte[] buf = new byte[4096];
+            int n;
+            while ((n = in.read(buf)) > 0) sb.append(new String(buf, 0, n, "UTF-8"));
+        }
+        org.json.JSONObject json = new org.json.JSONObject(sb.toString());
+        json.put("redirect_uri", "msauth://" + c.getPackageName() + "/"
+                + java.net.URLEncoder.encode(signatureHash(c), "UTF-8"));
+        java.io.File f = new java.io.File(c.getNoBackupFilesDir(), "msal_config.json");
+        try (java.io.FileOutputStream out = new java.io.FileOutputStream(f)) {
+            out.write(json.toString().getBytes("UTF-8"));
+        }
+        return f;
+    }
+
+    /** The app's signature in the form Microsoft uses (base64 of its SHA-1). */
+    static String signatureHash(Context c) throws Exception {
+        android.content.pm.PackageManager pm = c.getPackageManager();
+        android.content.pm.Signature[] sigs;
+        if (android.os.Build.VERSION.SDK_INT >= 28) {
+            android.content.pm.SigningInfo info = pm.getPackageInfo(c.getPackageName(),
+                    android.content.pm.PackageManager.GET_SIGNING_CERTIFICATES).signingInfo;
+            sigs = info.hasMultipleSigners() ? info.getApkContentsSigners() : info.getSigningCertificateHistory();
+        } else {
+            //noinspection deprecation
+            sigs = pm.getPackageInfo(c.getPackageName(), android.content.pm.PackageManager.GET_SIGNATURES).signatures;
+        }
+        byte[] sha1 = java.security.MessageDigest.getInstance("SHA-1").digest(sigs[sigs.length - 1].toByteArray());
+        return android.util.Base64.encodeToString(sha1, android.util.Base64.NO_WRAP);
     }
 
     /** Gets a sending key: silently if already signed in, otherwise Microsoft's sign-in screen (if interactive). */

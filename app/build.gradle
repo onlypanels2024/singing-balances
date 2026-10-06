@@ -7,12 +7,12 @@ def runNumber = System.getenv("GITHUB_RUN_NUMBER")
 
 android {
     namespace 'com.onlypanels.singingbalances'
-    compileSdk 35
+    compileSdk 36
 
     defaultConfig {
-        applicationId "com.onlypanels.singingbalances"
+        applicationId "com.showfee.app"
         minSdk 26
-        targetSdk 34
+        targetSdk 36
         versionCode runNumber ? runNumber.toInteger() : 1
         versionName "1.0." + (runNumber ?: "0")
     }

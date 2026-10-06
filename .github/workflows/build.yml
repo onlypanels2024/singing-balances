@@ -21,24 +21,28 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: "8.9"
+          gradle-version: "8.11.1"
 
       - name: Build APK
-        run: gradle assembleRelease --no-daemon --stacktrace
+        run: gradle assembleRelease bundleRelease --no-daemon --stacktrace
 
       - name: Name the APK
-        run: cp app/build/outputs/apk/release/app-release.apk "ShowFee-v${{ github.run_number }}.apk"
+        run: |
+          cp app/build/outputs/apk/release/app-release.apk "ShowFee-v${{ github.run_number }}.apk"
+          cp app/build/outputs/bundle/release/app-release.aab "ShowFee-v${{ github.run_number }}.aab"
 
       - uses: actions/upload-artifact@v4
         with:
           name: ShowFee-apk
-          path: ShowFee-*.apk
+          path: ShowFee-*.*
 
       - name: Publish download
         uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ github.run_number }}
           name: ShowFee v${{ github.run_number }}
-          body: Download the .apk below on your phone and open it to install or update.
-          files: ShowFee-*.apk
+          body: Download the .apk below on your phone and open it to install or update. The .aab file is for uploading to Google Play.
+          files: |
+            ShowFee-*.apk
+            ShowFee-*.aab
           make_latest: true

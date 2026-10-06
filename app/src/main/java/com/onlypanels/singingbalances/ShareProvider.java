@@ -14,7 +14,7 @@ import java.io.FileNotFoundException;
 
 /** Lets your email app read the invoice PDFs the app makes. Read-only. */
 public class ShareProvider extends ContentProvider {
-    static final String AUTHORITY = "com.onlypanels.singingbalances.files";
+    static final String AUTHORITY = "com.showfee.app.files";
 
     static Uri uriFor(File f) {
         return Uri.parse("content://" + AUTHORITY + "/" + Uri.encode(f.getName()));

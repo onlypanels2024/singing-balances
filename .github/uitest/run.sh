@@ -1,16 +1,17 @@
 #!/bin/bash
 # Automated screenshot test on the emulator. Keeps going on errors so we see everything.
-PKG=com.onlypanels.singingbalances
+PKG=com.showfee.app
+NS=com.onlypanels.singingbalances
 OUT=ui-results
 mkdir -p $OUT
 UI="python3 .github/uitest/ui.py"
 n=0
 shot() { sleep 2.5; n=$((n+1)); f=$(printf "%s/%02d-%s.png" $OUT $n "$1"); adb exec-out screencap -p > "$f"; echo "screenshot $f"; }
 texts() { $UI texts > "$OUT/$(printf %02d $n)-$1.txt"; }
-main() { adb shell am start -W -n $PKG/.MainActivity "$@" > /dev/null; }
+main() { adb shell am start -W -n $PKG/$NS.MainActivity "$@" > /dev/null; }
 back() { adb shell input keyevent 4; sleep 1; }
 swipe() { adb shell input swipe 540 1800 540 600 500; }
-seeder() { adb shell am broadcast -n $PKG/.DemoSeeder "$@" > /dev/null; sleep 2; }
+seeder() { adb shell am broadcast -n $PKG/$NS.DemoSeeder "$@" > /dev/null; sleep 2; }
 
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 adb shell pm grant $PKG android.permission.POST_NOTIFICATIONS
@@ -36,15 +37,15 @@ $UI tap Clients;                              shot clients-by-tap; texts clients
 $UI tap Money;                                shot money; texts money; swipe; shot money-2; swipe; shot money-3
 
 for id in 3 4 5 6 7 9 1; do
-  adb shell am start -W -n $PKG/.GigActivity --el id $id > /dev/null
+  adb shell am start -W -n $PKG/$NS.GigActivity --el id $id > /dev/null
   shot gig-$id; swipe; shot gig-$id-scrolled
   back
 done
 
-adb shell am start -W -n $PKG/.ClientActivity --es name 'Hilton\ Malta' > /dev/null; shot client-hilton; swipe; shot client-hilton-scrolled; back
+adb shell am start -W -n $PKG/$NS.ClientActivity --es name 'Hilton\ Malta' > /dev/null; shot client-hilton; swipe; shot client-hilton-scrolled; back
 
 seeder --es task logo
-S() { adb shell am start -W --activity-clear-top -n $PKG/.SettingsActivity "$@" > /dev/null; sleep 1; }
+S() { adb shell am start -W --activity-clear-top -n $PKG/$NS.SettingsActivity "$@" > /dev/null; sleep 1; }
 S;                          shot settings-menu; texts settings-menu
 for p in work look business pay email reminders backup; do
   S --es section $p;        shot settings-$p; texts settings-$p; swipe; shot settings-$p-2
@@ -54,9 +55,9 @@ back
 # Forms
 main --es page gigs --es gigsTab unpaid
 $UI tap "Add a booking";                          shot form-new-gig; back; back
-adb shell am start -W -n $PKG/.GigActivity --el id 3 > /dev/null
+adb shell am start -W -n $PKG/$NS.GigActivity --el id 3 > /dev/null
 $UI tap "Record a payment";                   shot form-payment; back; back
-adb shell am start -W -n $PKG/.GigActivity --el id 4 > /dev/null
+adb shell am start -W -n $PKG/$NS.GigActivity --el id 4 > /dev/null
 $UI tap "Add an expense" 4;                   shot form-expense; back; back
 main --es page clients
 $UI tap "Add a client";                       shot form-client; back; back
@@ -70,9 +71,9 @@ $UI tap "=OUTLOOK";                           shot calendar-outlook-signin; text
 $UI tap "=CANCEL"
 
 # Actions that hand over to other apps
-adb shell am start -W -n $PKG/.GigActivity --el id 4 > /dev/null
+adb shell am start -W -n $PKG/$NS.GigActivity --el id 4 > /dev/null
 $UI tap "Send invoice";                       shot action-send-invoice; back; back
-adb shell am start -W -n $PKG/.GigActivity --el id 6 > /dev/null
+adb shell am start -W -n $PKG/$NS.GigActivity --el id 6 > /dev/null
 $UI tap "calendar";                           shot action-calendar; back; back
 
 # Invoices (with logo), reminders
@@ -88,7 +89,7 @@ main --es page gigs --es gigsTab unpaid;      shot dark-gigs; texts dark-gigs
 main --es page gigs --es gigsTab upcoming;    shot dark-upcoming
 $UI tap Calendar;                             shot dark-calendar
 $UI tap Money;                                shot dark-money
-adb shell am start -W -n $PKG/.GigActivity --el id 4 > /dev/null; shot dark-gig-4; back
+adb shell am start -W -n $PKG/$NS.GigActivity --el id 4 > /dev/null; shot dark-gig-4; back
 S; shot dark-settings; S --es section look; shot dark-settings-2; back
 main --es page gigs --es gigsTab unpaid
 $UI tap "Add a shoot";                        shot dark-form-new; back; back
@@ -98,11 +99,11 @@ seeder --es task invoice --el id 3
 seeder --es task look --es profession makeup --es accent rose --es mode light --es currency USD --es tab - --es email outlook
 main --es page gigs --es gigsTab unpaid;      shot rose-gigs; texts rose-gigs
 main --es page clients;                       shot rose-clients
-adb shell am start -W -n $PKG/.GigActivity --el id 4 > /dev/null; shot outlook-gig-4; texts outlook-gig-4
+adb shell am start -W -n $PKG/$NS.GigActivity --el id 4 > /dev/null; shot outlook-gig-4; texts outlook-gig-4
 $UI tap "Send invoice";                       shot outlook-send-invoice; back; back
 S --es section email; shot outlook-settings; back
 seeder --es task look --es email ask
-adb shell am start -W -n $PKG/.GigActivity --el id 4 > /dev/null; shot ask-gig-4; texts ask-gig-4
+adb shell am start -W -n $PKG/$NS.GigActivity --el id 4 > /dev/null; shot ask-gig-4; texts ask-gig-4
 $UI tap "Send invoice";                       shot ask-send-invoice; back; back
 
 # ---- Google sign-in: settings when signed out, then the send preview when signed in ----
@@ -115,12 +116,12 @@ $UI tap "Use without an account";             sleep 3; $UI tap "No thanks"; $UI 
 shot ms-signin-page; texts ms-signin-page; sleep 6; shot ms-signin-page-2; texts ms-signin-page-2; back; back; back
 seeder --es task look --es google maria.sings@gmail.com
 S --es section email; shot google-settings-signed-in; back
-adb shell am start -W -n $PKG/.GigActivity --el id 4 > /dev/null; shot google-gig-4; texts google-gig-4
+adb shell am start -W -n $PKG/$NS.GigActivity --el id 4 > /dev/null; shot google-gig-4; texts google-gig-4
 $UI tap "Send invoice";                       shot google-compose; texts google-compose
 $UI tap "=SEND";                              sleep 4; shot google-after-send; texts google-after-send; back; back; back
 seeder --es task look --es google - --es microsoft maria.sings@outlook.com
 S --es section email; shot ms-settings-signed-in; back
-adb shell am start -W -n $PKG/.GigActivity --el id 4 > /dev/null
+adb shell am start -W -n $PKG/$NS.GigActivity --el id 4 > /dev/null
 $UI tap "Send invoice";                       shot ms-compose; texts ms-compose
 $UI tap "=SEND";                              sleep 8; shot ms-after-send; texts ms-after-send; back; back; back
 seeder --es task look --es microsoft -

@@ -142,6 +142,40 @@ final class Theme {
         int light = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
         d.setSystemUiVisibility(dark ? flags & ~light : flags | light);
         d.setBackgroundColor(Ui.BG);
+        if (android.os.Build.VERSION.SDK_INT >= 30) {
+            int appearance = android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+                    | android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS;
+            android.view.WindowInsetsController c = w.getInsetsController();
+            if (c != null) c.setSystemBarsAppearance(dark ? 0 : appearance, appearance);
+        }
+        edgeToEdge(a);
+    }
+
+    /**
+     * Android 15 and newer draw every app behind the status bar and the navigation buttons. This keeps ShowFee's
+     * screens clear of them (and of the keyboard), and paints the strip behind the navigation buttons to match.
+     */
+    private static void edgeToEdge(Activity a) {
+        if (android.os.Build.VERSION.SDK_INT < 35) return;
+        View content = a.findViewById(android.R.id.content);
+        if (content == null) return;
+        final boolean hasBar = a.getActionBar() != null && a.getActionBar().isShowing();
+        final int bg = Ui.BG, navColor = Ui.SURFACE;
+        content.setOnApplyWindowInsetsListener((v, insets) -> {
+            android.graphics.Insets bars = insets.getInsets(android.view.WindowInsets.Type.systemBars()
+                    | android.view.WindowInsets.Type.displayCutout());
+            android.graphics.Insets ime = insets.getInsets(android.view.WindowInsets.Type.ime());
+            int bottom = Math.max(bars.bottom, ime.bottom);
+            int top = hasBar ? 0 : bars.top; // the top bar already sits below the status bar
+            v.setPadding(bars.left, top, bars.right, bottom);
+            android.graphics.drawable.LayerDrawable layers = new android.graphics.drawable.LayerDrawable(
+                    new android.graphics.drawable.Drawable[]{new ColorDrawable(bg), new ColorDrawable(navColor)});
+            layers.setLayerGravity(1, android.view.Gravity.BOTTOM | android.view.Gravity.FILL_HORIZONTAL);
+            layers.setLayerHeight(1, bars.bottom);
+            v.setBackground(layers);
+            return android.view.WindowInsets.CONSUMED;
+        });
+        content.requestApplyInsets();
     }
 
     static void changed(Context c) {

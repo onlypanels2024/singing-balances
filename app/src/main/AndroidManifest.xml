@@ -56,15 +56,14 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data
-                    android:host="com.onlypanels.singingbalances"
-                    android:path="/4Y+anr53U/y8bSlzpzy/MWNi4vs="
+                    android:host="${applicationId}"
                     android:scheme="msauth" />
             </intent-filter>
         </activity>
 
         <provider
             android:name=".ShareProvider"
-            android:authorities="com.onlypanels.singingbalances.files"
+            android:authorities="${applicationId}.files"
             android:exported="false"
             android:grantUriPermissions="true" />
 
