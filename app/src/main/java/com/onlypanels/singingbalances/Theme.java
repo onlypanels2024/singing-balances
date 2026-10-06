@@ -166,7 +166,13 @@ final class Theme {
                     | android.view.WindowInsets.Type.displayCutout());
             android.graphics.Insets ime = insets.getInsets(android.view.WindowInsets.Type.ime());
             int bottom = Math.max(bars.bottom, ime.bottom);
-            int top = bars.top + (hasBar ? barHeight(a) : 0); // the screen starts under the top bar
+            // The screen starts under the status bar, plus the title bar if there is one. (The system adds the
+            // title bar into the bar sizes on some redraws, so it's worked out from the status bar alone.)
+            int status = Math.max(insets.getInsets(android.view.WindowInsets.Type.statusBars()).top,
+                    insets.getInsets(android.view.WindowInsets.Type.displayCutout()).top);
+            int top = hasBar ? status + barHeight(a) : bars.top;
+            android.util.Log.d("ShowFeeInsets", a.getClass().getSimpleName() + " sys=" + bars.top + " status=" + status
+                    + " bar=" + barHeight(a) + " top=" + top + " bottom=" + bottom);
             v.setPadding(bars.left, top, bars.right, bottom);
             android.graphics.drawable.LayerDrawable layers = new android.graphics.drawable.LayerDrawable(
                     new android.graphics.drawable.Drawable[]{new ColorDrawable(bg), new ColorDrawable(navColor)});

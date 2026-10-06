@@ -15,7 +15,7 @@ bad() { fail=$((fail+1)); echo "FAIL  $1" | tee -a $R; shot "FAIL-$(echo "$1" | 
 check() { if $UI has "$2" ${3:-0} > /dev/null; then ok "$1"; else bad "$1 (expected to see: $2)"; fi; }
 nocheck() { if $UI has "$2" > /dev/null; then bad "$1 (should be gone: $2)"; else ok "$1"; fi; }
 # dump the saved data and check it matches a pattern
-data() { adb logcat -c; adb shell am broadcast -n $PKG/$NS.DemoSeeder --es task dump > /dev/null; sleep 2;
+data() { adb logcat -d -s ShowFeeInsets >> $OUT/insets.txt; adb logcat -c; adb shell am broadcast -n $PKG/$NS.DemoSeeder --es task dump > /dev/null; sleep 2;
          D=$(adb logcat -d -s UITEST | grep "dump " | tail -1); echo "      data: ${D#*dump }" >> $R; }
 dcheck() { data; if echo "$D" | grep -qE "$2"; then ok "$1"; else bad "$1 (saved data should match: $2)"; fi; }
 crashes() { adb logcat -b crash -d | grep -c "FATAL EXCEPTION" ; }
