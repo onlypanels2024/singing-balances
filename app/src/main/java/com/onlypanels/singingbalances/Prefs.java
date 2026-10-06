@@ -115,6 +115,4 @@ final class Prefs {
         }
         return sb.toString().trim();
     }
-        return sb.toString().trim();
-    }
 }
