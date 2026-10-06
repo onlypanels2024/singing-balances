@@ -159,20 +159,13 @@ final class Theme {
         if (android.os.Build.VERSION.SDK_INT < 35) return;
         View content = a.findViewById(android.R.id.content);
         if (content == null) return;
-        final boolean hasBar = a.getActionBar() != null && a.getActionBar().isShowing();
         final int bg = Ui.BG, navColor = Ui.SURFACE;
         content.setOnApplyWindowInsetsListener((v, insets) -> {
             android.graphics.Insets bars = insets.getInsets(android.view.WindowInsets.Type.systemBars()
                     | android.view.WindowInsets.Type.displayCutout());
             android.graphics.Insets ime = insets.getInsets(android.view.WindowInsets.Type.ime());
             int bottom = Math.max(bars.bottom, ime.bottom);
-            // The screen starts under the status bar, plus the title bar if there is one. (The system adds the
-            // title bar into the bar sizes on some redraws, so it's worked out from the status bar alone.)
-            int status = Math.max(insets.getInsets(android.view.WindowInsets.Type.statusBars()).top,
-                    insets.getInsets(android.view.WindowInsets.Type.displayCutout()).top);
-            int top = hasBar ? status + barHeight(a) : bars.top;
-            android.util.Log.d("ShowFeeInsets", a.getClass().getSimpleName() + " sys=" + bars.top + " status=" + status
-                    + " bar=" + barHeight(a) + " top=" + top + " bottom=" + bottom);
+            int top = bars.top; // Android already counts the title bar in here when there is one
             v.setPadding(bars.left, top, bars.right, bottom);
             android.graphics.drawable.LayerDrawable layers = new android.graphics.drawable.LayerDrawable(
                     new android.graphics.drawable.Drawable[]{new ColorDrawable(bg), new ColorDrawable(navColor)});
@@ -182,16 +175,6 @@ final class Theme {
             return android.view.WindowInsets.CONSUMED;
         });
         content.requestApplyInsets();
-    }
-
-    /** Height of the top bar with the screen title. */
-    private static int barHeight(Activity a) {
-        int h = a.getActionBar() != null ? a.getActionBar().getHeight() : 0;
-        if (h > 0) return h;
-        android.content.res.TypedArray t = a.obtainStyledAttributes(new int[]{android.R.attr.actionBarSize});
-        h = t.getDimensionPixelSize(0, 0);
-        t.recycle();
-        return h;
     }
 
     static void changed(Context c) {
