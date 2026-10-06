@@ -370,6 +370,18 @@ inapp && ok "Tapping a reminder opens ShowFee" || bad "Tapping a reminder opens 
 adb shell cmd statusbar collapse
 seeder --es task widget; nocrash "Widget update"
 
+section "Google Play update bar"
+main --es page gigs; nocheck "No update bar without Google Play" "new version of ShowFee"
+seeder --es task update --es step available; main --es page calendar; main --es page gigs
+check "Update bar shows" "A new version of ShowFee is available"; shot "REVIEW-update-available"
+$UI tap "=Later" > /dev/null; nocheck "Later hides the update bar" "new version of ShowFee"
+seeder --es task update --es step available; main --es page money; main --es page gigs
+$UI tap "=Update" > /dev/null; sleep 1
+seeder --es task update --es step download; sleep 1
+check "Downloaded update asks to restart" "restart to finish"; shot "REVIEW-update-ready"
+seeder --es task update --es step off
+nocrash "Update bar"
+
 section "Review pictures (Android 15 edge-to-edge)"
 for pg in gigs calendar clients money; do main --es page $pg; shot "REVIEW-e2e-$pg"; done
 gig 4; shot "REVIEW-e2e-booking"

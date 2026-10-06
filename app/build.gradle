@@ -55,4 +55,6 @@ dependencies {
     implementation 'com.microsoft.identity.client:msal:8.+'
     // QR codes for the pay-now link on invoices (works offline, no internet needed)
     implementation 'com.google.zxing:core:3.5.3'
+    // Google Play in-app updates: the "new version available" bar
+    implementation 'com.google.android.play:app-update:2.1.0'
 }

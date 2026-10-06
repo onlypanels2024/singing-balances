@@ -43,6 +43,7 @@ public class MainActivity extends Activity {
     private int moneyYear = LocalDate.now().getYear();
 
     private FrameLayout content;
+    private LinearLayout updateBar;
     private final TextView[] navLabels = new TextView[4];
     private final ImageView[] navIcons = new ImageView[4];
     private int themeGeneration;
@@ -68,6 +69,9 @@ public class MainActivity extends Activity {
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setBackgroundColor(Ui.BG);
+        updateBar = Ui.hbox(this);
+        updateBar.setVisibility(View.GONE);
+        root.addView(updateBar, Ui.matchWrap(this, 0));
         content = new FrameLayout(this);
         root.addView(content, new LinearLayout.LayoutParams(-1, 0, 1f));
         root.addView(Ui.divider(this));
@@ -153,6 +157,42 @@ public class MainActivity extends Activity {
             return;
         }
         render();
+        Updates.check(this, this::showUpdate);
+    }
+
+    /** The slim "new version" bar at the top of the home screen (Google Play updates). */
+    private void showUpdate(int state) {
+        if (updateBar == null) return;
+        updateBar.removeAllViews();
+        if (state == 0) {
+            updateBar.setVisibility(View.GONE);
+            return;
+        }
+        int p = Ui.dp(this, 14);
+        updateBar.setPadding(p, Ui.dp(this, 10), Ui.dp(this, 8), Ui.dp(this, 10));
+        updateBar.setBackgroundColor(Ui.PRIMARY_LIGHT);
+        updateBar.setGravity(Gravity.CENTER_VERTICAL);
+        String msg = state == Updates.READY ? "Update downloaded – restart to finish"
+                : state == Updates.DOWNLOADING ? "Downloading the new version…"
+                : "A new version of " + getString(R.string.app_name) + " is available";
+        updateBar.addView(Ui.text(this, msg, 14, Ui.DARK, state != Updates.DOWNLOADING), Ui.weight(1f));
+        if (state == Updates.AVAILABLE) {
+            Button later = Ui.quiet(this, "Later");
+            later.setOnClickListener(v -> {
+                Updates.dismissed = true;
+                showUpdate(0);
+            });
+            updateBar.addView(later);
+        }
+        if (state != Updates.DOWNLOADING) {
+            Button go = Ui.primary(this, state == Updates.READY ? "Restart" : "Update");
+            go.setOnClickListener(v -> {
+                if (state == Updates.READY) Updates.finish(this);
+                else Updates.start(this, com.google.android.play.core.install.model.AppUpdateType.FLEXIBLE);
+            });
+            updateBar.addView(go, new LinearLayout.LayoutParams(-2, Ui.dp(this, 40)));
+        }
+        updateBar.setVisibility(View.VISIBLE);
     }
 
     @Override

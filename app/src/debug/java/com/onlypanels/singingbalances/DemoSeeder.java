@@ -38,6 +38,7 @@ public class DemoSeeder extends BroadcastReceiver {
             }
             else if ("logo".equals(task)) logo(c);
             else if ("dump".equals(task)) dump(c);
+            else if ("update".equals(task)) fakeUpdate(c, intent.getStringExtra("step"));
             else if ("widget".equals(task)) {
                 Widget.updateAll(c);
                 Log.i(TAG, "widget updated");
@@ -121,6 +122,27 @@ public class DemoSeeder extends BroadcastReceiver {
         }
         Logo.save(c, android.net.Uri.fromFile(f));
         Log.i(TAG, "logo saved " + Logo.exists(c) + " size=" + Logo.file(c).length());
+    }
+
+    private static com.google.android.play.core.appupdate.testing.FakeAppUpdateManager fake;
+
+    /** Pretend Google Play has a newer version: --es step available | download | off */
+    private static void fakeUpdate(Context c, String step) throws Exception {
+        if ("off".equals(step)) {
+            Updates.override = null;
+            fake = null;
+        } else if ("download".equals(step) && fake != null) {
+            fake.userAcceptsUpdate();
+            fake.downloadStarts();
+            fake.downloadCompletes();
+        } else {
+            fake = new com.google.android.play.core.appupdate.testing.FakeAppUpdateManager(c.getApplicationContext());
+            int v = (int) c.getPackageManager().getPackageInfo(c.getPackageName(), 0).getLongVersionCode();
+            fake.setUpdateAvailable(v + 1);
+            Updates.override = fake;
+            Updates.dismissed = false;
+        }
+        Log.i(TAG, "update " + step);
     }
 
     /** One line with everything the full test checks against. */
