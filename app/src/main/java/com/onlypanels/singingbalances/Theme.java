@@ -166,7 +166,7 @@ final class Theme {
                     | android.view.WindowInsets.Type.displayCutout());
             android.graphics.Insets ime = insets.getInsets(android.view.WindowInsets.Type.ime());
             int bottom = Math.max(bars.bottom, ime.bottom);
-            int top = hasBar ? 0 : bars.top; // the top bar already sits below the status bar
+            int top = bars.top + (hasBar ? barHeight(a) : 0); // the screen starts under the top bar
             v.setPadding(bars.left, top, bars.right, bottom);
             android.graphics.drawable.LayerDrawable layers = new android.graphics.drawable.LayerDrawable(
                     new android.graphics.drawable.Drawable[]{new ColorDrawable(bg), new ColorDrawable(navColor)});
@@ -176,6 +176,16 @@ final class Theme {
             return android.view.WindowInsets.CONSUMED;
         });
         content.requestApplyInsets();
+    }
+
+    /** Height of the top bar with the screen title. */
+    private static int barHeight(Activity a) {
+        int h = a.getActionBar() != null ? a.getActionBar().getHeight() : 0;
+        if (h > 0) return h;
+        android.content.res.TypedArray t = a.obtainStyledAttributes(new int[]{android.R.attr.actionBarSize});
+        h = t.getDimensionPixelSize(0, 0);
+        t.recycle();
+        return h;
     }
 
     static void changed(Context c) {
