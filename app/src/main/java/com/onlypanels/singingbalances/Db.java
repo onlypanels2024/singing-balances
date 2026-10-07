@@ -438,7 +438,7 @@ final class Db extends SQLiteOpenHelper {
         for (Map.Entry<String, ?> e : Prefs.sp(app).getAll().entrySet()) {
             if (Prefs.BACKUP_URI.equals(e.getKey()) || e.getKey().startsWith("backup_")
                     || Prefs.GOOGLE_EMAIL.equals(e.getKey()) || Prefs.MS_EMAIL.equals(e.getKey())
-                    || Prefs.PRO_ACTIVE.equals(e.getKey())) continue; // sign-ins and the subscription belong to one phone / Google account
+                    || Prefs.PRO_ACTIVE.equals(e.getKey()) || Prefs.PRO_CODE_UNTIL.equals(e.getKey())) continue; // sign-ins and the subscription belong to one phone / Google account
             settings.put(e.getKey(), e.getValue());
         }
         root.put("settings", settings);
@@ -483,7 +483,7 @@ final class Db extends SQLiteOpenHelper {
             Iterator<String> keys = s.keys();
             while (keys.hasNext()) {
                 String k = keys.next();
-                if (Prefs.PRO_ACTIVE.equals(k)) continue; // only Google Play decides this
+                if (Prefs.PRO_ACTIVE.equals(k) || Prefs.PRO_CODE_UNTIL.equals(k)) continue; // only Google Play / a code decides this
                 Object val = s.get(k);
                 if (val instanceof Boolean) ed.putBoolean(k, (Boolean) val);
                 else if (val instanceof Integer) ed.putInt(k, (Integer) val);

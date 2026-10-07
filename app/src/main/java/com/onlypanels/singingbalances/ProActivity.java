@@ -115,9 +115,40 @@ public class ProActivity extends Activity {
                 Toast.makeText(this, "Checking with Google Play…", Toast.LENGTH_SHORT).show();
             });
             v.addView(restore);
+            TextView code = Ui.text(this, "Have an access code?", 13, Ui.PRIMARY, false);
+            code.setGravity(Gravity.CENTER);
+            code.setPadding(0, Ui.dp(this, 14), 0, 0);
+            code.setOnClickListener(x -> askCode());
+            v.addView(code);
         }
+        if (!dev && Pro.codeDaysLeft(this) > 0 && !Prefs.sp(this).getBoolean(Prefs.PRO_ACTIVE, false)) {
+            v.addView(note("Unlocked with an access code – " + Pro.codeDaysLeft(this) + " days left."));
+        }
+        v.addView(Legal.links(this));
         setContentView(scroll);
         Theme.bars(this);
+    }
+
+    private void askCode() {
+        android.widget.EditText e = new android.widget.EditText(this);
+        e.setSingleLine(true);
+        e.setHint("Access code");
+        e.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS);
+        LinearLayout box = Ui.vbox(this, 20);
+        box.addView(e);
+        new android.app.AlertDialog.Builder(this)
+                .setTitle("Access code")
+                .setView(box)
+                .setPositiveButton("Unlock", (d, w) -> {
+                    if (Pro.redeem(this, e.getText().toString())) {
+                        Toast.makeText(this, "ShowFee Pro unlocked for " + Pro.CODE_DAYS + " days ✓", Toast.LENGTH_LONG).show();
+                        render();
+                    } else {
+                        Toast.makeText(this, "That code isn't valid", Toast.LENGTH_LONG).show();
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 
     private LinearLayout tick(String s) {

@@ -537,6 +537,7 @@ public class SettingsActivity extends Activity {
         ver.setGravity(android.view.Gravity.CENTER);
         ver.setPadding(0, Ui.dp(this, 24), 0, 0);
         page.addView(ver);
+        page.addView(Legal.links(this));
         setContentView(scroll);
         Theme.bars(this);
     }

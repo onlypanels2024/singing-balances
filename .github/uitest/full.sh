@@ -392,7 +392,13 @@ $UI tap "ShowFee Pro" > /dev/null; sleep 1; check "Pro screen opens" "Everything
 seeder --es task plan --es plan free
 settings; check "Free plan shown in Settings" "Free plan"; shot "REVIEW-pro-settings-free"
 $UI tap "ShowFee Pro" > /dev/null; sleep 1; check "Pro screen shows price" "6.99/month"; check "Pro screen offers free month" "Start my free month"; shot "REVIEW-pro-paywall"
-$UI tap "Not now" 2 > /dev/null; sleep 1
+$UI tap "Have an access code" 3 > /dev/null; $UI fill "Access code" "WRONG-CODE" > /dev/null; $UI tap "=UNLOCK" > /dev/null; sleep 1
+check "Wrong access code keeps the free plan" "Start my free month" 2
+$UI tap "Have an access code" 3 > /dev/null; $UI fill "Access code" "SHOWFEE-REVIEW-7351" > /dev/null; $UI tap "=UNLOCK" > /dev/null; sleep 1
+check "Reviewer access code unlocks Pro" "Unlocked with an access code" 3; shot "REVIEW-pro-code"
+check "Privacy and terms links on Pro screen" "Privacy policy" 3
+adb shell input keyevent 4; sleep 1; settings; check "Settings shows code days left" "days left"; check "Settings has privacy link" "Privacy policy" 3; shot "REVIEW-settings-legal"
+seeder --es task plan --es plan -; seeder --es task plan --es plan free
 gig 4; $UI tap "Send invoice" 3 > /dev/null; sleep 1; check "Free plan: invoice asks for Pro" "Sending PDF invoices is part of ShowFee Pro"; shot "REVIEW-pro-invoice-locked"; adb shell input keyevent 4; sleep 1
 gig 4; $UI tap "Send pay link" 3 > /dev/null; sleep 1; check "Free plan: pay link asks for Pro" "Sending pay links"; adb shell input keyevent 4; sleep 1
 main --es page gigs --es gigsTab all; $UI tap "Add a booking" > /dev/null

@@ -45,9 +45,33 @@ final class Pro {
     // ---- Status ----
 
     static boolean isPro(Context c) {
-        if ("free".equals(forced)) return false;
+        if ("free".equals(forced)) return codeDaysLeft(c) > 0;
         if ("pro".equals(forced)) return true;
-        return isDeveloperCopy(c) || Prefs.sp(c).getBoolean(Prefs.PRO_ACTIVE, false);
+        return isDeveloperCopy(c) || Prefs.sp(c).getBoolean(Prefs.PRO_ACTIVE, false) || codeDaysLeft(c) > 0;
+    }
+
+    // ---- Access codes (for Google's app reviewers, and the owner's guests) ----
+    /** SHA-256 of the current code, so the code itself isn't written in the app. Change it to retire a code. */
+    private static final String CODE_HASH = "14dae3d125b8c1f30bb3639346f1174d9c3c5f1269bd169c18159562e3e39937";
+    static final int CODE_DAYS = 30;
+
+    /** Unlocks Pro on this phone for 30 days if the code is right. */
+    static boolean redeem(Context c, String code) {
+        try {
+            byte[] h = java.security.MessageDigest.getInstance("SHA-256")
+                    .digest(code.trim().toUpperCase(java.util.Locale.ROOT).getBytes("UTF-8"));
+            StringBuilder sb = new StringBuilder();
+            for (byte b : h) sb.append(String.format("%02x", b));
+            if (!CODE_HASH.equals(sb.toString())) return false;
+        } catch (Exception e) {
+            return false;
+        }
+        Prefs.sp(c).edit().putLong(Prefs.PRO_CODE_UNTIL, Dates.today() + CODE_DAYS).apply();
+        return true;
+    }
+
+    static long codeDaysLeft(Context c) {
+        return Math.max(0, Prefs.sp(c).getLong(Prefs.PRO_CODE_UNTIL, 0) - Dates.today());
     }
 
     static boolean isDeveloperCopy(Context c) {
@@ -65,7 +89,8 @@ final class Pro {
     /** "ShowFee Pro", "Free trial", "Free plan · 2 of 5 bookings this month"… for the Settings menu. */
     static String summary(Context c) {
         if (isDeveloperCopy(c)) return "All features unlocked (developer copy)";
-        if (isPro(c)) return "Active – all features";
+        if (Prefs.sp(c).getBoolean(Prefs.PRO_ACTIVE, false)) return "Active – all features";
+        if (codeDaysLeft(c) > 0) return "Unlocked with a code · " + codeDaysLeft(c) + " days left";
         int n = bookingsInMonth(c, Dates.today(), 0);
         return "Free plan · " + Math.min(n, FREE_BOOKINGS) + " of " + FREE_BOOKINGS + " " + Words.many(c) + " this month";
     }
