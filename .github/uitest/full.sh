@@ -307,7 +307,11 @@ leave "Payment due (days"
 dcheck "Payment terms saved (7 days)" "terms=7"
 dcheck "PayPal pay link saved" "pay=paypal:https://paypal.me/tester "
 gig 4; check "Send pay link button" "Send pay link" 3
-$UI tap "Send pay link" 3 > /dev/null; sleep 2; shot "REVIEW-pay-link-share"; left "Send pay link opens share apps"; backto "Record a payment"
+$UI tap "Send pay link" 3 > /dev/null; sleep 1; check "Send pay link offers WhatsApp" "=WhatsApp"; shot "REVIEW-pay-link-choice"
+$UI tap "Text message (SMS)" > /dev/null; sleep 2; shot "REVIEW-pay-link-sms"; left "Text message opens messaging app"; backto "Record a payment"
+gig 4; $UI tap "Send pay link" 3 > /dev/null; sleep 1; $UI tap "Other apps" > /dev/null; sleep 2; left "Other apps opens share list"; backto "Record a payment"
+gig 4; $UI tap "Send pay link" 3 > /dev/null; sleep 1; $UI tap "=WhatsApp" > /dev/null; sleep 2
+if inapp; then ok "WhatsApp missing falls back to share list"; else ok "WhatsApp / share list opened"; fi; backto "Record a payment"
 seeder --es task invoice --el id 4
 seeder --es task mail --el id 4
 adb pull "/sdcard/Android/data/$PKG/files/email-4.eml" $OUT/email-paypal.eml > /dev/null 2>&1

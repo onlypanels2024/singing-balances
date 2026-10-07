@@ -3,6 +3,7 @@ package com.onlypanels.singingbalances;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.ClipData;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.provider.CalendarContract;
@@ -92,17 +93,117 @@ final class Google {
         return sb.toString();
     }
 
-    /** A short message with the pay link, to send by WhatsApp, SMS or any app. */
+    /** A short message with the pay link, sent by WhatsApp, text message or any other app. */
     static void sharePayLink(Activity a, Gig g) {
         Db.get(a).assignInvoice(g);
         String url = PayLink.url(a, g);
         if (url.isEmpty()) return;
-        String text = "Hi " + g.client + ", here's the link to pay " + Money.fmt(g.balance()) + " for the "
+        String text = ("Hi " + g.client + ", here's the link to pay " + Money.fmt(g.balance()) + " for the "
                 + Words.one(a) + gigDesc(g) + ":\n" + url
                 + (PayLink.fillsAmount(a) ? "" : "\n(Amount: " + Money.fmt(g.balance()) + ")")
-                + "\nReference: " + g.invoiceNo + "\nThank you!\n" + Prefs.get(a, Prefs.NAME);
-        Intent i = new Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text.trim());
-        launch(a, i, "Send pay link with");
+                + "\nReference: " + g.invoiceNo + "\nThank you!\n" + Prefs.get(a, Prefs.NAME)).trim();
+        Client k = Db.get(a).client(g.client);
+        String phone = k == null ? "" : k.phone.trim();
+        String[] options = {"WhatsApp", "Text message (SMS)", "Other apps…"};
+        new android.app.AlertDialog.Builder(a)
+                .setTitle("Send pay link" + (phone.isEmpty() ? "" : " to " + phone))
+                .setItems(options, (d, which) -> {
+                    if (which == 0) whatsApp(a, phone, text);
+                    else if (which == 1) sms(a, phone, text);
+                    else other(a, text);
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private static void whatsApp(Activity a, String phone, String text) {
+        String number = intlNumber(a, phone);
+        for (String pkg : new String[]{"com.whatsapp", "com.whatsapp.w4b"}) {
+            try {
+                Intent i = number.isEmpty()
+                        // No usable number: WhatsApp opens and you pick the chat
+                        ? new Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text)
+                        // Straight into the client's chat with the message typed in
+                        : new Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me/" + number + "?text=" + Uri.encode(text)));
+                i.setPackage(pkg);
+                a.startActivity(i);
+                return;
+            } catch (ActivityNotFoundException ignored) {
+            }
+        }
+        Toast.makeText(a, "WhatsApp isn't installed on this phone", Toast.LENGTH_LONG).show();
+        other(a, text);
+    }
+
+    private static void sms(Activity a, String phone, String text) {
+        Intent i = new Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:" + Uri.encode(phone)));
+        i.putExtra("sms_body", text);
+        try {
+            a.startActivity(i);
+        } catch (ActivityNotFoundException e) {
+            Toast.makeText(a, "No text message app found", Toast.LENGTH_LONG).show();
+            other(a, text);
+        }
+    }
+
+    private static void other(Activity a, String text) {
+        Intent i = new Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text);
+        try {
+            a.startActivity(Intent.createChooser(i, "Send pay link with"));
+        } catch (ActivityNotFoundException e) {
+            Toast.makeText(a, "No app found to send this", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    /**
+     * The number in the international form WhatsApp needs (digits only, with country code), or "" if unsure.
+     * Local numbers get the country code of the phone's network, e.g. 7900 1234 in Malta becomes 35679001234.
+     */
+    static String intlNumber(Context c, String phone) {
+        if (phone == null) return "";
+        String p = phone.trim();
+        String digits = p.replaceAll("[^0-9]", "");
+        if (digits.length() < 6) return "";
+        if (p.startsWith("+")) return digits;
+        if (digits.startsWith("00")) return digits.substring(2);
+        String code = callingCode(c);
+        if (code.isEmpty()) return "";
+        // UK, Ireland, Australia… write local numbers with a leading 0 that's dropped internationally (not Italy)
+        if (digits.startsWith("0") && !"39".equals(code)) digits = digits.substring(1);
+        return code + digits;
+    }
+
+    private static String callingCode(Context c) {
+        String iso = "";
+        try {
+            android.telephony.TelephonyManager t = (android.telephony.TelephonyManager) c.getSystemService(Context.TELEPHONY_SERVICE);
+            if (t != null) iso = t.getNetworkCountryIso();
+            if ((iso == null || iso.isEmpty()) && t != null) iso = t.getSimCountryIso();
+        } catch (Exception ignored) {
+        }
+        if (iso == null || iso.isEmpty()) iso = java.util.Locale.getDefault().getCountry();
+        switch (iso.toLowerCase(java.util.Locale.ROOT)) {
+            case "mt": return "356";
+            case "gb": return "44";
+            case "ie": return "353";
+            case "it": return "39";
+            case "us": case "ca": return "1";
+            case "au": return "61";
+            case "nz": return "64";
+            case "de": return "49";
+            case "fr": return "33";
+            case "es": return "34";
+            case "nl": return "31";
+            case "be": return "32";
+            case "pt": return "351";
+            case "ch": return "41";
+            case "at": return "43";
+            case "se": return "46";
+            case "no": return "47";
+            case "dk": return "45";
+            case "pl": return "48";
+            default: return "";
+        }
     }
 
     private static String gigDesc(Gig g) {
