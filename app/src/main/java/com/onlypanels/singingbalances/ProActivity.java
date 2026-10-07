@@ -143,9 +143,12 @@ public class ProActivity extends Activity {
                 .setTitle("Access code")
                 .setView(box)
                 .setPositiveButton("Unlock", (d, w) -> {
-                    if (Pro.redeem(this, e.getText().toString())) {
+                    int r = Pro.redeem(this, e.getText().toString());
+                    if (r == Pro.CODE_OK) {
                         Toast.makeText(this, "ShowFee Pro unlocked for " + Pro.CODE_DAYS + " days ✓", Toast.LENGTH_LONG).show();
                         render();
+                    } else if (r == Pro.CODE_USED) {
+                        Toast.makeText(this, "This phone has already used that code", Toast.LENGTH_LONG).show();
                     } else {
                         Toast.makeText(this, "That code isn't valid", Toast.LENGTH_LONG).show();
                     }

@@ -55,19 +55,23 @@ final class Pro {
     private static final String CODE_HASH = "14dae3d125b8c1f30bb3639346f1174d9c3c5f1269bd169c18159562e3e39937";
     static final int CODE_DAYS = 30;
 
-    /** Unlocks Pro on this phone for 30 days if the code is right. */
-    static boolean redeem(Context c, String code) {
+    static final int CODE_OK = 1, CODE_WRONG = 0, CODE_USED = 2;
+
+    /** Unlocks Pro on this phone for 30 days if the code is right. Each phone can use a code only once. */
+    static int redeem(Context c, String code) {
         try {
             byte[] h = java.security.MessageDigest.getInstance("SHA-256")
                     .digest(code.trim().toUpperCase(java.util.Locale.ROOT).getBytes("UTF-8"));
             StringBuilder sb = new StringBuilder();
             for (byte b : h) sb.append(String.format("%02x", b));
-            if (!CODE_HASH.equals(sb.toString())) return false;
+            if (!CODE_HASH.equals(sb.toString())) return CODE_WRONG;
         } catch (Exception e) {
-            return false;
+            return CODE_WRONG;
         }
-        Prefs.sp(c).edit().putLong(Prefs.PRO_CODE_UNTIL, Dates.today() + CODE_DAYS).apply();
-        return true;
+        if (Prefs.sp(c).getBoolean(Prefs.PRO_CODE_USED, false)) return CODE_USED;
+        Prefs.sp(c).edit().putLong(Prefs.PRO_CODE_UNTIL, Dates.today() + CODE_DAYS)
+                .putBoolean(Prefs.PRO_CODE_USED, true).apply();
+        return CODE_OK;
     }
 
     static long codeDaysLeft(Context c) {

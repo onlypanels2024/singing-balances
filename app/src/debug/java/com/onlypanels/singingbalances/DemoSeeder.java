@@ -44,7 +44,8 @@ public class DemoSeeder extends BroadcastReceiver {
                 String p = intent.getStringExtra("plan");
                 Pro.forced = p == null || p.equals("-") ? null : p;
                 Pro.fakePrice = Pro.forced == null ? null : "1 month free, then €6.99/month";
-                if (Pro.forced == null) Prefs.sp(c).edit().remove(Prefs.PRO_CODE_UNTIL).apply();
+                if (Pro.forced == null) Prefs.sp(c).edit().remove(Prefs.PRO_CODE_UNTIL).remove(Prefs.PRO_CODE_USED).apply();
+                if ("expire".equals(intent.getStringExtra("code"))) Prefs.sp(c).edit().remove(Prefs.PRO_CODE_UNTIL).apply();
                 Theme.changed(c);
                 Log.i(TAG, "plan " + Pro.forced + " bookingsThisMonth=" + Pro.bookingsInMonth(c, Dates.today(), 0));
             }

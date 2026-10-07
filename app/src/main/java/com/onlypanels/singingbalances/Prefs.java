@@ -40,6 +40,7 @@ final class Prefs {
     static final String GOOGLE_EMAIL = "google_email"; // signed-in Google account that ShowFee sends from
     static final String PRO_ACTIVE = "pro_active";     // last answer from Google Play: subscribed to ShowFee Pro
     static final String PRO_CODE_UNTIL = "pro_code_until"; // day a Pro access code stops working
+    static final String PRO_CODE_USED = "pro_code_used";   // this phone has already used its access code
 
     /**
      * Existing users (who had the app before personalisation) keep exactly what they had:

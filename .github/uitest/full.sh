@@ -398,6 +398,10 @@ $UI tap "Have an access code" 3 > /dev/null; $UI fill "Access code" "SHOWFEE-REV
 check "Reviewer access code unlocks Pro" "Unlocked with an access code" 3; shot "REVIEW-pro-code"
 check "Privacy and terms links on Pro screen" "Privacy policy" 3
 adb shell input keyevent 4; sleep 1; settings; check "Settings shows code days left" "days left"; check "Settings has privacy link" "Privacy policy" 3; shot "REVIEW-settings-legal"
+seeder --es task plan --es plan free --es code expire
+settings; check "Code ends after its 30 days" "Free plan"; $UI tap "ShowFee Pro" > /dev/null; sleep 1
+$UI tap "Have an access code" 3 > /dev/null; $UI fill "Access code" "SHOWFEE-REVIEW-7351" > /dev/null; $UI tap "=UNLOCK" > /dev/null; sleep 1
+check "Same phone can't use the code twice" "Start my free month" 2; adb shell input keyevent 4; sleep 1
 seeder --es task plan --es plan -; seeder --es task plan --es plan free
 gig 4; $UI tap "Send invoice" 3 > /dev/null; sleep 1; check "Free plan: invoice asks for Pro" "Sending PDF invoices is part of ShowFee Pro"; shot "REVIEW-pro-invoice-locked"; adb shell input keyevent 4; sleep 1
 gig 4; $UI tap "Send pay link" 3 > /dev/null; sleep 1; check "Free plan: pay link asks for Pro" "Sending pay links"; adb shell input keyevent 4; sleep 1
