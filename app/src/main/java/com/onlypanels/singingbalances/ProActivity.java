@@ -51,6 +51,8 @@ public class ProActivity extends Activity {
         v.addView(title);
 
         boolean pro = Pro.isPro(this), dev = Pro.isDeveloperCopy(this);
+        boolean subscribed = Prefs.sp(this).getBoolean(Prefs.PRO_ACTIVE, false);
+        boolean byCode = pro && !dev && !subscribed && Pro.codeDaysLeft(this) > 0;
         String reason = getIntent().getStringExtra("reason");
         if (!pro && reason != null && !reason.isEmpty()) {
             TextView r = Ui.text(this, reason, 14, Ui.DARK, false);
@@ -62,6 +64,7 @@ public class ProActivity extends Activity {
         }
 
         String headline = dev ? "Everything is unlocked on this copy."
+                : byCode ? "Unlocked with an access code ✓"
                 : pro ? "You're on ShowFee Pro ✓"
                 : Pro.hasTrial() ? "Try every feature free for a month." : "Unlock every feature.";
         TextView h = Ui.text(this, headline, 18, pro || dev ? Ui.GREEN : Ui.PRIMARY, true);
@@ -78,6 +81,9 @@ public class ProActivity extends Activity {
 
         if (dev) {
             v.addView(note("This copy was installed outside Google Play by the app's owner, so there's nothing to pay."));
+        } else if (byCode) {
+            v.addView(note("All Pro features are unlocked on this phone for " + Pro.codeDaysLeft(this)
+                    + " more days. Nothing was bought and nothing will be charged."));
         } else if (pro) {
             Button manage = Ui.tonal(this, "Manage or cancel in Google Play");
             manage.setOnClickListener(x -> Pro.manage(this));
@@ -120,9 +126,6 @@ public class ProActivity extends Activity {
             code.setPadding(0, Ui.dp(this, 14), 0, 0);
             code.setOnClickListener(x -> askCode());
             v.addView(code);
-        }
-        if (!dev && Pro.codeDaysLeft(this) > 0 && !Prefs.sp(this).getBoolean(Prefs.PRO_ACTIVE, false)) {
-            v.addView(note("Unlocked with an access code – " + Pro.codeDaysLeft(this) + " days left."));
         }
         v.addView(Legal.links(this));
         setContentView(scroll);
