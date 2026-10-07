@@ -249,7 +249,8 @@ final class Forms {
      * Preview of an email ShowFee is about to send from the signed-in Google account.
      * Everything is editable; nothing goes until the user taps Send.
      */
-    static void composeEmail(Activity a, String to, String subject, String body, java.io.File pdf, Runnable useEmailApp) {
+    static void composeEmail(Activity a, String to, String subject, String body, java.io.File pdf, String payUrl,
+                             Runnable useEmailApp) {
         LinearLayout form = Ui.vbox(a, 20);
         form.addView(Ui.text(a, "From " + Mail.email(a) + " (" + Mail.service(a) + ")", 13, Ui.GREY, false));
         EditText toField = Ui.field(form, "To", to, EMAIL);
@@ -257,6 +258,12 @@ final class Forms {
         EditText msg = Ui.field(form, "Message", body, NOTES);
         msg.setMinLines(6);
         msg.setGravity(android.view.Gravity.TOP | android.view.Gravity.START);
+        if (payUrl != null && !payUrl.isEmpty() && body.contains(Mail.PAY_HERE)) {
+            android.widget.TextView tip = Ui.text(a, Mail.PAY_HERE + " becomes a \"Pay here\" button that opens your pay link.",
+                    12, Ui.GREY, false);
+            tip.setPadding(0, Ui.dp(a, 6), 0, 0);
+            form.addView(tip);
+        }
         if (pdf != null) {
             android.widget.TextView att = Ui.text(a, "📎  " + pdf.getName(), 14, Ui.PRIMARY, true);
             att.setPadding(0, Ui.dp(a, 12), 0, 0);
@@ -278,12 +285,12 @@ final class Forms {
             dialog.dismiss();
             String s = subj.getText().toString().trim(), b = msg.getText().toString();
             android.widget.Toast.makeText(a, "Sending…", android.widget.Toast.LENGTH_SHORT).show();
-            sendNow(a, t, s, b, pdf, useEmailApp, true);
+            sendNow(a, t, s, b, pdf, payUrl, useEmailApp, true);
         }));
         dialog.show();
     }
 
-    private static void sendNow(Activity a, String to, String subject, String body, java.io.File pdf,
+    private static void sendNow(Activity a, String to, String subject, String body, java.io.File pdf, String payUrl,
                                 Runnable useEmailApp, boolean firstTry) {
         Mail.authorize(a, new GoogleAccount.TokenCallback() {
             @Override
@@ -292,7 +299,7 @@ final class Forms {
                     String err = null;
                     boolean expired = false;
                     try {
-                        Mail.send(a, token, to, subject, body, pdf);
+                        Mail.send(a, token, to, subject, body, pdf, payUrl);
                     } catch (GmailSender.AuthExpired e) {
                         expired = true;
                     } catch (Exception e) {
@@ -302,7 +309,7 @@ final class Forms {
                     final boolean fExpired = expired;
                     a.runOnUiThread(() -> {
                         if (fExpired && firstTry) {
-                            sendNow(a, to, subject, body, pdf, useEmailApp, false);
+                            sendNow(a, to, subject, body, pdf, payUrl, useEmailApp, false);
                         } else if (fErr == null && !fExpired) {
                             android.widget.Toast.makeText(a, "Sent ✓  A copy is in your " + Mail.service(a) + " Sent folder.",
                                     android.widget.Toast.LENGTH_LONG).show();

@@ -309,9 +309,21 @@ dcheck "PayPal pay link saved" "pay=paypal:https://paypal.me/tester "
 gig 4; check "Send pay link button" "Send pay link" 3
 $UI tap "Send pay link" 3 > /dev/null; sleep 2; shot "REVIEW-pay-link-share"; left "Send pay link opens share apps"; backto "Record a payment"
 seeder --es task invoice --el id 4
+seeder --es task mail --el id 4
+adb pull "/sdcard/Android/data/$PKG/files/email-4.eml" $OUT/email-paypal.eml > /dev/null 2>&1
+python3 - "$OUT/email-paypal.eml" <<'PY' && ok "Sent email has a Pay here button" || bad "Sent email has a Pay here button"
+import email, sys
+m = email.message_from_bytes(open(sys.argv[1], 'rb').read())
+html = [p.get_payload(decode=True).decode() for p in m.walk() if p.get_content_type() == 'text/html'][0]
+text = [p.get_payload(decode=True).decode() for p in m.walk() if p.get_content_type() == 'text/plain'][0]
+open(sys.argv[1] + '.html', 'w').write(html)
+assert 'href="https://paypal.me/tester/900EUR"' in html and '>Pay here</a>' in html, html
+assert 'https://paypal.me/tester/900EUR' in text and '[Pay here]' not in text, text
+assert any(p.get_content_type() == 'application/pdf' for p in m.walk())
+PY
 adb pull "/sdcard/Android/data/$PKG/files/invoice-4.pdf" $OUT/invoice-paypal.pdf > /dev/null 2>&1 && ok "Invoice with pay link made" || bad "Invoice with pay link made"
 seeder --es task look --es google maria.sings@gmail.com; gig 4
-$UI tap "Send invoice" 3 > /dev/null; sleep 2; check "Email preview has PayPal link" "paypal.me/tester/" 2; shot "REVIEW-email-pay-link"
+$UI tap "Send invoice" 3 > /dev/null; sleep 2; check "Email preview shows Pay here" "Pay here]" 2; shot "REVIEW-email-pay-link"
 $UI tap "=CANCEL" > /dev/null || $UI tap "=Cancel" > /dev/null
 $UI tap "Email payment reminder" 3 > /dev/null; sleep 2; shot "REVIEW-reminder-pay-link"
 $UI tap "=CANCEL" > /dev/null || $UI tap "=Cancel" > /dev/null

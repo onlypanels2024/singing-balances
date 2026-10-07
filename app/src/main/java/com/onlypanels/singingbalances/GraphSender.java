@@ -17,10 +17,11 @@ import java.util.Base64;
 final class GraphSender {
     private GraphSender() {}
 
-    static String json(String to, String subject, String body, String fileName, byte[] pdf) throws Exception {
+    static String json(String to, String subject, String body, String html, String fileName, byte[] pdf) throws Exception {
         JSONObject msg = new JSONObject();
         msg.put("subject", subject);
-        msg.put("body", new JSONObject().put("contentType", "Text").put("content", body));
+        msg.put("body", html != null ? new JSONObject().put("contentType", "HTML").put("content", html)
+                : new JSONObject().put("contentType", "Text").put("content", body));
         msg.put("toRecipients", new JSONArray().put(new JSONObject().put("emailAddress", new JSONObject().put("address", to))));
         if (pdf != null) {
             msg.put("attachments", new JSONArray().put(new JSONObject()
@@ -32,10 +33,10 @@ final class GraphSender {
         return new JSONObject().put("message", msg).put("saveToSentItems", true).toString();
     }
 
-    static void send(String accessToken, String to, String subject, String body, File pdf) throws IOException {
+    static void send(String accessToken, String to, String subject, String body, String html, File pdf) throws IOException {
         String payload;
         try {
-            payload = json(to, subject, body, pdf == null ? null : pdf.getName(), pdf == null ? null : GmailSender.read(pdf));
+            payload = json(to, subject, body, html, pdf == null ? null : pdf.getName(), pdf == null ? null : GmailSender.read(pdf));
         } catch (IOException e) {
             throw e;
         } catch (Exception e) {

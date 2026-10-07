@@ -82,7 +82,7 @@ final class Google {
         if (url.isEmpty() && bank.isEmpty()) return "";
         StringBuilder sb = new StringBuilder();
         if (!url.isEmpty()) {
-            sb.append("\n\n").append(PayLink.label(a, g)).append(" – just tap:\n").append(url);
+            sb.append("\n\n").append(PayLink.label(a, g)).append(":\n").append(Mail.PAY_HERE);
             if (!PayLink.fillsAmount(a)) sb.append("\n(Amount: ").append(Money.fmt(g.balance())).append(")");
         }
         if (!bank.isEmpty()) {
@@ -119,7 +119,7 @@ final class Google {
             return;
         }
         if (Mail.isConnected(a)) {
-            Forms.composeEmail(a, g.email, subject, body, pdf, () -> openInEmailApp(a, g, subject, body, pdf));
+            Forms.composeEmail(a, g.email, subject, body, pdf, PayLink.url(a, g), () -> openInEmailApp(a, g, subject, body, pdf));
             return;
         }
         openInEmailApp(a, g, subject, body, pdf);
@@ -134,7 +134,8 @@ final class Google {
         i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         if (!g.email.isEmpty()) i.putExtra(Intent.EXTRA_EMAIL, new String[]{g.email});
         i.putExtra(Intent.EXTRA_SUBJECT, subject);
-        i.putExtra(Intent.EXTRA_TEXT, body);
+        // Email apps only take plain text, so here the pay link is written out in full.
+        i.putExtra(Intent.EXTRA_TEXT, Mail.plain(body, PayLink.url(a, g)));
         if (g.email.isEmpty()) {
             Toast.makeText(a, "No email saved for " + g.client + " – add the address in your email app", Toast.LENGTH_LONG).show();
         }

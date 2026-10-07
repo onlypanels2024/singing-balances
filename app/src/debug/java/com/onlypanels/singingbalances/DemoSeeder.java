@@ -24,6 +24,7 @@ public class DemoSeeder extends BroadcastReceiver {
         try {
             if ("seed".equals(task)) seed(c);
             else if ("invoice".equals(task)) invoice(c, intent.getLongExtra("id", 3));
+            else if ("mail".equals(task)) mail(c, intent.getLongExtra("id", 4));
             else if ("notify".equals(task)) Log.i(TAG, "notifications shown: " + Nudges.check(c, true));
             else if ("backup".equals(task)) backupRoundTrip(c);
             else if ("look".equals(task)) look(c, intent);
@@ -219,6 +220,22 @@ public class DemoSeeder extends BroadcastReceiver {
             int n;
             while ((n = in.read(b)) > 0) out.write(b, 0, n);
         }
+    }
+
+    /** The exact email ShowFee would send for this booking's invoice (with the Pay here button), saved as a file. */
+    private static void mail(Context c, long id) throws Exception {
+        Gig g = Db.get(c).gig(id);
+        File pdf = Invoice.create(c, g);
+        String body = "Hi " + g.client + ",\n\nTest of the pay link.\n\n" + PayLink.label(c, g) + ":\n" + Mail.PAY_HERE
+                + "\n\nMany thanks";
+        String url = PayLink.url(c, g);
+        String raw = GmailSender.mime(g.email, "Invoice " + g.invoiceNo, Mail.plain(body, url),
+                Mail.html(body, url, Theme.strong(c)), pdf.getName(), GmailSender.read(pdf));
+        File out = new File(c.getExternalFilesDir(null), "email-" + id + ".eml");
+        try (OutputStream o = new FileOutputStream(out)) {
+            o.write(raw.getBytes(StandardCharsets.UTF_8));
+        }
+        Log.i(TAG, "mail written " + out.length());
     }
 
     private static void invoice(Context c, long id) throws Exception {
