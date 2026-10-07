@@ -48,7 +48,7 @@ public class SettingsActivity extends Activity {
     /** Which page this is: null = the Settings menu, otherwise one of the keys below. */
     private String section;
     static final String WORK = "work", LOOK = "look", BUSINESS = "business", PAY = "pay", EMAIL_S = "email",
-            REMIND = "reminders", BACKUP = "backup";
+            REMIND = "reminders", BACKUP = "backup", PRO = "pro";
 
     private boolean is(String key) {
         return key.equals(section);
@@ -507,7 +507,10 @@ public class SettingsActivity extends Activity {
         int terms = Prefs.termsDays(this);
         String cur = Money.NAMES[Money.index(this)];
 
-        LinearLayout g = menuGroup(page, "Personalise");
+        LinearLayout g = menuGroup(page, "Plan");
+        menuRow(g, R.drawable.ic_set_pro, "ShowFee Pro", Pro.summary(this), PRO, true);
+
+        g = menuGroup(page, "Personalise");
         menuRow(g, R.drawable.ic_set_work, "Your work", Words.NAMES[idx] + " · \u201c" + Words.many(this) + "\u201d", WORK, false);
         menuRow(g, R.drawable.ic_set_look, "Appearance",
                 Theme.ACCENT_NAMES[Theme.accentIndex(this)] + " · " + Theme.MODE_NAMES[Math.max(0, modeIdx)], LOOK, true);
@@ -573,14 +576,17 @@ public class SettingsActivity extends Activity {
         texts.setOrientation(LinearLayout.VERTICAL);
         texts.addView(Ui.text(this, title, 16, Ui.DARK, true));
         TextView sum = Ui.text(this, summary, 13,
-                key.equals(BACKUP) && !Backup.isSetUp(this) ? Ui.ORANGE : Ui.GREY, false);
+                key.equals(BACKUP) && !Backup.isSetUp(this) ? Ui.ORANGE : key.equals(PRO) && Pro.isPro(this) ? Ui.GREEN : Ui.GREY, false);
         sum.setMaxLines(2);
         sum.setEllipsize(android.text.TextUtils.TruncateAt.END);
         texts.addView(sum);
         row.addView(texts, Ui.weight(1f));
         row.addView(Ui.icon(this, R.drawable.ic_chevron, Ui.FAINT, 22));
         row.setBackground(Ui.touchable(null, Ui.ripple()));
-        row.setOnClickListener(x -> open(this, key));
+        row.setOnClickListener(x -> {
+            if (PRO.equals(key)) Pro.open(this, null);
+            else open(this, key);
+        });
         card.addView(row);
         if (!last) {
             android.view.View line = new android.view.View(this);

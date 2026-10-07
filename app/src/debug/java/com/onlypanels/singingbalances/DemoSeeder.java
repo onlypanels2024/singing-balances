@@ -39,6 +39,14 @@ public class DemoSeeder extends BroadcastReceiver {
             }
             else if ("logo".equals(task)) logo(c);
             else if ("dump".equals(task)) dump(c);
+            else if ("plan".equals(task)) {
+                // --es plan free|pro|- : pretend to be on the free plan or subscribed ("-" = normal)
+                String p = intent.getStringExtra("plan");
+                Pro.forced = p == null || p.equals("-") ? null : p;
+                Pro.fakePrice = Pro.forced == null ? null : "1 month free, then €6.99/month";
+                Theme.changed(c);
+                Log.i(TAG, "plan " + Pro.forced + " bookingsThisMonth=" + Pro.bookingsInMonth(c, Dates.today(), 0));
+            }
             else if ("update".equals(task)) fakeUpdate(c, intent.getStringExtra("step"));
             else if ("widget".equals(task)) {
                 Widget.updateAll(c);

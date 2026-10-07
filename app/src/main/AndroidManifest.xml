@@ -47,6 +47,12 @@
             android:windowSoftInputMode="adjustResize"
             android:parentActivityName=".MainActivity" />
 
+        <activity
+            android:name=".ProActivity"
+            android:exported="false"
+            android:label="ShowFee Pro"
+            android:parentActivityName=".MainActivity" />
+
         <!-- Microsoft sign-in returns here after the user approves ShowFee -->
         <activity
             android:name="com.microsoft.identity.client.BrowserTabActivity"

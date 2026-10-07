@@ -158,6 +158,7 @@ public class MainActivity extends Activity {
         }
         render();
         Updates.check(this, this::showUpdate);
+        Pro.refresh(this, this::render);
     }
 
     /** Small buttons side by side in the update bar (normal buttons are full width). */

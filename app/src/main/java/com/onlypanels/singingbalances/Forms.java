@@ -73,6 +73,7 @@ final class Forms {
         final long[] dueDay = {g.dueDay};
         final int[] start = {g.startMin};
         final boolean[] dueChosen = {!isNew && g.dueDay != g.gigDay + terms};
+        final java.time.YearMonth wasMonth = isNew ? null : java.time.YearMonth.from(java.time.LocalDate.ofEpochDay(g.gigDay));
         Db db = Db.get(a);
 
         LinearLayout form = Ui.vbox(a, 20);
@@ -154,6 +155,16 @@ final class Forms {
             g.startMin = start[0];
             g.dueDay = dueDay[0];
             g.status = status.getSelectedItemPosition();
+            // Free plan: a few bookings a month. Editing an existing booking in the same month is always allowed.
+            java.time.YearMonth month = java.time.YearMonth.from(java.time.LocalDate.ofEpochDay(g.gigDay));
+            if (!g.isCancelled() && !month.equals(wasMonth) && !Pro.isPro(a)
+                    && Pro.bookingsInMonth(a, g.gigDay, g.id) >= Pro.FREE_BOOKINGS) {
+                Pro.open(a, "The free plan includes " + Pro.FREE_BOOKINGS + " " + Words.many(a) + " a month, and "
+                        + month.getMonth().getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.getDefault())
+                        + " already has " + Pro.FREE_BOOKINGS + ". ShowFee Pro gives you unlimited " + Words.many(a)
+                        + ". (Nothing you typed is lost – this window stays open.)");
+                return;
+            }
             long id = db.save(g);
             dialog.dismiss();
             onSaved.onSaved(id);

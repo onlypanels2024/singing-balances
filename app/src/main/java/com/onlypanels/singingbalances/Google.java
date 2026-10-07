@@ -95,6 +95,7 @@ final class Google {
 
     /** A short message with the pay link, sent by WhatsApp, text message or any other app. */
     static void sharePayLink(Activity a, Gig g) {
+        if (!Pro.allow(a, "Sending pay links is part of ShowFee Pro.")) return;
         Db.get(a).assignInvoice(g);
         String url = PayLink.url(a, g);
         if (url.isEmpty()) return;
@@ -244,6 +245,7 @@ final class Google {
     }
 
     static void emailInvoice(Activity a, Gig g) {
+        if (!Pro.allow(a, "Sending PDF invoices is part of ShowFee Pro.")) return;
         Db.get(a).assignInvoice(g);
         String subject = "Invoice " + g.invoiceNo + " – " + (g.event.isEmpty() ? Words.invoiceLine(a) : g.event)
                 + " (" + Dates.fmt(g.gigDay) + ")";
@@ -258,6 +260,7 @@ final class Google {
 
     /** Friendly payment reminder with payment details and the invoice attached. */
     static void emailReminder(Activity a, Gig g) {
+        if (!Pro.allow(a, "Emailing payment reminders is part of ShowFee Pro.")) return;
         Db.get(a).assignInvoice(g);
         String subject = "Payment reminder – " + (g.event.isEmpty() ? Words.one(a) + " on " + Dates.fmt(g.gigDay)
                 : g.event + " (" + Dates.fmt(g.gigDay) + ")");

@@ -386,6 +386,25 @@ inapp && ok "Tapping a reminder opens ShowFee" || bad "Tapping a reminder opens 
 adb shell cmd statusbar collapse
 seeder --es task widget; nocrash "Widget update"
 
+section "ShowFee Pro (subscription)"
+settings; check "Settings shows ShowFee Pro" "ShowFee Pro" 0; check "Developer copy is unlocked" "developer copy"
+$UI tap "ShowFee Pro" > /dev/null; sleep 1; check "Pro screen opens" "Everything is unlocked"; shot "REVIEW-pro-developer"; adb shell input keyevent 4; sleep 1
+seeder --es task plan --es plan free
+settings; check "Free plan shown in Settings" "Free plan"; shot "REVIEW-pro-settings-free"
+$UI tap "ShowFee Pro" > /dev/null; sleep 1; check "Pro screen shows price" "6.99/month"; check "Pro screen offers free month" "Start my free month"; shot "REVIEW-pro-paywall"
+$UI tap "Not now" 2 > /dev/null; sleep 1
+gig 4; $UI tap "Send invoice" 3 > /dev/null; sleep 1; check "Free plan: invoice asks for Pro" "Sending PDF invoices is part of ShowFee Pro"; shot "REVIEW-pro-invoice-locked"; adb shell input keyevent 4; sleep 1
+gig 4; $UI tap "Send pay link" 3 > /dev/null; sleep 1; check "Free plan: pay link asks for Pro" "Sending pay links"; adb shell input keyevent 4; sleep 1
+main --es page gigs --es gigsTab all; $UI tap "Add a booking" > /dev/null
+$UI fill "Client (who pays you)" "Limit Test" > /dev/null; $UI fill "Fee (" "100" 2 > /dev/null; $UI tap "=SAVE" > /dev/null; sleep 2
+if $UI has "free plan includes" > /dev/null; then ok "Free plan: 6th booking this month asks for Pro"; shot "REVIEW-pro-limit"; adb shell input keyevent 4; sleep 1; $UI tap "=CANCEL" > /dev/null
+else D=$(adb logcat -d -s UITEST | grep "plan free" | tail -1); echo "      $D" >> $R; ok "Free plan: booking saved (month had fewer than 5)"; fi
+seeder --es task plan --es plan pro
+gig 4; $UI tap "Send invoice" 3 > /dev/null; sleep 2; nocheck "Pro: invoice goes straight through" "part of ShowFee Pro"; backto "Record a payment"
+settings; $UI tap "ShowFee Pro" > /dev/null; sleep 1; check "Pro screen shows subscribed" "on ShowFee Pro"; shot "REVIEW-pro-active"; adb shell input keyevent 4; sleep 1
+seeder --es task plan --es plan -
+nocrash "ShowFee Pro"
+
 section "Google Play update bar"
 main --es page gigs; nocheck "No update bar without Google Play" "new version of ShowFee"
 seeder --es task update --es step available; main --es page calendar; main --es page gigs
