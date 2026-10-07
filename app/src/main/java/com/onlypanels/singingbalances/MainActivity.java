@@ -160,6 +160,14 @@ public class MainActivity extends Activity {
         Updates.check(this, this::showUpdate);
     }
 
+    /** Small buttons side by side in the update bar (normal buttons are full width). */
+    private LinearLayout.LayoutParams barButton(boolean last) {
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-2, Ui.dp(this, 40));
+        lp.leftMargin = Ui.dp(this, 8);
+        if (last) lp.rightMargin = Ui.dp(this, 4);
+        return lp;
+    }
+
     /** The slim "new version" bar at the top of the home screen (Google Play updates). */
     private void showUpdate(int state) {
         if (updateBar == null) return;
@@ -176,21 +184,26 @@ public class MainActivity extends Activity {
                 : state == Updates.DOWNLOADING ? "Downloading the new version…"
                 : "A new version of " + getString(R.string.app_name) + " is available";
         updateBar.addView(Ui.text(this, msg, 14, Ui.DARK, state != Updates.DOWNLOADING), Ui.weight(1f));
+        int bp = Ui.dp(this, 16);
         if (state == Updates.AVAILABLE) {
             Button later = Ui.quiet(this, "Later");
+            later.setPadding(bp, 0, bp, 0);
+            later.setTextSize(14);
             later.setOnClickListener(v -> {
                 Updates.dismissed = true;
                 showUpdate(0);
             });
-            updateBar.addView(later);
+            updateBar.addView(later, barButton(false));
         }
         if (state != Updates.DOWNLOADING) {
             Button go = Ui.primary(this, state == Updates.READY ? "Restart" : "Update");
+            go.setPadding(bp, 0, bp, 0);
+            go.setTextSize(14);
             go.setOnClickListener(v -> {
                 if (state == Updates.READY) Updates.finish(this);
                 else Updates.start(this, com.google.android.play.core.install.model.AppUpdateType.FLEXIBLE);
             });
-            updateBar.addView(go, new LinearLayout.LayoutParams(-2, Ui.dp(this, 40)));
+            updateBar.addView(go, barButton(true));
         }
         updateBar.setVisibility(View.VISIBLE);
     }
