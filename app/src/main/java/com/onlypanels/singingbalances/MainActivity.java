@@ -322,8 +322,9 @@ public class MainActivity extends Activity {
         List<Object> rows = new ArrayList<>();
         boolean examples = Examples.active(this);
         if (examples) rows.add("examples");
-        if (Prefs.get(this, Prefs.NAME).isEmpty() || !Prefs.hasPaymentDetails(this)) rows.add("setup");
         boolean brandNew = !examples && db.allGigs().isEmpty();
+        // (a brand-new user sees the start card instead; the invoice-details hint comes once they have bookings)
+        if (!brandNew && (Prefs.get(this, Prefs.NAME).isEmpty() || !Prefs.hasPaymentDetails(this))) rows.add("setup");
         String empty;
         switch (gigsTab) {
             case "upcoming":
