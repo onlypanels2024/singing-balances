@@ -105,6 +105,9 @@ shot welcome-done
 # ====================================================================
 section "Sample data loaded"
 adb shell am force-stop $PKG
+# Start from empty storage so the sample bookings get numbers 1-10 (the tests below open them by number;
+# the example bookings above used up the first numbers)
+adb shell pm clear $PKG > /dev/null; adb shell pm grant $PKG android.permission.POST_NOTIFICATIONS
 seeder --es task seed
 main --es page gigs --es gigsTab unpaid
 dcheck "Sample data in place" "gigs=10 cancelled=1 pencilled=1 paid=120000 owed=145000 expenses=5 expTotal=55000 clients=6"
