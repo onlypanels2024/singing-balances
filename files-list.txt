@@ -1,0 +1,7 @@
+/sdcard/Documents:
+
+/sdcard/Download:
+ShowFee-backup.json
+showfee-expenses-2026-10-10.csv
+showfee-gigs-2026-10-10.csv
+test-logo.png
