@@ -99,12 +99,15 @@ final class Pro {
         return "Free plan · " + Math.min(n, FREE_BOOKINGS) + " of " + FREE_BOOKINGS + " " + Words.many(c) + " this month";
     }
 
-    /** Bookings (not cancelled) in the same month as {@code day}, not counting the one being edited. */
+    /** Bookings (not cancelled, not examples) in the same month as {@code day}, not counting the one being edited. */
     static int bookingsInMonth(Context c, long day, long exceptId) {
         java.time.LocalDate d = java.time.LocalDate.ofEpochDay(day);
         long from = d.withDayOfMonth(1).toEpochDay(), to = d.withDayOfMonth(d.lengthOfMonth()).toEpochDay();
         int n = 0;
-        for (Gig g : Db.get(c).gigsBetween(from, to)) if (!g.isCancelled() && g.id != exceptId) n++;
+        java.util.Set<Long> examples = Examples.ids(c, "g"); // example bookings never use up the free plan
+        for (Gig g : Db.get(c).gigsBetween(from, to)) {
+            if (!g.isCancelled() && g.id != exceptId && !examples.contains(g.id)) n++;
+        }
         return n;
     }
 
