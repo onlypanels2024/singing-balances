@@ -31,6 +31,10 @@ public class WelcomeActivity extends Activity {
         if (Prefs.get(this, Prefs.PROFESSION).isEmpty()) Prefs.set(this, Prefs.PROFESSION, Words.KEYS[0]);
         if (Prefs.get(this, Prefs.CURRENCY).isEmpty()) Prefs.set(this, Prefs.CURRENCY, guessCurrency());
         Theme.load(this);
+        if (!Prefs.sp(this).getBoolean(Prefs.INTRO_DONE, false)) {
+            intro(savedInstanceState == null ? 0 : savedInstanceState.getInt("intro", 0));
+            return;
+        }
 
         ScrollView scroll = new ScrollView(this);
         LinearLayout v = Ui.vbox(this, 20);
@@ -133,6 +137,92 @@ public class WelcomeActivity extends Activity {
         Theme.bars(this);
     }
 
+    private int introPage;
+
+    /** Three short pages on what ShowFee does, before the setup questions. */
+    private void intro(int page) {
+        introPage = page;
+        String[][] pages = {
+                {"📅", "Welcome to " + getString(R.string.app_name),
+                        "Every " + Words.one(this) + " in one place",
+                        "Log a " + Words.one(this) + " in seconds – who, when, where and the fee. "
+                                + "ShowFee reminds you before each one, and it can go straight into your calendar."},
+                {"💶", "No more chasing from memory", "Always know who owes you",
+                        "See what's paid, what's due and what's overdue at a glance. "
+                                + "Record cash, transfers and part payments as they come in."},
+                {"⚡", "Get paid faster", "Invoices and reminders in one tap",
+                        "Send a PDF invoice or a friendly reminder with a \"Pay here\" link by email, WhatsApp or text. "
+                                + "These are part of ShowFee Pro, free for your first month."}};
+        String[] pg = pages[page];
+
+        LinearLayout v = Ui.vbox(this, 0);
+        int pad = Ui.dp(this, 28);
+        v.setPadding(pad, Ui.dp(this, 20), pad, Ui.dp(this, 28));
+        v.setBackgroundColor(Ui.BG);
+
+        TextView skip = Ui.text(this, page < pages.length - 1 ? "Skip" : " ", 15, Ui.GREY, false);
+        skip.setGravity(Gravity.END);
+        skip.setPadding(0, Ui.dp(this, 8), 0, Ui.dp(this, 8));
+        skip.setOnClickListener(x -> introDone());
+        v.addView(skip, Ui.matchWrap(this, 0));
+
+        LinearLayout middle = Ui.vbox(this, 0);
+        middle.setGravity(Gravity.CENTER);
+        TextView art = Ui.text(this, pg[0], 64, Ui.DARK, false);
+        art.setGravity(Gravity.CENTER);
+        art.setBackground(Ui.rounded(this, Ui.PRIMARY_LIGHT, 60));
+        int s = Ui.dp(this, 132);
+        middle.addView(art, new LinearLayout.LayoutParams(s, s));
+        TextView over = Ui.text(this, pg[1].toUpperCase(), 12, Ui.PRIMARY, true);
+        over.setGravity(Gravity.CENTER);
+        over.setLetterSpacing(0.08f);
+        over.setPadding(0, Ui.dp(this, 32), 0, Ui.dp(this, 8));
+        middle.addView(over);
+        TextView title = Ui.text(this, pg[2], 26, Ui.DARK, true);
+        title.setGravity(Gravity.CENTER);
+        middle.addView(title);
+        TextView body = Ui.text(this, pg[3], 16, Ui.GREY, false);
+        body.setGravity(Gravity.CENTER);
+        body.setLineSpacing(0, 1.15f);
+        body.setPadding(0, Ui.dp(this, 14), 0, 0);
+        middle.addView(body);
+        v.addView(middle, new LinearLayout.LayoutParams(-1, 0, 1f));
+
+        LinearLayout dots = Ui.hbox(this);
+        dots.setGravity(Gravity.CENTER);
+        for (int i = 0; i < pages.length; i++) {
+            android.view.View dot = new android.view.View(this);
+            dot.setBackground(Ui.rounded(this, i == page ? Ui.PRIMARY : Ui.PRIMARY_LIGHT, 4));
+            LinearLayout.LayoutParams dl = new LinearLayout.LayoutParams(Ui.dp(this, i == page ? 22 : 8), Ui.dp(this, 8));
+            dl.leftMargin = dl.rightMargin = Ui.dp(this, 4);
+            dots.addView(dot, dl);
+        }
+        dots.setPadding(0, 0, 0, Ui.dp(this, 22));
+        v.addView(dots, Ui.matchWrap(this, 0));
+
+        boolean last = page == pages.length - 1;
+        Button next = Ui.primary(this, last ? "Set up ShowFee" : "Next");
+        next.setOnClickListener(x -> {
+            if (last) introDone();
+            else intro(page + 1);
+        });
+        v.addView(next, new LinearLayout.LayoutParams(-1, Ui.dp(this, 54)));
+
+        setContentView(v);
+        Theme.bars(this);
+    }
+
+    private void introDone() {
+        Prefs.sp(this).edit().putBoolean(Prefs.INTRO_DONE, true).apply();
+        recreate();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle out) {
+        super.onSaveInstanceState(out);
+        out.putInt("intro", introPage);
+    }
+
     private TextView heading(String s) {
         TextView t = Ui.text(this, s, 16, Ui.DARK, true);
         t.setPadding(0, Ui.dp(this, 28), 0, Ui.dp(this, 2));
@@ -147,6 +237,7 @@ public class WelcomeActivity extends Activity {
 
     /** Saves what's been typed so far (the screen redraws when a choice changes). */
     private void keep() {
+        if (name == null) return; // still on the intro pages
         Prefs.set(this, Prefs.NAME, name.getText().toString());
         Prefs.set(this, Prefs.CURRENCY, Money.CODES[currency.getSelectedItemPosition()]);
     }

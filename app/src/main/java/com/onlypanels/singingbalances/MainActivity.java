@@ -320,7 +320,10 @@ public class MainActivity extends Activity {
         v.addView(top);
 
         List<Object> rows = new ArrayList<>();
+        boolean examples = Examples.active(this);
+        if (examples) rows.add("examples");
         if (Prefs.get(this, Prefs.NAME).isEmpty() || !Prefs.hasPaymentDetails(this)) rows.add("setup");
+        boolean brandNew = !examples && db.allGigs().isEmpty();
         String empty;
         switch (gigsTab) {
             case "upcoming":
@@ -344,6 +347,7 @@ public class MainActivity extends Activity {
             Object o = rows.get(pos);
             if (o instanceof Gig) openGig(((Gig) o).id);
             else if ("setup".equals(o)) SettingsActivity.open(this, SettingsActivity.BUSINESS);
+            else if ("examples".equals(o)) askRemoveExamples();
         });
         TextView emptyView = Ui.text(this, empty, 16, Ui.GREY, false);
         emptyView.setGravity(Gravity.CENTER);
@@ -351,7 +355,9 @@ public class MainActivity extends Activity {
         emptyView.setPadding(p, p, p, p);
         frame.addView(list, new FrameLayout.LayoutParams(-1, -1));
         boolean onlySetup = rows.size() == 1 && "setup".equals(rows.get(0));
-        if (rows.isEmpty() || onlySetup) {
+        if (brandNew) {
+            frame.addView(startCard(), new FrameLayout.LayoutParams(-1, -2));
+        } else if (rows.isEmpty() || onlySetup) {
             FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(-1, -1);
             if (onlySetup) lp.topMargin = Ui.dp(this, 90);
             frame.addView(emptyView, lp);
@@ -379,7 +385,50 @@ public class MainActivity extends Activity {
         }
     }
 
-    /** Rows: Gig, month header (String), or "setup" hint. */
+    /** Brand-new user, nothing added yet: add a first booking, or look around with example ones. */
+    private View startCard() {
+        LinearLayout outer = Ui.vbox(this, 0);
+        int m = Ui.dp(this, 16);
+        outer.setPadding(m, Ui.dp(this, 4), m, m);
+        LinearLayout box = Ui.vbox(this, 20);
+        box.setBackground(Ui.outlined(this, Ui.SURFACE, 16));
+        box.addView(Ui.text(this, "👋  New to ShowFee?", 18, Ui.DARK, true));
+        TextView body = Ui.text(this, "Add your first " + Words.one(this) + " – it takes about 20 seconds. "
+                + "Or see how everything works with a few example " + Words.many(this) + " first.", 14, Ui.GREY, false);
+        body.setPadding(0, Ui.dp(this, 6), 0, Ui.dp(this, 14));
+        box.addView(body);
+        Button first = Ui.primary(this, "+  Add my first " + Words.one(this));
+        first.setOnClickListener(x -> Forms.editGig(this, null, 0, id -> render()));
+        box.addView(first);
+        Button demo = Ui.tonal(this, "Show me with example " + Words.many(this));
+        LinearLayout.LayoutParams lp = Ui.matchWrap(this, 10);
+        demo.setLayoutParams(lp);
+        demo.setOnClickListener(x -> {
+            Examples.add(this);
+            gigsTab = "unpaid";
+            render();
+            android.widget.Toast.makeText(this, "Example " + Words.many(this) + " added – remove them any time",
+                    android.widget.Toast.LENGTH_LONG).show();
+        });
+        box.addView(demo);
+        outer.addView(box);
+        return outer;
+    }
+
+    private void askRemoveExamples() {
+        new android.app.AlertDialog.Builder(this)
+                .setTitle("Remove the examples?")
+                .setMessage("The example " + Words.many(this) + ", their payments and expenses will be deleted. "
+                        + "Anything you added yourself stays.")
+                .setPositiveButton("Remove", (d, w) -> {
+                    Examples.remove(this);
+                    render();
+                })
+                .setNegativeButton("Keep for now", null)
+                .show();
+    }
+
+    /** Rows: Gig, month header (String), "setup" hint or "examples" note. */
     private class RowsAdapter extends BaseAdapter {
         private final List<Object> rows;
 
@@ -390,7 +439,10 @@ public class MainActivity extends Activity {
         @Override public int getCount() { return rows.size(); }
         @Override public Object getItem(int pos) { return rows.get(pos); }
         @Override public long getItemId(int pos) { return pos; }
-        @Override public boolean isEnabled(int pos) { return !(rows.get(pos) instanceof String) || "setup".equals(rows.get(pos)); }
+        @Override public boolean isEnabled(int pos) {
+            Object o = rows.get(pos);
+            return !(o instanceof String) || "setup".equals(o) || "examples".equals(o);
+        }
 
         @Override
         public View getView(int pos, View convertView, ViewGroup parent) {
@@ -402,6 +454,21 @@ public class MainActivity extends Activity {
                 wrap.addView(Ui.gigRow(c, (Gig) o));
                 wrap.addView(Ui.divider(c));
                 return wrap;
+            }
+            if ("examples".equals(o)) {
+                FrameLayout outer = new FrameLayout(c);
+                int m = Ui.dp(c, 16);
+                outer.setPadding(m, 0, m, Ui.dp(c, 8));
+                LinearLayout box = Ui.vbox(c, 14);
+                box.setBackground(Ui.rounded(c, Ui.PRIMARY_LIGHT, 14));
+                box.addView(Ui.text(c, "You're looking at example " + Words.many(c), 15, Ui.DARK, true));
+                box.addView(Ui.text(c, "Tap around to see how ShowFee works. When you're ready, tap here to remove "
+                        + "the examples – anything you've added yourself stays.", 13, Ui.GREY, false));
+                TextView go = Ui.text(c, "Remove examples", 14, Ui.PRIMARY, true);
+                go.setPadding(0, Ui.dp(c, 8), 0, 0);
+                box.addView(go);
+                outer.addView(box);
+                return outer;
             }
             if ("setup".equals(o)) {
                 FrameLayout outer = new FrameLayout(c);

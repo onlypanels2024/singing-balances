@@ -41,6 +41,8 @@ final class Prefs {
     static final String PRO_ACTIVE = "pro_active";     // last answer from Google Play: subscribed to ShowFee Pro
     static final String PRO_CODE_UNTIL = "pro_code_until"; // day a Pro access code stops working
     static final String PRO_CODE_USED = "pro_code_used";   // this phone has already used its access code
+    static final String EXAMPLES = "examples";             // ids of the example bookings, e.g. "g:3,4,5;e:7,8" (empty = none)
+    static final String INTRO_DONE = "intro_done";         // the three "what ShowFee does" pages have been seen
 
     /**
      * Existing users (who had the app before personalisation) keep exactly what they had:

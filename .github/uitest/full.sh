@@ -47,7 +47,18 @@ adb logcat -b crash -c; CR=0
 # ====================================================================
 section "Welcome screen (brand-new user)"
 main
+check "Intro page 1 shows" "Every booking in one place"
+check "Intro shows Welcome" "WELCOME TO"
+shot REVIEW-intro-1
+$UI tap "=Next" > /dev/null; sleep 1; check "Intro page 2" "Always know who owes you"; shot REVIEW-intro-2
+$UI tap "=Next" > /dev/null; sleep 1; check "Intro page 3" "Invoices and reminders in one tap"; shot REVIEW-intro-3
+nocheck "No Skip on the last intro page" "=Skip"
+adb shell input keyevent 4; sleep 1; main
+check "Reopening starts the intro again (nothing skipped by accident)" "Every booking in one place"
+$UI tap "=Skip" > /dev/null; sleep 2
 check "Welcome screen shows" "Welcome to"
+check "Setup questions after the intro" "What do you do?"
+nocrash "Intro pages"
 for pair in "Singer:bookings" "Band:bookings" "=DJ:bookings" "Photographer:shoots" "Videographer:shoots" "Hair & make-up:bookings" "MC / host:events" "Dancer:shows" "Something else:bookings"; do
   chip="${pair%%:*}"; word="${pair##*:}"
   $UI tap "$chip" > /dev/null; sleep 2; check "Job chip '$chip' -> wording '$word'" "\"$word\"" 1
@@ -63,8 +74,32 @@ check "Get started opens home" "Still owed to you"
 check "Home uses chosen currency (£)" "£0.00"
 check "Home uses chosen wording (Shoots)" "Shoots"
 dcheck "Welcome choices saved" "currency=GBP accent=teal mode=.* profession=photographer"
-check "Empty home explains what to do" "Nobody owes you anything"
-$UI tap "=Upcoming" > /dev/null; check "Empty upcoming message" "Nothing booked yet"
+check "Brand-new home offers a start" "New to ShowFee?"
+check "Start card: add first booking" "Add my first shoot"
+check "Start card: examples button" "Show me with example shoots"
+shot REVIEW-start-card
+$UI tap "=Upcoming" > /dev/null; check "Start card on Upcoming too" "New to ShowFee?"
+$UI tap "Show me with example shoots" > /dev/null; sleep 2
+check "Examples note shows" "You're looking at example shoots"
+dcheck "Six example bookings added" "gigs=6 "
+check "Examples fill the money card" "Still owed to you"
+shot REVIEW-examples-home
+$UI tap "=Upcoming" > /dev/null; check "Example upcoming booking" "Christmas party"; shot REVIEW-examples-upcoming
+$UI tap "=Calendar" > /dev/null; sleep 1; shot REVIEW-examples-calendar
+main --es page gigs --es gigsTab unpaid
+$UI tap "Wedding reception" > /dev/null; check "Example booking opens" "Example booking"; shot REVIEW-example-booking
+backto "Still owed to you"
+adb logcat -c; seeder --es task plan --es plan free
+if adb logcat -d -s UITEST | grep -q "bookingsThisMonth=0"; then ok "Examples don't use up the free plan"; else bad "Examples don't use up the free plan ($(adb logcat -d -s UITEST | grep plan | tail -1))"; fi
+main --es page gigs --es gigsTab unpaid
+$UI tap "Remove examples" > /dev/null; check "Remove asks first" "Remove the examples?"; shot REVIEW-remove-examples
+$UI tap "=KEEP FOR NOW" > /dev/null; check "Keep for now keeps them" "You're looking at example shoots"
+$UI tap "Remove examples" > /dev/null; $UI tap "=REMOVE" > /dev/null; sleep 2
+nocheck "Examples note gone" "You're looking at example shoots"
+dcheck "Examples removed" "gigs=0 .*expenses=0 "
+check "Back to the start card" "New to ShowFee?"
+seeder --es task plan --es plan -
+nocrash "Example bookings"
 shot welcome-done
 
 # ====================================================================
