@@ -44,10 +44,15 @@ public class DemoSeeder extends BroadcastReceiver {
                 String p = intent.getStringExtra("plan");
                 Pro.forced = p == null || p.equals("-") ? null : p;
                 Pro.fakePrice = Pro.forced == null ? null : "1 month free, then €6.99/month";
-                if (Pro.forced == null) Prefs.sp(c).edit().remove(Prefs.PRO_CODE_UNTIL).remove(Prefs.PRO_CODE_USED).apply();
+                if (Pro.forced == null) Prefs.sp(c).edit().remove(Prefs.PRO_CODE_UNTIL).remove(Prefs.PRO_CODE_USED).remove(Prefs.PRO_TESTER_USED).apply();
                 if ("expire".equals(intent.getStringExtra("code"))) Prefs.sp(c).edit().remove(Prefs.PRO_CODE_UNTIL).apply();
                 Theme.changed(c);
                 Log.i(TAG, "plan " + Pro.forced + " bookingsThisMonth=" + Pro.bookingsInMonth(c, Dates.today(), 0));
+            }
+            else if ("testercode".equals(task)) {
+                // Tests use a stand-in code; the real tester code is never written in this public repo
+                Pro.testerHash = "4676e50cffce262678e18d6d1c27b7473a155acf32f7197844ebe26a36eea500"; // TEST-TESTER-CODE
+                Log.i(TAG, "tester code set for test");
             }
             else if ("update".equals(task)) fakeUpdate(c, intent.getStringExtra("step"));
             else if ("widget".equals(task)) {
