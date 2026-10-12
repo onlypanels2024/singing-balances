@@ -56,6 +56,20 @@
             android:label="ShowFee Pro"
             android:parentActivityName=".MainActivity" />
 
+        <!-- Tester thank-you link: showfee://gift?code=… applies the code with one tap -->
+        <activity
+            android:name=".GiftActivity"
+            android:exported="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:noHistory="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="showfee" android:host="gift" />
+            </intent-filter>
+        </activity>
+
         <!-- Microsoft sign-in returns here after the user approves ShowFee -->
         <activity
             android:name="com.microsoft.identity.client.BrowserTabActivity"

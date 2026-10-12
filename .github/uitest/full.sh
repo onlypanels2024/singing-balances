@@ -447,6 +447,11 @@ check "Tester thank-you code unlocks Pro" "Unlocked with an access code" 3; adb 
 settings; check "Tester code gives a year" "365 days left"; shot "REVIEW-tester-settings"
 $UI tap "ShowFee Pro" > /dev/null; sleep 1; $UI tap "Have an access code" 3 > /dev/null; $UI fill "Access code" "TEST-TESTER-CODE" > /dev/null; $UI tap "=UNLOCK" > /dev/null; sleep 1
 check "Tester code still unlocked after trying it twice" "Unlocked with an access code" 3; adb shell input keyevent 4; sleep 1
+seeder --es task plan --es plan -; seeder --es task plan --es plan free; seeder --es task testercode
+adb shell am start -W -a android.intent.action.VIEW -d "showfee://gift?code=TEST-TESTER-CODE" > /dev/null; sleep 0.5; shot "REVIEW-tester-link"
+check "Tapping the gift link unlocks Pro" "Unlocked with an access code" 3; adb shell input keyevent 4; sleep 1
+settings; check "Gift link gives a year" "365 days left"
+adb shell am start -W -a android.intent.action.VIEW -d "showfee://gift?code=WRONG" > /dev/null; sleep 1; nocrash "Wrong gift link"
 seeder --es task plan --es plan -; seeder --es task plan --es plan free
 gig 4; $UI tap "Send invoice" 3 > /dev/null; sleep 1; check "Free plan: invoice asks for Pro" "Sending PDF invoices is part of ShowFee Pro"; shot "REVIEW-pro-invoice-locked"; adb shell input keyevent 4; sleep 1
 gig 4; $UI tap "Send pay link" 3 > /dev/null; sleep 1; check "Free plan: pay link asks for Pro" "Sending pay links"; adb shell input keyevent 4; sleep 1
