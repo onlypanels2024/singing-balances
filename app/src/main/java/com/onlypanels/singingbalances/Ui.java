@@ -130,6 +130,34 @@ final class Ui {
         return b;
     }
 
+    /** Google's standard "Sign in with Google" button (white or dark, G logo, pill shape), as Google's branding rules require. */
+    static Button googleSignIn(Context c) {
+        boolean dk = Theme.dark;
+        Button b = new Button(c);
+        b.setText("Sign in with Google");
+        b.setAllCaps(false);
+        b.setTextSize(14);
+        b.setTypeface(android.graphics.Typeface.create("sans-serif-medium", android.graphics.Typeface.NORMAL));
+        b.setTextColor(dk ? 0xFFE3E3E3 : 0xFF1F1F1F);
+        b.setStateListAnimator(null);
+        android.graphics.drawable.GradientDrawable g = new android.graphics.drawable.GradientDrawable();
+        g.setColor(dk ? 0xFF131314 : 0xFFFFFFFF);
+        g.setStroke(dp(c, 1), dk ? 0xFF8E918F : 0xFF747775);
+        g.setCornerRadius(dp(c, 25));
+        b.setBackground(touchable(g, ripple()));
+        android.graphics.drawable.Drawable logo = c.getDrawable(R.drawable.ic_google_g);
+        logo.setBounds(0, 0, dp(c, 20), dp(c, 20));
+        b.setCompoundDrawables(logo, null, null, null);
+        b.setCompoundDrawablePadding(dp(c, 10));
+        b.setGravity(Gravity.CENTER);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-2, dp(c, 50));
+        lp.topMargin = dp(c, 10);
+        lp.gravity = Gravity.CENTER_HORIZONTAL;
+        b.setLayoutParams(lp);
+        b.setPadding(dp(c, 20), 0, dp(c, 24), 0);
+        return b;
+    }
+
     /** The main action on a screen. */
     static Button primary(Context c, String label) {
         return button(c, label, PRIMARY, ON_PRIMARY);

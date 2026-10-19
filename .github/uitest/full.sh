@@ -325,6 +325,7 @@ dcheck "Logo removed" "logo=false"
 
 section "Settings: email sign-in buttons and choice"
 settings email
+shot "REVIEW-google-button"
 $UI tap "Sign in with Google" 2 > /dev/null; sleep 3; left "Sign in with Google opens Google"; backto "Send straight from ShowFee"
 settings email
 $UI tap "Sign in with Microsoft" 2 > /dev/null; sleep 5; left "Sign in with Microsoft opens Microsoft"; backto "Send straight from ShowFee"
