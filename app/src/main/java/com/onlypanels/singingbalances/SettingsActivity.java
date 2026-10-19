@@ -191,7 +191,7 @@ public class SettingsActivity extends Activity {
                     Toast.makeText(SettingsActivity.this, reason, Toast.LENGTH_LONG).show();
                 }
             };
-            Button in = Ui.primary(this, "Sign in with Google (Gmail)");
+            Button in = Ui.googleSignIn(this);
             in.setOnClickListener(v -> GoogleAccount.authorize(this, true, signedIn));
             f.addView(in);
             Button ms = Ui.primary(this, "Sign in with Microsoft (Outlook, Hotmail)");
