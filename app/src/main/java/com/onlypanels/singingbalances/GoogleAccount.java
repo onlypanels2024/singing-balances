@@ -1,5 +1,7 @@
 package com.onlypanels.singingbalances;
 
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.app.Activity;
 import android.content.Intent;
 
@@ -22,6 +24,9 @@ import java.util.Arrays;
 final class GoogleAccount {
     static final String SEND_SCOPE = "https://www.googleapis.com/auth/gmail.send";
     static final int REQ_AUTH = 4801;
+    static final int REQ_PICK = 4802;
+    /** Account the user just picked in the account list, until Google confirms the permission. */
+    private static String picked;
 
     interface TokenCallback {
         void ok(String accessToken);
@@ -41,10 +46,29 @@ final class GoogleAccount {
         return Prefs.get(c, Prefs.GOOGLE_EMAIL);
     }
 
-    private static AuthorizationRequest request() {
-        return AuthorizationRequest.builder()
-                .setRequestedScopes(Arrays.asList(new Scope(SEND_SCOPE), new Scope("email")))
-                .build();
+    private static AuthorizationRequest request(android.content.Context c) {
+        AuthorizationRequest.Builder b = AuthorizationRequest.builder()
+                .setRequestedScopes(Arrays.asList(new Scope(SEND_SCOPE), new Scope("email")));
+        // Always ask for the account the user chose, so sending uses that account and no other
+        String email = picked != null ? picked : Prefs.get(c, Prefs.GOOGLE_EMAIL);
+        if (email != null && email.contains("@")) b.setAccount(new Account(email, "com.google"));
+        return b.build();
+    }
+
+    /**
+     * "Sign in with Google" in Settings: first shows the phone's list of Google accounts, then
+     * Google's permission screen for the chosen account (if it hasn't given permission yet).
+     */
+    static void chooseAccount(Activity a, TokenCallback cb) {
+        try {
+            Intent pick = AccountManager.newChooseAccountIntent(null, null, new String[]{"com.google"},
+                    null, null, null, null);
+            pending = cb;
+            a.startActivityForResult(pick, REQ_PICK);
+        } catch (Exception e) {
+            pending = null;
+            authorize(a, true, cb);
+        }
     }
 
     /**
@@ -52,7 +76,7 @@ final class GoogleAccount {
      * (interactive must be true); after that it's silent.
      */
     static void authorize(Activity a, boolean interactive, TokenCallback cb) {
-        Identity.getAuthorizationClient(a).authorize(request())
+        Identity.getAuthorizationClient(a).authorize(request(a))
                 .addOnSuccessListener(result -> {
                     if (result.hasResolution()) {
                         if (!interactive || result.getPendingIntent() == null) {
@@ -77,6 +101,19 @@ final class GoogleAccount {
 
     /** Call from onActivityResult. Returns true if it was Google's sign-in result. */
     static boolean handleResult(Activity a, int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQ_PICK) {
+            TokenCallback cb = pending;
+            pending = null;
+            if (cb == null) return true;
+            String name = data == null ? null : data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
+            if (resultCode != Activity.RESULT_OK || name == null) {
+                cb.fail("Sign-in was cancelled.");
+                return true;
+            }
+            picked = name;
+            authorize(a, true, cb);
+            return true;
+        }
         if (requestCode != REQ_AUTH) return false;
         TokenCallback cb = pending;
         pending = null;
@@ -97,7 +134,9 @@ final class GoogleAccount {
 
     private static void remember(Activity a, AuthorizationResult result) {
         GoogleSignInAccount acc = result.toGoogleSignInAccount();
-        String email = acc != null && acc.getEmail() != null ? acc.getEmail() : "your Google account";
+        String email = acc != null && acc.getEmail() != null ? acc.getEmail()
+                : picked != null ? picked : "your Google account";
+        picked = null;
         Prefs.set(a, Prefs.GOOGLE_EMAIL, email);
     }
 
@@ -105,7 +144,10 @@ final class GoogleAccount {
     static void signOut(Activity a, Runnable done) {
         Prefs.set(a, Prefs.GOOGLE_EMAIL, "");
         GoogleSignInOptions o = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).requestEmail().build();
-        GoogleSignIn.getClient(a, o).revokeAccess().addOnCompleteListener(t -> done.run());
+        picked = null;
+        // Remove the permission and forget the account, so the next sign-in starts fresh
+        com.google.android.gms.auth.api.signin.GoogleSignInClient g = GoogleSignIn.getClient(a, o);
+        g.revokeAccess().addOnCompleteListener(t -> g.signOut().addOnCompleteListener(t2 -> done.run()));
     }
 
     private static String friendly(Exception e) {

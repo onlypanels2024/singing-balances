@@ -192,7 +192,7 @@ public class SettingsActivity extends Activity {
                 }
             };
             Button in = Ui.googleSignIn(this);
-            in.setOnClickListener(v -> GoogleAccount.authorize(this, true, signedIn));
+            in.setOnClickListener(v -> GoogleAccount.chooseAccount(this, signedIn));
             f.addView(in);
             Button ms = Ui.primary(this, "Sign in with Microsoft (Outlook, Hotmail)");
             ms.setOnClickListener(v -> MicrosoftAccount.authorize(this, true, signedIn));
