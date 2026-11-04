@@ -54,16 +54,13 @@ final class Pro {
     /** SHA-256 of the current code, so the code itself isn't written in the app. Change it to retire a code. */
     private static final String CODE_HASH = "14dae3d125b8c1f30bb3639346f1174d9c3c5f1269bd169c18159562e3e39937";
     static final int CODE_DAYS = 30;
-    /** SHA-256 of the thank-you code Gary gives testers who stayed for the 14-day test. */
-    static String testerHash = "e02d6289dfdf1dd983d21ebf9b9f9a021c78c7e3759bb149821b2b78e77bf454";
-    static final int TESTER_DAYS = 365;
-    /** How many days the last code that worked unlocked (30 or 365). */
+    /** How many days the last code that worked unlocked. */
     static int lastCodeDays = CODE_DAYS;
 
     static final int CODE_OK = 1, CODE_WRONG = 0, CODE_USED = 2;
 
-    /** Unlocks Pro on this phone if the code is right: 30 days for the reviewer code, a year for the
-     *  tester thank-you code. Each phone can use each code only once. */
+    /** Unlocks Pro on this phone for 30 days if the reviewer code is right. Each phone can use it once.
+     *  (Testers who already unlocked their free year keep it: it's stored on their phone.) */
     static int redeem(Context c, String code) {
         String hash;
         try {
@@ -78,7 +75,6 @@ final class Pro {
         String usedKey;
         int days;
         if (CODE_HASH.equals(hash)) { usedKey = Prefs.PRO_CODE_USED; days = CODE_DAYS; }
-        else if (testerHash.equals(hash)) { usedKey = Prefs.PRO_TESTER_USED; days = TESTER_DAYS; }
         else return CODE_WRONG;
         if (Prefs.sp(c).getBoolean(usedKey, false)) return CODE_USED;
         long until = Math.max(Prefs.sp(c).getLong(Prefs.PRO_CODE_UNTIL, 0), Dates.today() + days);

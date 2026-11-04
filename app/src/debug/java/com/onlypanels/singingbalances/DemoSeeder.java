@@ -49,11 +49,6 @@ public class DemoSeeder extends BroadcastReceiver {
                 Theme.changed(c);
                 Log.i(TAG, "plan " + Pro.forced + " bookingsThisMonth=" + Pro.bookingsInMonth(c, Dates.today(), 0));
             }
-            else if ("testercode".equals(task)) {
-                // Tests use a stand-in code; the real tester code is never written in this public repo
-                Pro.testerHash = "4676e50cffce262678e18d6d1c27b7473a155acf32f7197844ebe26a36eea500"; // TEST-TESTER-CODE
-                Log.i(TAG, "tester code set for test");
-            }
             else if ("update".equals(task)) fakeUpdate(c, intent.getStringExtra("step"));
             else if ("widget".equals(task)) {
                 Widget.updateAll(c);
