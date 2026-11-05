@@ -135,12 +135,9 @@ final class Theme {
             bar.setElevation(0);
         }
         Window w = a.getWindow();
-        w.setStatusBarColor(Ui.BG);
-        w.setNavigationBarColor(Ui.SURFACE);
         View d = w.getDecorView();
-        int flags = d.getSystemUiVisibility();
-        int light = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
-        d.setSystemUiVisibility(dark ? flags & ~light : flags | light);
+        // Android 15+ draws edge-to-edge (handled in edgeToEdge); the old bar-colour calls are only for older phones
+        if (android.os.Build.VERSION.SDK_INT < 35) legacyBars(w, d);
         d.setBackgroundColor(Ui.BG);
         if (android.os.Build.VERSION.SDK_INT >= 30) {
             int appearance = android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
@@ -149,6 +146,18 @@ final class Theme {
             if (c != null) c.setSystemBarsAppearance(dark ? 0 : appearance, appearance);
         }
         edgeToEdge(a);
+    }
+
+    /** Bar colours for Android 14 and older, where apps still colour the status and navigation bars themselves. */
+    @SuppressWarnings("deprecation")
+    private static void legacyBars(Window w, View d) {
+        w.setStatusBarColor(Ui.BG);
+        w.setNavigationBarColor(Ui.SURFACE);
+        if (android.os.Build.VERSION.SDK_INT < 30) {
+            int flags = d.getSystemUiVisibility();
+            int light = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+            d.setSystemUiVisibility(dark ? flags & ~light : flags | light);
+        }
     }
 
     /**

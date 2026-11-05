@@ -29,10 +29,15 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
+            // Shrink and obfuscate the code (R8), as Google Play asks
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
         }
         debug {
+            // The test app is shrunk the same way, so the full button test checks exactly what users get
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
         }
     }
