@@ -440,7 +440,12 @@ adb shell input keyevent 4; sleep 1; settings; check "Settings shows code days l
 seeder --es task plan --es plan free --es code expire
 settings; check "Code ends after its 30 days" "Free plan"; $UI tap "ShowFee Pro" > /dev/null; sleep 1
 $UI tap "Have an access code" 3 > /dev/null; $UI fill "Access code" "SHOWFEE-REVIEW-7351" > /dev/null; $UI tap "=UNLOCK" > /dev/null; sleep 1
-check "Same phone can't use the code twice" "Start my free month" 2; adb shell input keyevent 4; sleep 1
+check "Same phone can't use the code twice" "Start my free month" 2
+seeder --es task plan --es plan free --es ownertest f04ae3aad05a191a9bac4938586823d771908d0eb442fb61a7bc206c3eba91bb
+$UI tap "Have an access code" 3 > /dev/null; $UI fill "Access code" "TEST-OWNER-0000" > /dev/null; $UI tap "=UNLOCK" > /dev/null; sleep 1
+check "Owner code unlocks Pro even after the reviewer code was used" "Unlocked with your owner code" 3; shot "REVIEW-owner-code"
+adb shell input keyevent 4; sleep 1; settings; check "Settings shows owner code" "owner code"; shot "REVIEW-owner-settings"
+$UI tap "ShowFee Pro" > /dev/null; sleep 1; check "Owner code still unlocked when reopened" "Unlocked with your owner code" 3; adb shell input keyevent 4; sleep 1
 adb shell am start -W -a android.intent.action.VIEW -d "showfee://gift?code=ANY" > /dev/null 2>&1; sleep 1; nocrash "Old tester gift link no longer opens anything"
 seeder --es task plan --es plan -; seeder --es task plan --es plan free
 gig 4; $UI tap "Send invoice" 3 > /dev/null; sleep 1; check "Free plan: invoice asks for Pro" "Sending PDF invoices is part of ShowFee Pro"; shot "REVIEW-pro-invoice-locked"; adb shell input keyevent 4; sleep 1

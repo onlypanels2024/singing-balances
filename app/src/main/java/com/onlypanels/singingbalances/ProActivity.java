@@ -52,7 +52,8 @@ public class ProActivity extends Activity {
 
         boolean pro = Pro.isPro(this), dev = Pro.isDeveloperCopy(this);
         boolean subscribed = Prefs.sp(this).getBoolean(Prefs.PRO_ACTIVE, false);
-        boolean byCode = pro && !dev && !subscribed && Pro.codeDaysLeft(this) > 0;
+        boolean owner = pro && !dev && !subscribed && Pro.isOwner(this);
+        boolean byCode = pro && !dev && !subscribed && !owner && Pro.codeDaysLeft(this) > 0;
         String reason = getIntent().getStringExtra("reason");
         if (!pro && reason != null && !reason.isEmpty()) {
             TextView r = Ui.text(this, reason, 14, Ui.DARK, false);
@@ -64,6 +65,7 @@ public class ProActivity extends Activity {
         }
 
         String headline = dev ? "Everything is unlocked on this copy."
+                : owner ? "Unlocked with your owner code ✓"
                 : byCode ? "Unlocked with an access code ✓"
                 : pro ? "You're on ShowFee Pro ✓"
                 : Pro.hasTrial() ? "Try every feature free for a month." : "Unlock every feature.";
@@ -81,6 +83,8 @@ public class ProActivity extends Activity {
 
         if (dev) {
             v.addView(note("This copy was installed outside Google Play by the app's owner, so there's nothing to pay."));
+        } else if (owner) {
+            v.addView(note("All Pro features are unlocked on this phone for good. Nothing was bought and nothing will be charged."));
         } else if (byCode) {
             v.addView(note("All Pro features are unlocked on this phone for " + Pro.codeDaysLeft(this)
                     + " more days. Nothing was bought and nothing will be charged."));
@@ -145,7 +149,9 @@ public class ProActivity extends Activity {
                 .setPositiveButton("Unlock", (d, w) -> {
                     int r = Pro.redeem(this, e.getText().toString());
                     if (r == Pro.CODE_OK) {
-                        Toast.makeText(this, Pro.lastCodeDays >= 365
+                        Toast.makeText(this, Pro.lastCodeDays == Integer.MAX_VALUE
+                                ? "Owner code accepted – ShowFee Pro is unlocked for good ✓"
+                                : Pro.lastCodeDays >= 365
                                 ? "Thank you for testing! ShowFee Pro is yours free for a year ✓"
                                 : "ShowFee Pro unlocked for " + Pro.lastCodeDays + " days ✓", Toast.LENGTH_LONG).show();
                         render();

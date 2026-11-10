@@ -40,6 +40,7 @@ final class Prefs {
     static final String GOOGLE_EMAIL = "google_email"; // signed-in Google account that ShowFee sends from
     static final String PRO_ACTIVE = "pro_active";     // last answer from Google Play: subscribed to ShowFee Pro
     static final String PRO_CODE_UNTIL = "pro_code_until"; // day a Pro access code stops working
+    static final String PRO_OWNER = "pro_owner";           // unlocked for good with the owner's personal code
     static final String PRO_CODE_USED = "pro_code_used";   // this phone has already used its access code
     static final String PRO_TESTER_USED = "pro_tester_used"; // this phone has already used the tester thank-you code
     static final String EXAMPLES = "examples";             // ids of the example bookings, e.g. "g:3,4,5;e:7,8" (empty = none)

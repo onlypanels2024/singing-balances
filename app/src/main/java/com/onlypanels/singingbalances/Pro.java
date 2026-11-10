@@ -45,15 +45,24 @@ final class Pro {
     // ---- Status ----
 
     static boolean isPro(Context c) {
-        if ("free".equals(forced)) return codeDaysLeft(c) > 0;
+        if ("free".equals(forced)) return isOwner(c) || codeDaysLeft(c) > 0;
         if ("pro".equals(forced)) return true;
-        return isDeveloperCopy(c) || Prefs.sp(c).getBoolean(Prefs.PRO_ACTIVE, false) || codeDaysLeft(c) > 0;
+        return isDeveloperCopy(c) || Prefs.sp(c).getBoolean(Prefs.PRO_ACTIVE, false) || isOwner(c) || codeDaysLeft(c) > 0;
+    }
+
+    /** Unlocked with the owner's personal code. */
+    static boolean isOwner(Context c) {
+        return Prefs.sp(c).getBoolean(Prefs.PRO_OWNER, false);
     }
 
     // ---- Access codes (for Google's app reviewers, and the owner's guests) ----
     /** SHA-256 of the current code, so the code itself isn't written in the app. Change it to retire a code. */
     private static final String CODE_HASH = "14dae3d125b8c1f30bb3639346f1174d9c3c5f1269bd169c18159562e3e39937";
     static final int CODE_DAYS = 30;
+    /** SHA-256 of the owner's personal code: unlocks Pro on any phone for good, and can be used again. */
+    private static final String OWNER_HASH = "cd3860eccacb39d7e97f01246b806ffb44f8078c136646655e47e1015c9dc21d";
+    /** Test builds can set a stand-in owner code here (the real one is never in the repo). */
+    static String testOwnerHash;
     /** How many days the last code that worked unlocked. */
     static int lastCodeDays = CODE_DAYS;
 
@@ -71,6 +80,11 @@ final class Pro {
             hash = sb.toString();
         } catch (Exception e) {
             return CODE_WRONG;
+        }
+        if (hash.equals(OWNER_HASH) || hash.equals(testOwnerHash)) {
+            Prefs.sp(c).edit().putBoolean(Prefs.PRO_OWNER, true).apply();
+            lastCodeDays = Integer.MAX_VALUE;
+            return CODE_OK;
         }
         String usedKey;
         int days;
@@ -103,6 +117,7 @@ final class Pro {
     static String summary(Context c) {
         if (isDeveloperCopy(c)) return "All features unlocked (developer copy)";
         if (Prefs.sp(c).getBoolean(Prefs.PRO_ACTIVE, false)) return "Active – all features";
+        if (isOwner(c)) return "All features unlocked (owner code)";
         if (codeDaysLeft(c) > 0) return "Unlocked with a code · " + codeDaysLeft(c) + " days left";
         int n = bookingsInMonth(c, Dates.today(), 0);
         return "Free plan · " + Math.min(n, FREE_BOOKINGS) + " of " + FREE_BOOKINGS + " " + Words.many(c) + " this month";
