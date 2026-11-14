@@ -73,11 +73,9 @@ public class ProActivity extends Activity {
 
         String[] perks = {
                 "Unlimited " + Words.many(this) + " (free plan: " + Pro.FREE_BOOKINGS + " a month)",
-                "PDF invoices with your logo and colours",
-                "Send invoices and reminders from your Gmail or Outlook",
-                "Pay-now links, \"Pay here\" buttons and QR codes",
-                "Send pay links by WhatsApp or text message"};
+                "Your own booking link – clients book you from Facebook and Instagram (coming soon)"};
         for (String s : perks) v.addView(tick(s));
+        v.addView(note("Invoices, reminders and pay links are free for everyone."));
 
         if (dev) {
             v.addView(note("This copy was installed outside Google Play by the app's owner, so there's nothing to pay."));
