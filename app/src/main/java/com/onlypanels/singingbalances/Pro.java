@@ -21,8 +21,8 @@ import java.util.List;
 
 /**
  * ShowFee Pro: a monthly subscription through Google Play (price and free trial are set in Play Console).
- * Without it the app still works as a free plan: up to {@link #FREE_BOOKINGS} bookings a month, and no
- * invoices, emails or pay links. Nobody ever loses access to their own data.
+ * Without it the app still works as a free plan: up to {@link #FREE_BOOKINGS} bookings a month, with invoices,
+ * emails, reminders and pay links included. Nobody ever loses access to their own data.
  */
 final class Pro {
     static final String PRODUCT = "showfee_pro";

@@ -443,8 +443,9 @@ $UI tap "Have an access code" 3 > /dev/null; $UI fill "Access code" "SHOWFEE-REV
 check "Same phone can't use the code twice" "Start my free month" 2; adb shell input keyevent 4; sleep 1
 adb shell am start -W -a android.intent.action.VIEW -d "showfee://gift?code=ANY" > /dev/null 2>&1; sleep 1; nocrash "Old tester gift link no longer opens anything"
 seeder --es task plan --es plan -; seeder --es task plan --es plan free
-gig 4; $UI tap "Send invoice" 3 > /dev/null; sleep 1; check "Free plan: invoice asks for Pro" "Sending PDF invoices is part of ShowFee Pro"; shot "REVIEW-pro-invoice-locked"; adb shell input keyevent 4; sleep 1
-gig 4; $UI tap "Send pay link" 3 > /dev/null; sleep 1; check "Free plan: pay link asks for Pro" "Sending pay links"; adb shell input keyevent 4; sleep 1
+gig 4; $UI tap "Send invoice" 3 > /dev/null; sleep 2; nocheck "Free plan: invoice works without Pro" "part of ShowFee Pro"; nocheck "Free plan: invoice doesn't open the Pro screen" "Start my free month"; shot "REVIEW-free-invoice"; backto "Record a payment"
+gig 4; $UI tap "Send pay link" 3 > /dev/null; sleep 2; nocheck "Free plan: pay link works without Pro" "part of ShowFee Pro"; nocheck "Free plan: pay link doesn't open the Pro screen" "Start my free month"; backto "Record a payment"
+gig 4; $UI tap "Email payment reminder" 3 > /dev/null; sleep 2; nocheck "Free plan: reminder works without Pro" "part of ShowFee Pro"; nocheck "Free plan: reminder doesn't open the Pro screen" "Start my free month"; backto "Record a payment"
 main --es page gigs --es gigsTab all; $UI tap "Add a booking" > /dev/null
 $UI fill "Client (who pays you)" "Limit Test" > /dev/null; $UI fill "Fee (" "100" 2 > /dev/null; $UI tap "=SAVE" > /dev/null; sleep 2
 if $UI has "free plan includes" > /dev/null; then ok "Free plan: 6th booking this month asks for Pro"; shot "REVIEW-pro-limit"; adb shell input keyevent 4; sleep 1; $UI tap "=CANCEL" > /dev/null
