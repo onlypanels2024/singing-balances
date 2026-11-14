@@ -73,7 +73,7 @@ public class ProActivity extends Activity {
 
         String[] perks = {
                 "Unlimited " + Words.many(this) + " (free plan: " + Pro.FREE_BOOKINGS + " a month)",
-                "Your own booking link – clients book you from Facebook and Instagram (coming soon)"};
+                "Your own booking link – clients book you from WhatsApp, Facebook, Instagram and more (coming soon)"};
         for (String s : perks) v.addView(tick(s));
         v.addView(note("Invoices, reminders and pay links are free for everyone."));
 
