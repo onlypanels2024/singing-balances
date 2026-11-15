@@ -169,6 +169,7 @@ public class MainActivity extends Activity {
             @Override public void fail(String reason) { } // quiet: tried again next time the app opens
         });
         Cloud.syncBusy(this);
+        Cloud.registerDevice(this);
     }
 
     /** Small buttons side by side in the update bar (normal buttons are full width). */

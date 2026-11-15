@@ -83,6 +83,17 @@
             </intent-filter>
         </activity>
 
+        <!-- Booking-request notifications. Nothing is set up unless the user creates a booking link. -->
+        <service
+            android:name=".PushService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+        <meta-data android:name="firebase_messaging_auto_init_enabled" android:value="false" />
+        <meta-data android:name="firebase_analytics_collection_deactivated" android:value="true" />
+
         <provider
             android:name=".ShareProvider"
             android:authorities="${applicationId}.files"

@@ -353,7 +353,7 @@ public class DemoSeeder extends BroadcastReceiver {
             case "bkstate":
                 Log.i(TAG, "bkstate signedIn=" + Cloud.signedIn(c) + " slug=" + Cloud.get(c, Cloud.SLUG) + " accepting=" + Cloud.accepting(c)
                         + " days=" + Cloud.days(c) + " questions=" + Cloud.questions(c) + " new=" + Cloud.newCount(c)
-                        + " cached=" + Cloud.cached(c).size());
+                        + " cached=" + Cloud.cached(c).size() + " push=" + (Cloud.get(c, Cloud.PUSH_TOKEN).isEmpty() ? "no" : "yes"));
                 break;
             default:
                 Log.i(TAG, "unknown booking task " + task);

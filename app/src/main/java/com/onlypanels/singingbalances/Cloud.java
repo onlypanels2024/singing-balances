@@ -43,7 +43,7 @@ final class Cloud {
     // Saved on the phone (kept apart from the main settings, so a backup file never carries sign-in keys)
     static final String UID = "uid", REFRESH = "refresh", ID_TOKEN = "id_token", EXPIRES = "expires", EMAIL = "email",
             ANON = "anonymous", SLUG = "slug", NAME = "name", TAGLINE = "tagline", ACCEPTING = "accepting", DAYS = "days",
-            QUESTIONS = "questions", BUSY_SENT = "busy_sent", REQUESTS = "requests";
+            QUESTIONS = "questions", BUSY_SENT = "busy_sent", REQUESTS = "requests", PUSH_TOKEN = "push_token";
 
     /** Test builds only: pretend to be offline, to check the "no internet" messages. */
     static volatile boolean forceOffline;
@@ -280,7 +280,37 @@ final class Cloud {
                 } catch (Exception ignored) { }
             }
             if (!get(c, SLUG).isEmpty()) call("DELETE", DOCS + "/pages/" + get(c, SLUG), null, t);
+            try {
+                call("DELETE", DOCS + "/devices/" + get(c, UID), null, t); // stop notifications to this account
+            } catch (Exception ignored) { }
             sp(c).edit().clear().apply();
+            return null;
+        });
+    }
+
+    // ------------------------------------------------------------------ notifications
+
+    /** Signs this phone up for booking-request notifications (only if the user has a booking link). */
+    static void registerDevice(Context c) {
+        if (!hasLink(c)) return;
+        try {
+            com.google.firebase.messaging.FirebaseMessaging.getInstance().getToken()
+                    .addOnSuccessListener(t -> registerDevice(c, t));
+        } catch (Exception ignored) { } // no Google Play services: requests still show when the app opens
+    }
+
+    static void registerDevice(Context c, String token) {
+        if (!hasLink(c) || token == null || token.isEmpty() || token.equals(get(c, PUSH_TOKEN))) return;
+        run(null, () -> {
+            JSONObject w = new JSONObject()
+                    .put("update", new JSONObject().put("name", DOC_PREFIX + "/devices/" + get(c, UID)).put("fields", new JSONObject()))
+                    .put("updateMask", new JSONObject().put("fieldPaths", new JSONArray()))
+                    .put("updateTransforms", new JSONArray()
+                            .put(new JSONObject().put("fieldPath", "tokens").put("appendMissingElements",
+                                    new JSONObject().put("values", new JSONArray().put(sv(token)))))
+                            .put(new JSONObject().put("fieldPath", "updated").put("setToServerValue", "REQUEST_TIME")));
+            call("POST", DOCS + ":commit", new JSONObject().put("writes", new JSONArray().put(w)), token(c));
+            sp(c).edit().putString(PUSH_TOKEN, token).apply();
             return null;
         });
     }
