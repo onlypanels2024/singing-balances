@@ -20,12 +20,15 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * ShowFee Pro: a monthly subscription through Google Play (price and free trial are set in Play Console).
+ * ShowFee Pro and ShowFee Business: monthly subscriptions through Google Play. Business includes everything in Pro
+ * plus branding on the booking page (logo, colour, light/dark page, no "Powered by ShowFee", own web address).
+ * Pro: a monthly subscription through Google Play (price and free trial are set in Play Console).
  * Without it the app still works as a free plan: up to {@link #FREE_BOOKINGS} bookings a month, with invoices,
  * emails, reminders and pay links included. Nobody ever loses access to their own data.
  */
 final class Pro {
     static final String PRODUCT = "showfee_pro";
+    static final String BUSINESS = "showfee_business";
     static final int FREE_BOOKINGS = 5;
     /** Copies we build and hand out ourselves (not from Google Play) are signed with this key: all unlocked. */
     private static final String DEVELOPER_SIGNATURE = "4Y+anr53U/y8bSlzpzy/MWNi4vs=";
@@ -33,10 +36,12 @@ final class Pro {
     /** Test builds can force "free" or "pro" here. */
     static String forced;
     /** Test builds can show a pretend price here when Google Play isn't on the phone. */
-    static String fakePrice;
+    static String fakePrice, fakeBusinessPrice;
 
     private static BillingClient client;
-    private static ProductDetails details;
+    private static final java.util.Map<String, ProductDetails> details = new java.util.HashMap<>();
+    /** The subscription this phone has now (for upgrading Pro → Business and for "Manage"). */
+    private static String currentProduct, currentToken;
     private static Boolean developer;
     private static Runnable onChange;
 
@@ -46,8 +51,14 @@ final class Pro {
 
     static boolean isPro(Context c) {
         if ("free".equals(forced)) return codeDaysLeft(c) > 0;
-        if ("pro".equals(forced)) return true;
+        if ("pro".equals(forced) || "business".equals(forced)) return true;
         return isDeveloperCopy(c) || Prefs.sp(c).getBoolean(Prefs.PRO_ACTIVE, false) || codeDaysLeft(c) > 0;
+    }
+
+    /** ShowFee Business (branding). Access codes unlock Pro only. */
+    static boolean isBusiness(Context c) {
+        if (forced != null) return "business".equals(forced);
+        return isDeveloperCopy(c) || Prefs.sp(c).getBoolean(Prefs.BUSINESS_ACTIVE, false);
     }
 
     // ---- Access codes (for Google's app reviewers, and the owner's guests) ----
@@ -102,6 +113,7 @@ final class Pro {
     /** "ShowFee Pro", "Free trial", "Free plan · 2 of 5 bookings this month"… for the Settings menu. */
     static String summary(Context c) {
         if (isDeveloperCopy(c)) return "All features unlocked (developer copy)";
+        if (isBusiness(c)) return "ShowFee Business – active";
         if (Prefs.sp(c).getBoolean(Prefs.PRO_ACTIVE, false)) return "Active – all features";
         if (codeDaysLeft(c) > 0) return "Unlocked with a code · " + codeDaysLeft(c) + " days left";
         int n = bookingsInMonth(c, Dates.today(), 0);
@@ -173,33 +185,43 @@ final class Pro {
                     if (r.getResponseCode() == BillingClient.BillingResponseCode.OK) handle(c, purchases);
                 });
         client.queryProductDetailsAsync(QueryProductDetailsParams.newBuilder()
-                        .setProductList(Collections.singletonList(QueryProductDetailsParams.Product.newBuilder()
-                                .setProductId(PRODUCT).setProductType(BillingClient.ProductType.SUBS).build()))
+                        .setProductList(java.util.Arrays.asList(
+                                QueryProductDetailsParams.Product.newBuilder()
+                                        .setProductId(PRODUCT).setProductType(BillingClient.ProductType.SUBS).build(),
+                                QueryProductDetailsParams.Product.newBuilder()
+                                        .setProductId(BUSINESS).setProductType(BillingClient.ProductType.SUBS).build()))
                         .build(),
                 (r, result) -> {
                     if (r.getResponseCode() == BillingClient.BillingResponseCode.OK
                             && !result.getProductDetailsList().isEmpty()) {
-                        details = result.getProductDetailsList().get(0);
+                        for (ProductDetails d : result.getProductDetailsList()) details.put(d.getProductId(), d);
                         changed();
                     }
                 });
     }
 
     private static void handle(Context c, List<Purchase> purchases) {
-        boolean active = false;
+        boolean active = false, business = false;
         for (Purchase p : purchases) {
-            if (!p.getProducts().contains(PRODUCT)) continue;
+            boolean isB = p.getProducts().contains(BUSINESS);
+            if (!p.getProducts().contains(PRODUCT) && !isB) continue;
             if (p.getPurchaseState() != Purchase.PurchaseState.PURCHASED) continue;
             active = true;
+            if (isB) business = true;
+            if (isB || currentProduct == null) {
+                currentProduct = isB ? BUSINESS : PRODUCT;
+                currentToken = p.getPurchaseToken();
+            }
             if (!p.isAcknowledged()) {
                 // Google refunds purchases that aren't confirmed within 3 days
                 client.acknowledgePurchase(AcknowledgePurchaseParams.newBuilder()
                         .setPurchaseToken(p.getPurchaseToken()).build(), r -> {});
             }
         }
-        boolean was = Prefs.sp(c).getBoolean(Prefs.PRO_ACTIVE, false);
-        Prefs.sp(c).edit().putBoolean(Prefs.PRO_ACTIVE, active).apply();
-        if (was != active) changed();
+        if (!active) currentProduct = currentToken = null;
+        boolean was = Prefs.sp(c).getBoolean(Prefs.PRO_ACTIVE, false), wasB = Prefs.sp(c).getBoolean(Prefs.BUSINESS_ACTIVE, false);
+        Prefs.sp(c).edit().putBoolean(Prefs.PRO_ACTIVE, active).putBoolean(Prefs.BUSINESS_ACTIVE, business).apply();
+        if (was != active || wasB != business) changed();
     }
 
     private static void changed() {
@@ -208,10 +230,11 @@ final class Pro {
     }
 
     /** The offer with the free month if there is one, otherwise the normal monthly plan. */
-    private static ProductDetails.SubscriptionOfferDetails bestOffer() {
-        if (details == null || details.getSubscriptionOfferDetails() == null) return null;
+    private static ProductDetails.SubscriptionOfferDetails bestOffer(String product) {
+        ProductDetails d = details.get(product);
+        if (d == null || d.getSubscriptionOfferDetails() == null) return null;
         ProductDetails.SubscriptionOfferDetails best = null;
-        for (ProductDetails.SubscriptionOfferDetails o : details.getSubscriptionOfferDetails()) {
+        for (ProductDetails.SubscriptionOfferDetails o : d.getSubscriptionOfferDetails()) {
             if (best == null) best = o;
             for (ProductDetails.PricingPhase ph : o.getPricingPhases().getPricingPhaseList()) {
                 if (ph.getPriceAmountMicros() == 0) return o; // has a free trial
@@ -222,8 +245,13 @@ final class Pro {
 
     /** E.g. "1 month free, then €6.99/month", or "" while Google Play hasn't answered. */
     static String priceLine() {
-        if (fakePrice != null) return fakePrice;
-        ProductDetails.SubscriptionOfferDetails o = bestOffer();
+        return priceLine(PRODUCT);
+    }
+
+    static String priceLine(String product) {
+        if (BUSINESS.equals(product) ? fakeBusinessPrice != null : fakePrice != null)
+            return BUSINESS.equals(product) ? fakeBusinessPrice : fakePrice;
+        ProductDetails.SubscriptionOfferDetails o = bestOffer(product);
         if (o == null) return "";
         List<ProductDetails.PricingPhase> phases = o.getPricingPhases().getPricingPhaseList();
         String free = "", price = "";
@@ -235,8 +263,11 @@ final class Pro {
     }
 
     static boolean hasTrial() {
-        if (fakePrice != null) return fakePrice.contains("free");
-        return priceLine().contains("free");
+        return hasTrial(PRODUCT);
+    }
+
+    static boolean hasTrial(String product) {
+        return priceLine(product).contains("free");
     }
 
     /** "P1M" -> "1 month", "P7D" -> "7 days", "P1W" -> "1 week". */
@@ -256,12 +287,24 @@ final class Pro {
 
     /** Opens Google Play's payment sheet. Returns false if Google Play isn't ready. */
     static boolean buy(Activity a) {
-        ProductDetails.SubscriptionOfferDetails o = bestOffer();
-        if (client == null || details == null || o == null) return false;
-        BillingFlowParams params = BillingFlowParams.newBuilder()
+        return buy(a, PRODUCT);
+    }
+
+    /** Pro → Business is an upgrade of the same subscription: Google Play adjusts what was already paid. */
+    static boolean buy(Activity a, String product) {
+        ProductDetails.SubscriptionOfferDetails o = bestOffer(product);
+        ProductDetails d = details.get(product);
+        if (client == null || d == null || o == null) return false;
+        BillingFlowParams.Builder b = BillingFlowParams.newBuilder()
                 .setProductDetailsParamsList(Collections.singletonList(BillingFlowParams.ProductDetailsParams.newBuilder()
-                        .setProductDetails(details).setOfferToken(o.getOfferToken()).build()))
-                .build();
+                        .setProductDetails(d).setOfferToken(o.getOfferToken()).build()));
+        if (currentToken != null && currentProduct != null && !currentProduct.equals(product)) {
+            b.setSubscriptionUpdateParams(BillingFlowParams.SubscriptionUpdateParams.newBuilder()
+                    .setOldPurchaseToken(currentToken)
+                    .setSubscriptionReplacementMode(BillingFlowParams.SubscriptionUpdateParams.ReplacementMode.WITH_TIME_PRORATION)
+                    .build());
+        }
+        BillingFlowParams params = b.build();
         BillingResult r = client.launchBillingFlow(a, params);
         return r.getResponseCode() == BillingClient.BillingResponseCode.OK;
     }
@@ -270,7 +313,7 @@ final class Pro {
     static void manage(Activity a) {
         try {
             a.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(
-                    "https://play.google.com/store/account/subscriptions?sku=" + PRODUCT + "&package=" + a.getPackageName())));
+                    "https://play.google.com/store/account/subscriptions?sku=" + (currentProduct == null ? PRODUCT : currentProduct) + "&package=" + a.getPackageName())));
         } catch (Exception ignored) {
         }
     }

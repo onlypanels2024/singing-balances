@@ -38,7 +38,8 @@ final class Prefs {
     static final String ASK_CALENDAR = "ask_calendar"; // offer "Add to calendar?" after each new booking
     static final String MS_EMAIL = "ms_email";         // signed-in Microsoft account that ShowFee sends from
     static final String GOOGLE_EMAIL = "google_email"; // signed-in Google account that ShowFee sends from
-    static final String PRO_ACTIVE = "pro_active";     // last answer from Google Play: subscribed to ShowFee Pro
+    static final String PRO_ACTIVE = "pro_active";
+    static final String BUSINESS_ACTIVE = "business_active"; // last answer from Google Play: subscribed to ShowFee Business     // last answer from Google Play: subscribed to ShowFee Pro
     static final String PRO_CODE_UNTIL = "pro_code_until"; // day a Pro access code stops working
     static final String PRO_CODE_USED = "pro_code_used";   // this phone has already used its access code
     static final String PRO_TESTER_USED = "pro_tester_used"; // this phone has already used the tester thank-you code
