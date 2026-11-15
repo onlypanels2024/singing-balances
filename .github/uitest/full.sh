@@ -468,6 +468,8 @@ check "Downloaded update asks to restart" "restart to finish"; shot "REVIEW-upda
 seeder --es task update --es step off
 nocrash "Update bar"
 
+source .github/uitest/booking.sh
+
 section "Review pictures (Android 15 edge-to-edge)"
 for pg in gigs calendar clients money; do main --es page $pg; shot "REVIEW-e2e-$pg"; done
 gig 4; shot "REVIEW-e2e-booking"
