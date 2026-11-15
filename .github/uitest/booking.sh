@@ -8,7 +8,7 @@ bklog() { adb logcat -c; seeder --es task "$2" "${@:4}"; sleep 5; L=$(adb logcat
 SLUG="test-ci-$(date +%s)"
 seeder --es task plan --es plan free
 settings; check "Settings has Your booking link" "Your booking link"; check "Row explains the link" "Clients book you from WhatsApp"; shot "REVIEW-bk-settings-row"
-$UI tap "Your booking link" > /dev/null; sleep 2; check "Free plan: booking link asks for Pro" "Start my free month"; adb shell input keyevent 4; sleep 1
+$UI tap "Your booking link" > /dev/null; sleep 2; check "Free plan: booking link asks for Pro" "1 month free, then"; adb shell input keyevent 4; sleep 1
 seeder --es task plan --es plan -
 settings; $UI tap "Your booking link" > /dev/null; sleep 2
 check "Booking link intro" "Let clients book you with one link"; check "Clients need no account (said on screen)" "don't need an account"
@@ -58,7 +58,7 @@ bk; check "Powered by switched off" "only your brand shows" 4; shot "REVIEW-biz-
 bklog "Branding saved on the page" bkpage '"color":\{"stringValue":"#0f6b5c"\}'
 bklog "Light page saved" bkpage '"theme":\{"stringValue":"light"\}'
 bklog "Powered by off saved" bkpage '"powered":\{"booleanValue":false\}'
-bklog "Logo saved on the page" bkpage 'data:image/png;base64'
+bklog "Logo saved on the page" bkpage 'data:image\\?/png;base64'
 bk; $UI tap "Use my own web address" 4 > /dev/null; sleep 1; $UI fill "The web address" "book.mariaborg.com" > /dev/null
 $UI tap "=SEND REQUEST" > /dev/null || $UI tap "=Send request" > /dev/null; sleep 3; left "Own web address opens an email"; backto "Your booking link"
 seeder --es task plan --es plan pro

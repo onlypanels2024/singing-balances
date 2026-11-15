@@ -341,7 +341,9 @@ public class DemoSeeder extends BroadcastReceiver {
                 try {
                     String raw = Cloud.request("GET", DOCS + "/pages/" + (in.getStringExtra("slug") != null ? in.getStringExtra("slug") : Cloud.get(c, Cloud.SLUG)) + "?key=" + KEY, null, null, null);
                     JSONObject fields = new JSONObject(raw).getJSONObject("fields");
-                    Log.i(TAG, "bkpage " + fields.toString().replace("\n", " "));
+                    // the logo is a long data: address; keep only its start so the log line isn't cut off
+                    String line = fields.toString().replace("\n", " ").replaceAll("(data:image\\\\?/[a-z]+;base64,)[A-Za-z0-9+/=\\\\]+", "$1...");
+                    Log.i(TAG, "bkpage " + line);
                 } catch (Cloud.HttpError e) {
                     Log.i(TAG, "bkpage missing " + e.code);
                 }
