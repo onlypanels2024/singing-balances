@@ -482,12 +482,13 @@ seeder --es task plan --es plan -
 settings; $UI tap "Your booking link" > /dev/null; sleep 2
 check "Booking link intro" "Let clients book you with one link"; check "Clients need no account (said on screen)" "don't need an account"
 check "Owner signs in with Google" "Sign in with Google"; shot "REVIEW-bk-intro"
-$UI tap "Sign in with Google" > /dev/null; sleep 4; shot "REVIEW-bk-google"; left "Sign in with Google opens Google's sign-in"; backto "Let clients book you"
+$UI tap "Sign in with Google" > /dev/null; sleep 4; shot "REVIEW-bk-google"; nocrash "Sign in with Google button (the test phone has no Google account)"; backto "Let clients book you"
 nocrash "Booking link intro"
 bklog "Test account signs in" bkanon "bkanon signed in"
 bk; check "Signed in: choose your link" "Choose your link"; check "Name filled in" "Maria Borg"
 $UI fill "Your link:" "garyfalzon" > /dev/null; $UI fill "Line under your name" "Singer in Malta" > /dev/null
-$UI tap "Create my link" 2 > /dev/null; sleep 2; check "Test account can only use test- links" "must start with test-" 1
+$UI tap "Create my link" 2 > /dev/null; sleep 3; check "Wrong link name is refused (stays on Choose your link)" "Choose your link"
+bklog "Test account can't take a real link name" bkstate "slug= accepting"
 $UI fill "Your link:" "$SLUG" > /dev/null; shot "REVIEW-bk-choose"
 $UI tap "Create my link" 2 > /dev/null; sleep 6
 check "Link created" "showfee.app/book/$SLUG"; check "Taking bookings switch" "Taking bookings"; check "Default questions Event" "=Event" 2; shot "REVIEW-bk-settings"
@@ -506,8 +507,8 @@ bklog "Questions saved on the page" bkpage "Event type.*Number of guests"
 bk; $UI tapdesc "Taking bookings" > /dev/null; sleep 4; check "Pausing shows on screen" "Paused"
 bklog "Paused page refuses requests" bksend "bksend refused 403" --es name "Nobody" --es contact "x@y.z"
 bk; $UI tapdesc "Taking bookings" > /dev/null; sleep 4; check "Taking bookings again" "Clients can send you requests"
-bklog "Client request 1 accepted by Firebase" bksend "bksend sent" --es name "Paul Grech" --es contact "+356 7912 3456" --es answers "Birthday party|40" --es message "Can you sing for 2 hours?" --ei days 25
-bklog "Client request 2 accepted by Firebase" bksend "bksend sent" --es name "Claire Zammit" --es contact "claire@example.com" --es answers "Christmas dinner|" --ei days 13
+bklog "Client request 1 accepted by Firebase" bksend "bksend sent" --es name "'Paul Grech'" --es contact "'+356 7912 3456'" --es answers "'Birthday party|40'" --es message "'Can you sing for 2 hours?'" --ei days 25
+bklog "Client request 2 accepted by Firebase" bksend "bksend sent" --es name "'Claire Zammit'" --es contact "claire@example.com" --es answers "'Christmas dinner|'" --ei days 13
 main --es page gigs; sleep 6; main --es page gigs
 check "Home shows the new requests card" "2 new booking requests"; shot "REVIEW-bk-home-card"
 $UI tap "new booking requests" > /dev/null; sleep 4
