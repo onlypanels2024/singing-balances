@@ -283,6 +283,8 @@ public class BookingLinkActivity extends Activity {
         card.addView(btns);
         page.addView(card);
 
+        branding();
+
         // Booking requests
         LinearLayout rq = card();
         rq.setLayoutParams(Ui.matchWrap(this, 12));
@@ -401,6 +403,161 @@ public class BookingLinkActivity extends Activity {
         remove.setPadding(0, Ui.dp(this, 10), 0, Ui.dp(this, 10));
         remove.setOnClickListener(v -> confirmRemove());
         page.addView(remove);
+    }
+
+    // ------------------------------------------------------------------ ShowFee Business branding
+
+    private void branding() {
+        TextView head = overline("Branding  ·  BUSINESS");
+        page.addView(head);
+        LinearLayout bc = card();
+        if (!Pro.isBusiness(this)) {
+            TextView t = Ui.text(this, "With ShowFee Business your booking page shows your logo and brand colour, in a light or dark "
+                    + "style, without “Powered by ShowFee” – and can have your own web address.", 14, Ui.GREY, false);
+            t.setPadding(Ui.dp(this, 16), Ui.dp(this, 14), Ui.dp(this, 16), Ui.dp(this, 6));
+            bc.addView(t);
+            Button see = Ui.tonal(this, "See ShowFee Business");
+            LinearLayout.LayoutParams lp = Ui.matchWrap(this, 6);
+            lp.leftMargin = lp.rightMargin = Ui.dp(this, 16);
+            lp.bottomMargin = Ui.dp(this, 14);
+            see.setOnClickListener(v -> startActivity(new Intent(this, ProActivity.class).putExtra("business", true)));
+            bc.addView(see, lp);
+            page.addView(bc);
+            return;
+        }
+        android.content.SharedPreferences sp = Cloud.sp(this);
+
+        // Logo
+        LinearLayout lr = Ui.hbox(this);
+        lr.setPadding(Ui.dp(this, 16), Ui.dp(this, 12), Ui.dp(this, 12), Ui.dp(this, 12));
+        if (Logo.exists(this)) {
+            android.widget.ImageView li = new android.widget.ImageView(this);
+            li.setImageBitmap(Logo.bitmap(this));
+            li.setScaleType(android.widget.ImageView.ScaleType.FIT_CENTER);
+            li.setBackground(Ui.outlined(this, Ui.WHITE, 20));
+            int pd = Ui.dp(this, 4);
+            li.setPadding(pd, pd, pd, pd);
+            LinearLayout.LayoutParams ll = new LinearLayout.LayoutParams(Ui.dp(this, 40), Ui.dp(this, 40));
+            ll.rightMargin = Ui.dp(this, 12);
+            lr.addView(li, ll);
+        }
+        LinearLayout lt = Ui.vbox(this, 0);
+        lt.addView(Ui.text(this, "Show my logo", 16, Ui.DARK, true));
+        lt.addView(Ui.text(this, Logo.exists(this) ? "The logo from your invoices" : "Add a logo first in Settings › Business details & logo",
+                13, Logo.exists(this) ? Ui.GREY : Ui.ORANGE, false));
+        lr.addView(lt, Ui.weight(1f));
+        Switch ls = new Switch(this);
+        ls.setChecked(sp.getBoolean(Cloud.BRAND_LOGO, false) && Logo.exists(this));
+        ls.setEnabled(Logo.exists(this));
+        ls.setContentDescription("Show my logo");
+        ls.setOnCheckedChangeListener((b, on) -> { sp.edit().putBoolean(Cloud.BRAND_LOGO, on).apply(); push(null); });
+        lr.addView(ls);
+        if (!Logo.exists(this)) lr.setOnClickListener(v -> SettingsActivity.open(this, SettingsActivity.BUSINESS));
+        bc.addView(lr);
+        bc.addView(line());
+
+        // Colour
+        LinearLayout ch = Ui.vbox(this, 0);
+        ch.setPadding(Ui.dp(this, 16), Ui.dp(this, 12), Ui.dp(this, 16), Ui.dp(this, 4));
+        ch.addView(Ui.text(this, "Brand colour", 16, Ui.DARK, true));
+        ch.addView(Ui.text(this, "Buttons and your client's chosen date", 13, Ui.GREY, false));
+        bc.addView(ch);
+        LinearLayout dots = Ui.hbox(this);
+        dots.setPadding(Ui.dp(this, 14), Ui.dp(this, 6), Ui.dp(this, 14), Ui.dp(this, 14));
+        String cur = Cloud.brandColor(this);
+        for (int i = 0; i < Cloud.BRAND_COLORS.length; i++) {
+            String col = Cloud.BRAND_COLORS[i];
+            View dot = new View(this);
+            int cc = android.graphics.Color.parseColor(col);
+            android.graphics.drawable.GradientDrawable g = new android.graphics.drawable.GradientDrawable();
+            g.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+            g.setColor(cc);
+            if (col.equalsIgnoreCase(cur)) g.setStroke(Ui.dp(this, 3), Ui.DARK);
+            dot.setBackground(g);
+            dot.setContentDescription(Cloud.BRAND_COLOR_NAMES[i] + (col.equalsIgnoreCase(cur) ? ", chosen" : ""));
+            dot.setOnClickListener(v -> { sp.edit().putString(Cloud.BRAND_COLOR, col).apply(); render(); push(null); });
+            LinearLayout.LayoutParams dl = new LinearLayout.LayoutParams(0, Ui.dp(this, 32), 1f);
+            dl.leftMargin = dl.rightMargin = Ui.dp(this, 3);
+            dots.addView(dot, dl);
+        }
+        bc.addView(dots);
+        bc.addView(line());
+
+        // Light / dark
+        TextView st = Ui.text(this, "Page style", 16, Ui.DARK, true);
+        st.setPadding(Ui.dp(this, 16), Ui.dp(this, 12), Ui.dp(this, 16), Ui.dp(this, 6));
+        bc.addView(st);
+        String theme = "light".equals(Cloud.get(this, Cloud.BRAND_THEME)) ? "light" : "dark";
+        LinearLayout seg = Ui.segmented(this, new String[][]{{"light", "Light"}, {"dark", "Dark"}}, theme, k -> {
+            sp.edit().putString(Cloud.BRAND_THEME, k).apply();
+            render();
+            push(null);
+        });
+        LinearLayout.LayoutParams sl = Ui.matchWrap(this, 0);
+        sl.leftMargin = sl.rightMargin = Ui.dp(this, 16);
+        sl.bottomMargin = Ui.dp(this, 12);
+        bc.addView(seg, sl);
+        bc.addView(line());
+
+        // Powered by ShowFee
+        LinearLayout pr = Ui.hbox(this);
+        pr.setPadding(Ui.dp(this, 16), Ui.dp(this, 12), Ui.dp(this, 12), Ui.dp(this, 12));
+        LinearLayout pt = Ui.vbox(this, 0);
+        pt.addView(Ui.text(this, "Show “Powered by ShowFee”", 16, Ui.DARK, true));
+        pt.addView(Ui.text(this, sp.getBoolean(Cloud.BRAND_POWERED, true) ? "On: shown at the bottom of your page"
+                : "Off: only your brand shows", 13, Ui.GREY, false));
+        pr.addView(pt, Ui.weight(1f));
+        Switch ps = new Switch(this);
+        ps.setChecked(sp.getBoolean(Cloud.BRAND_POWERED, true));
+        ps.setContentDescription("Show Powered by ShowFee");
+        ps.setOnCheckedChangeListener((b, on) -> { sp.edit().putBoolean(Cloud.BRAND_POWERED, on).apply(); render(); push(null); });
+        pr.addView(ps);
+        bc.addView(pr);
+        bc.addView(line());
+
+        // Own web address (set up by hand, on request)
+        LinearLayout wr = Ui.hbox(this);
+        wr.setPadding(Ui.dp(this, 16), Ui.dp(this, 14), Ui.dp(this, 12), Ui.dp(this, 14));
+        LinearLayout wt = Ui.vbox(this, 0);
+        wt.addView(Ui.text(this, "Use my own web address", 16, Ui.DARK, true));
+        wt.addView(Ui.text(this, "e.g. book.yourbusiness.com – we set it up", 13, Ui.GREY, false));
+        wr.addView(wt, Ui.weight(1f));
+        wr.addView(Ui.icon(this, R.drawable.ic_chevron, Ui.FAINT, 22));
+        wr.setBackground(Ui.touchable(null, Ui.ripple()));
+        wr.setOnClickListener(v -> ownDomain());
+        bc.addView(wr);
+        page.addView(bc);
+    }
+
+    /** Asks for the web address and opens an email to ShowFee, which connects it by hand. */
+    private void ownDomain() {
+        LinearLayout form = Ui.vbox(this, 20);
+        EditText d = Ui.field(form, "The web address you'd like (you need to own the domain), e.g. book.mariasphotography.com", "",
+                InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
+        form.addView(Ui.text(this, "We'll reply by email with one setting to change at the company where you bought the domain "
+                + "(for example GoDaddy or Porkbun). It usually takes a day or two.", 13, Ui.GREY, false));
+        AlertDialog dlg = new AlertDialog.Builder(this).setTitle("Your own web address").setView(form)
+                .setPositiveButton("Send request", null).setNegativeButton("Cancel", null).create();
+        dlg.setOnShowListener(x -> dlg.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+            String dom = d.getText().toString().trim().toLowerCase(java.util.Locale.ROOT)
+                    .replaceFirst("^https?://", "").replaceAll("/.*$", "");
+            if (!dom.matches("^([a-z0-9-]+\\.)+[a-z]{2,}$")) {
+                d.setError("Type a web address like book.yourbusiness.com");
+                return;
+            }
+            String body = "Hello ShowFee,\n\nPlease connect my own web address to my booking page.\n\n"
+                    + "Web address: " + dom + "\nMy booking link: https://" + Cloud.link(this)
+                    + "\nSigned in as: " + Cloud.get(this, Cloud.EMAIL) + "\n\nThanks!";
+            try {
+                startActivity(Intent.createChooser(new Intent(Intent.ACTION_SENDTO, android.net.Uri.parse("mailto:showfee.app@gmail.com"))
+                        .putExtra(Intent.EXTRA_SUBJECT, "Own web address for my booking page: " + dom)
+                        .putExtra(Intent.EXTRA_TEXT, body), "Send with"));
+                dlg.dismiss();
+            } catch (Exception e) {
+                toast("No email app found. Please email showfee.app@gmail.com with " + dom);
+            }
+        }));
+        dlg.show();
     }
 
     private void toggleDay(int d) {

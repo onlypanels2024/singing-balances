@@ -43,7 +43,11 @@ final class Cloud {
     // Saved on the phone (kept apart from the main settings, so a backup file never carries sign-in keys)
     static final String UID = "uid", REFRESH = "refresh", ID_TOKEN = "id_token", EXPIRES = "expires", EMAIL = "email",
             ANON = "anonymous", SLUG = "slug", NAME = "name", TAGLINE = "tagline", ACCEPTING = "accepting", DAYS = "days",
-            QUESTIONS = "questions", BUSY_SENT = "busy_sent", REQUESTS = "requests", PUSH_TOKEN = "push_token";
+            QUESTIONS = "questions", BUSY_SENT = "busy_sent", REQUESTS = "requests", PUSH_TOKEN = "push_token",
+            BRAND_LOGO = "brand_logo", BRAND_COLOR = "brand_color", BRAND_THEME = "brand_theme", BRAND_POWERED = "brand_powered";
+    /** ShowFee Business brand colours offered for the booking page. */
+    static final String[] BRAND_COLORS = {"#3949ab", "#0f6b5c", "#e0457b", "#d45500", "#7b3fe4", "#1e88e5", "#b8860b", "#1b1c20"};
+    static final String[] BRAND_COLOR_NAMES = {"Indigo", "Green", "Pink", "Orange", "Purple", "Blue", "Gold", "Black"};
 
     /** Test builds only: pretend to be offline, to check the "no internet" messages. */
     static volatile boolean forceOffline;
@@ -266,7 +270,7 @@ final class Cloud {
 
     /** Updates the booking page's busy dates if bookings changed since last time (called when the app opens). */
     static void syncBusy(Context c) {
-        if (!hasLink(c) || busyList(c).toString().equals(get(c, BUSY_SENT))) return;
+        if (!hasLink(c) || sentKey(c, busyList(c)).equals(get(c, BUSY_SENT))) return;
         savePage(c, null);
     }
 
@@ -329,6 +333,42 @@ final class Cloud {
         return a;
     }
 
+    /** What was last sent: busy dates plus the branding state (so the page updates when either changes,
+     *  including when a Business subscription ends and the branding has to come off). */
+    private static String sentKey(Context c, JSONArray busy) {
+        String b = !Pro.isBusiness(c) ? "none" : brandColor(c) + "/" + get(c, BRAND_THEME) + "/" + sp(c).getBoolean(BRAND_POWERED, true)
+                + "/" + (sp(c).getBoolean(BRAND_LOGO, false) && Logo.exists(c) ? Logo.file(c).lastModified() : 0);
+        return busy.toString() + "|" + b;
+    }
+
+    static String brandColor(Context c) {
+        String s = get(c, BRAND_COLOR);
+        return s.matches("^#[0-9a-fA-F]{6}$") ? s : BRAND_COLORS[0];
+    }
+
+    /** The invoice logo, made small enough for the booking page (data: URL), or null. */
+    private static String logoData(Context c) {
+        android.graphics.Bitmap b = Logo.bitmap(c);
+        if (b == null) return null;
+        float scale = Math.min(1f, 256f / Math.max(b.getWidth(), b.getHeight()));
+        if (scale < 1f) b = android.graphics.Bitmap.createScaledBitmap(b, Math.max(1, Math.round(b.getWidth() * scale)),
+                Math.max(1, Math.round(b.getHeight() * scale)), true);
+        java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        b.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, out);
+        String type = "png";
+        if (out.size() > 100_000) { // very detailed logo: a JPEG on white is much smaller
+            android.graphics.Bitmap w = android.graphics.Bitmap.createBitmap(b.getWidth(), b.getHeight(), android.graphics.Bitmap.Config.ARGB_8888);
+            android.graphics.Canvas cv = new android.graphics.Canvas(w);
+            cv.drawColor(0xFFFFFFFF);
+            cv.drawBitmap(b, 0, 0, null);
+            out.reset();
+            w.compress(android.graphics.Bitmap.CompressFormat.JPEG, 85, out);
+            type = "jpeg";
+        }
+        if (out.size() > 110_000) return null;
+        return "data:image/" + type + ";base64," + android.util.Base64.encodeToString(out.toByteArray(), android.util.Base64.NO_WRAP);
+    }
+
     private static JSONObject pageWrite(Context c, String slug) throws Exception {
         JSONArray busy = busyList(c);
         JSONObject f = new JSONObject();
@@ -347,7 +387,16 @@ final class Cloud {
         JSONArray q = new JSONArray();
         for (String s : questions(c)) q.put(sv(s));
         f.put("fields", arr(q));
-        sp(c).edit().putString(BUSY_SENT, busy.toString()).apply();
+        if (Pro.isBusiness(c)) {
+            JSONObject br = new JSONObject();
+            br.put("color", sv(brandColor(c)));
+            br.put("theme", sv("light".equals(get(c, BRAND_THEME)) ? "light" : "dark"));
+            br.put("powered", new JSONObject().put("booleanValue", sp(c).getBoolean(BRAND_POWERED, true)));
+            String logo = sp(c).getBoolean(BRAND_LOGO, false) ? logoData(c) : null;
+            if (logo != null) br.put("logo", sv(logo));
+            f.put("brand", new JSONObject().put("mapValue", new JSONObject().put("fields", br)));
+        }
+        sp(c).edit().putString(BUSY_SENT, sentKey(c, busy)).apply();
         return new JSONObject()
                 .put("update", new JSONObject().put("name", DOC_PREFIX + "/pages/" + slug).put("fields", f))
                 .put("updateTransforms", new JSONArray().put(new JSONObject().put("fieldPath", "updated").put("setToServerValue", "REQUEST_TIME")));

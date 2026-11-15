@@ -8,7 +8,7 @@ bklog() { adb logcat -c; seeder --es task "$2" "${@:4}"; sleep 5; L=$(adb logcat
 SLUG="test-ci-$(date +%s)"
 seeder --es task plan --es plan free
 settings; check "Settings has Your booking link" "Your booking link"; check "Row explains the link" "Clients book you from WhatsApp"; shot "REVIEW-bk-settings-row"
-$UI tap "Your booking link" > /dev/null; sleep 2; check "Free plan: booking link asks for Pro" "Start my free month"; adb shell input keyevent 4; sleep 1
+$UI tap "Your booking link" > /dev/null; sleep 2; check "Free plan: booking link asks for Pro" "1 month free, then"; adb shell input keyevent 4; sleep 1
 seeder --es task plan --es plan -
 settings; $UI tap "Your booking link" > /dev/null; sleep 2
 check "Booking link intro" "Let clients book you with one link"; check "Clients need no account (said on screen)" "don't need an account"
@@ -38,6 +38,34 @@ nocheck "Venue removed" "=Venue"
 bk; $UI tap "=Event" 3 > /dev/null; $UI fill "Question shown to clients" "Event type" > /dev/null; $UI tap "=SAVE" > /dev/null || $UI tap "=Save" > /dev/null; sleep 3
 check "Question renamed" "Event type" 3; shot "REVIEW-bk-questions"
 bklog "Questions saved on the page" bkpage "Event type.*Number of guests"
+# ---- ShowFee Business: plans screen and branding ----
+seeder --es task plan --es plan free
+settings; $UI tap "ShowFee Pro" > /dev/null; sleep 2
+check "Plans screen: choose your plan" "Choose your plan"; check "Plans screen: Pro price" "6.99/month"; check "Plans screen: Business plan" "ShowFee Business" 2
+check "Plans screen: Business price" "9.99/month" 2; nocheck "Booking link no longer 'coming soon'" "coming soon"; shot "REVIEW-biz-plans"
+$UI tap "ShowFee Business" 2 > /dev/null; sleep 1; check "Choosing Business shows its price" "1 month free, then €9.99/month" 3; shot "REVIEW-biz-plans-business"
+adb shell input keyevent 4; sleep 1
+seeder --es task plan --es plan pro
+bk; check "Pro: branding offers Business" "See ShowFee Business" 2; shot "REVIEW-biz-pro-upsell"
+seeder --es task plan --es plan business
+seeder --es task logo
+bk; check "Business: branding section" "Brand colour" 2; check "Business: own web address" "Use my own web address" 4
+$UI tapdesc "Show my logo" 2 > /dev/null; sleep 3
+$UI tapdesc "Green" 3 > /dev/null; sleep 3
+bk; $UI tap "=Light" 3 > /dev/null; sleep 3
+bk; $UI tapdesc "Show Powered by ShowFee" 4 > /dev/null; sleep 4
+bk; check "Powered by switched off" "only your brand shows" 4; shot "REVIEW-biz-branding"
+bklog "Branding saved on the page" bkpage '"color":\{"stringValue":"#0f6b5c"\}'
+bklog "Light page saved" bkpage '"theme":\{"stringValue":"light"\}'
+bklog "Powered by off saved" bkpage '"powered":\{"booleanValue":false\}'
+bklog "Logo saved on the page" bkpage 'data:image\\?/png;base64'
+bk; $UI tap "Use my own web address" 4 > /dev/null; sleep 1; $UI fill "The web address" "book.mariaborg.com" > /dev/null
+$UI tap "=SEND REQUEST" > /dev/null || $UI tap "=Send request" > /dev/null; sleep 3; left "Own web address opens an email"; backto "Your booking link"
+seeder --es task plan --es plan pro
+main --es page gigs; sleep 8
+bklog "Branding removed when Business ends" bkpage '"accepting"'
+if echo "$L" | grep -q '"brand"'; then bad "Page still has branding after Business ended"; else ok "Page has no branding after Business ended"; fi
+seeder --es task plan --es plan -
 bk; $UI tapdesc "Taking bookings" > /dev/null; sleep 4; check "Pausing shows on screen" "Paused"
 bklog "Paused page refuses requests" bksend "bksend refused 403" --es name "Nobody" --es contact "x@y.z"
 bk; $UI tapdesc "Taking bookings" > /dev/null; sleep 4; check "Taking bookings again" "Clients can send you requests"

@@ -44,6 +44,7 @@ public class DemoSeeder extends BroadcastReceiver {
                 String p = intent.getStringExtra("plan");
                 Pro.forced = p == null || p.equals("-") ? null : p;
                 Pro.fakePrice = Pro.forced == null ? null : "1 month free, then €6.99/month";
+                Pro.fakeBusinessPrice = Pro.forced == null ? null : "1 month free, then €9.99/month";
                 if (Pro.forced == null) Prefs.sp(c).edit().remove(Prefs.PRO_CODE_UNTIL).remove(Prefs.PRO_CODE_USED).remove(Prefs.PRO_TESTER_USED).apply();
                 if ("expire".equals(intent.getStringExtra("code"))) Prefs.sp(c).edit().remove(Prefs.PRO_CODE_UNTIL).apply();
                 Theme.changed(c);
@@ -340,7 +341,9 @@ public class DemoSeeder extends BroadcastReceiver {
                 try {
                     String raw = Cloud.request("GET", DOCS + "/pages/" + (in.getStringExtra("slug") != null ? in.getStringExtra("slug") : Cloud.get(c, Cloud.SLUG)) + "?key=" + KEY, null, null, null);
                     JSONObject fields = new JSONObject(raw).getJSONObject("fields");
-                    Log.i(TAG, "bkpage " + fields.toString().replace("\n", " "));
+                    // the logo is a long data: address; keep only its start so the log line isn't cut off
+                    String line = fields.toString().replace("\n", " ").replaceAll("(data:image\\\\?/[a-z]+;base64,)[A-Za-z0-9+/=\\\\]+", "$1...");
+                    Log.i(TAG, "bkpage " + line);
                 } catch (Cloud.HttpError e) {
                     Log.i(TAG, "bkpage missing " + e.code);
                 }
