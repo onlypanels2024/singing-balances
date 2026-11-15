@@ -48,7 +48,7 @@ public class SettingsActivity extends Activity {
     /** Which page this is: null = the Settings menu, otherwise one of the keys below. */
     private String section;
     static final String WORK = "work", LOOK = "look", BUSINESS = "business", PAY = "pay", EMAIL_S = "email",
-            REMIND = "reminders", BACKUP = "backup", PRO = "pro";
+            REMIND = "reminders", BACKUP = "backup", PRO = "pro", LINK = "link";
 
     private boolean is(String key) {
         return key.equals(section);
@@ -516,6 +516,9 @@ public class SettingsActivity extends Activity {
                 Theme.ACCENT_NAMES[Theme.accentIndex(this)] + " · " + Theme.MODE_NAMES[Math.max(0, modeIdx)], LOOK, true);
 
         g = menuGroup(page, "Business");
+        menuRow(g, R.drawable.ic_set_link, "Your booking link",
+                Cloud.hasLink(this) ? Cloud.link(this) + (Cloud.accepting(this) ? "" : " · paused")
+                        : "Clients book you from WhatsApp, Facebook, Instagram and more", LINK, false);
         menuRow(g, R.drawable.ic_set_business, "Business details & logo",
                 (name.isEmpty() ? "Add your name for invoices" : name) + (Logo.exists(this) ? " · logo added" : ""), BUSINESS, false);
         menuRow(g, R.drawable.ic_set_pay, "Getting paid",
@@ -586,6 +589,11 @@ public class SettingsActivity extends Activity {
         row.setBackground(Ui.touchable(null, Ui.ripple()));
         row.setOnClickListener(x -> {
             if (PRO.equals(key)) Pro.open(this, null);
+            else if (LINK.equals(key)) {
+                if (Cloud.hasLink(this) || Pro.allow(this, "Your own booking link is part of ShowFee Pro.")) {
+                    startActivity(new Intent(this, BookingLinkActivity.class));
+                }
+            }
             else open(this, key);
         });
         card.addView(row);

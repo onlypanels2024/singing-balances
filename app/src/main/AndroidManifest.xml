@@ -51,6 +51,19 @@
             android:parentActivityName=".MainActivity" />
 
         <activity
+            android:name=".BookingLinkActivity"
+            android:exported="false"
+            android:label="Your booking link"
+            android:windowSoftInputMode="adjustResize"
+            android:parentActivityName=".SettingsActivity" />
+
+        <activity
+            android:name=".RequestsActivity"
+            android:exported="false"
+            android:label="Booking requests"
+            android:parentActivityName=".MainActivity" />
+
+        <activity
             android:name=".ProActivity"
             android:exported="false"
             android:label="ShowFee Pro"

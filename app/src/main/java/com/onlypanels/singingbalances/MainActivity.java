@@ -159,6 +159,16 @@ public class MainActivity extends Activity {
         render();
         Updates.check(this, this::showUpdate);
         Pro.refresh(this, this::render);
+        // Booking link: check for new requests and keep the page's busy dates up to date
+        final int before = Cloud.newCount(this);
+        Cloud.refresh(this, new Cloud.Done<Integer>() {
+            @Override public void ok(Integer n) {
+                if (n != before && !isFinishing()) render();
+            }
+
+            @Override public void fail(String reason) { } // quiet: tried again next time the app opens
+        });
+        Cloud.syncBusy(this);
     }
 
     /** Small buttons side by side in the update bar (normal buttons are full width). */
@@ -322,6 +332,7 @@ public class MainActivity extends Activity {
         List<Object> rows = new ArrayList<>();
         boolean examples = Examples.active(this);
         if (examples) rows.add("examples");
+        if (Cloud.hasLink(this) && Cloud.newCount(this) > 0) rows.add(0, "requests");
         boolean brandNew = !examples && db.allGigs().isEmpty();
         // (a brand-new user sees the start card instead; the invoice-details hint comes once they have bookings)
         if (!brandNew && (Prefs.get(this, Prefs.NAME).isEmpty() || !Prefs.hasPaymentDetails(this))) rows.add("setup");
@@ -348,6 +359,7 @@ public class MainActivity extends Activity {
             Object o = rows.get(pos);
             if (o instanceof Gig) openGig(((Gig) o).id);
             else if ("setup".equals(o)) SettingsActivity.open(this, SettingsActivity.BUSINESS);
+            else if ("requests".equals(o)) startActivity(new Intent(this, RequestsActivity.class));
             else if ("examples".equals(o)) askRemoveExamples();
         });
         TextView emptyView = Ui.text(this, empty, 16, Ui.GREY, false);
@@ -442,7 +454,7 @@ public class MainActivity extends Activity {
         @Override public long getItemId(int pos) { return pos; }
         @Override public boolean isEnabled(int pos) {
             Object o = rows.get(pos);
-            return !(o instanceof String) || "setup".equals(o) || "examples".equals(o);
+            return !(o instanceof String) || "setup".equals(o) || "examples".equals(o) || "requests".equals(o);
         }
 
         @Override
@@ -468,6 +480,33 @@ public class MainActivity extends Activity {
                 TextView go = Ui.text(c, "Remove examples", 14, Ui.PRIMARY, true);
                 go.setPadding(0, Ui.dp(c, 8), 0, 0);
                 box.addView(go);
+                outer.addView(box);
+                return outer;
+            }
+            if ("requests".equals(o)) {
+                FrameLayout outer = new FrameLayout(c);
+                int m = Ui.dp(c, 16);
+                outer.setPadding(m, 0, m, Ui.dp(c, 8));
+                LinearLayout box = Ui.hbox(c);
+                int p = Ui.dp(c, 14);
+                box.setPadding(p, p, p, p);
+                android.graphics.drawable.GradientDrawable bg = Ui.rounded(c, Ui.SURFACE, 16);
+                bg.setStroke(Ui.dp(c, 1.5f), 0xFFFFD400);
+                box.setBackground(bg);
+                android.widget.FrameLayout badge = new android.widget.FrameLayout(c);
+                badge.setBackground(Ui.rounded(c, 0xFFFFF6CC, 12));
+                TextView num = Ui.text(c, String.valueOf(Cloud.newCount(c)), 18, 0xFF7A5C00, true);
+                num.setGravity(Gravity.CENTER);
+                badge.addView(num, new FrameLayout.LayoutParams(-1, -1));
+                LinearLayout.LayoutParams blp = new LinearLayout.LayoutParams(Ui.dp(c, 44), Ui.dp(c, 44));
+                blp.rightMargin = Ui.dp(c, 14);
+                box.addView(badge, blp);
+                LinearLayout t = Ui.vbox(c, 0);
+                int n = Cloud.newCount(c);
+                t.addView(Ui.text(c, n == 1 ? "1 new booking request" : n + " new booking requests", 16, Ui.DARK, true));
+                t.addView(Ui.text(c, "From your booking link · tap to answer", 13, Ui.GREY, false));
+                box.addView(t, Ui.weight(1f));
+                box.addView(Ui.icon(c, R.drawable.ic_chevron, Ui.FAINT, 22));
                 outer.addView(box);
                 return outer;
             }

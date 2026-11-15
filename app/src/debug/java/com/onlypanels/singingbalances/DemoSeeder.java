@@ -50,6 +50,19 @@ public class DemoSeeder extends BroadcastReceiver {
                 Log.i(TAG, "plan " + Pro.forced + " bookingsThisMonth=" + Pro.bookingsInMonth(c, Dates.today(), 0));
             }
             else if ("update".equals(task)) fakeUpdate(c, intent.getStringExtra("step"));
+            else if (task != null && task.startsWith("bk")) {
+                // Booking link tests against the real Firebase project, using a throwaway anonymous account
+                PendingResult pr = goAsync();
+                new Thread(() -> {
+                    try {
+                        bookingTask(c, task, intent);
+                    } catch (Exception e) {
+                        Log.e(TAG, "booking task " + task + " failed", e);
+                    } finally {
+                        pr.finish();
+                    }
+                }).start();
+            }
             else if ("widget".equals(task)) {
                 Widget.updateAll(c);
                 Log.i(TAG, "widget updated");
@@ -272,6 +285,83 @@ public class DemoSeeder extends BroadcastReceiver {
         String after = strip(db.exportAll());
         Log.i(TAG, "backup roundtrip " + (before.equals(after) ? "IDENTICAL" : "DIFFERENT\n" + before + "\n" + after)
                 + " bytes=" + data.length);
+    }
+
+    private static final String KEY = Cloud.API_KEY;
+    private static final String DOCS = "https://firestore.googleapis.com/v1/projects/showfee-app/databases/(default)/documents";
+
+    private static void bookingTask(Context c, String task, Intent in) throws Exception {
+        switch (task) {
+            case "bkanon": {
+                // Signs in with a new anonymous account, like a ShowFee user who has just signed in with Google
+                Cloud.sp(c).edit().clear().apply();
+                JSONObject r = new JSONObject(Cloud.request("POST", "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=" + KEY,
+                        "{\"returnSecureToken\":true}", "application/json", null));
+                Cloud.saveSession(c, r.getString("localId"), r.getString("refreshToken"), r.getString("idToken"),
+                        r.optLong("expiresIn", 3600), "test@showfee.app", true);
+                Cloud.sp(c).edit().putString(Cloud.NAME, "Maria Borg").apply();
+                Log.i(TAG, "bkanon signed in uid=" + r.getString("localId"));
+                break;
+            }
+            case "bksend": {
+                // A client sends a request from the booking page (no sign-in, exactly like the website does)
+                String slug = Cloud.get(c, Cloud.SLUG);
+                java.util.List<String> qs = Cloud.questions(c);
+                org.json.JSONArray ask = new org.json.JSONArray(), ans = new org.json.JSONArray();
+                String[] given = (in.getStringExtra("answers") == null ? "" : in.getStringExtra("answers")).split("\\|", -1);
+                for (int i = 0; i < qs.size(); i++) {
+                    ask.put(new JSONObject().put("stringValue", qs.get(i)));
+                    ans.put(new JSONObject().put("stringValue", i < given.length ? given[i] : ""));
+                }
+                JSONObject f = new JSONObject()
+                        .put("slug", sv(slug)).put("owner", sv(Cloud.get(c, Cloud.UID)))
+                        .put("date", sv(java.time.LocalDate.now().plusDays(in.getIntExtra("days", 20)).toString()))
+                        .put("name", sv(in.getStringExtra("name"))).put("contact", sv(in.getStringExtra("contact")))
+                        .put("message", sv(in.getStringExtra("message") == null ? "" : in.getStringExtra("message")))
+                        .put("status", sv("new"))
+                        .put("ask", new JSONObject().put("arrayValue", ask.length() == 0 ? new JSONObject() : new JSONObject().put("values", ask)))
+                        .put("answers", new JSONObject().put("arrayValue", ans.length() == 0 ? new JSONObject() : new JSONObject().put("values", ans)));
+                String id = "t" + Long.toHexString(System.nanoTime());
+                JSONObject w = new JSONObject().put("update", new JSONObject()
+                                .put("name", "projects/showfee-app/databases/(default)/documents/requests/" + id).put("fields", f))
+                        .put("updateTransforms", new org.json.JSONArray().put(new JSONObject().put("fieldPath", "created").put("setToServerValue", "REQUEST_TIME")))
+                        .put("currentDocument", new JSONObject().put("exists", false));
+                try {
+                    Cloud.request("POST", DOCS + ":commit?key=" + KEY, new JSONObject().put("writes", new org.json.JSONArray().put(w)).toString(),
+                            "application/json", null);
+                    Log.i(TAG, "bksend sent " + id);
+                } catch (Cloud.HttpError e) {
+                    Log.i(TAG, "bksend refused " + e.code);
+                }
+                break;
+            }
+            case "bkpage": {
+                // What the public booking page sees (read without signing in)
+                try {
+                    String raw = Cloud.request("GET", DOCS + "/pages/" + (in.getStringExtra("slug") != null ? in.getStringExtra("slug") : Cloud.get(c, Cloud.SLUG)) + "?key=" + KEY, null, null, null);
+                    JSONObject fields = new JSONObject(raw).getJSONObject("fields");
+                    Log.i(TAG, "bkpage " + fields.toString().replace("\n", " "));
+                } catch (Cloud.HttpError e) {
+                    Log.i(TAG, "bkpage missing " + e.code);
+                }
+                break;
+            }
+            case "bkoffline":
+                Cloud.forceOffline = "on".equals(in.getStringExtra("mode"));
+                Log.i(TAG, "bkoffline " + Cloud.forceOffline);
+                break;
+            case "bkstate":
+                Log.i(TAG, "bkstate signedIn=" + Cloud.signedIn(c) + " slug=" + Cloud.get(c, Cloud.SLUG) + " accepting=" + Cloud.accepting(c)
+                        + " days=" + Cloud.days(c) + " questions=" + Cloud.questions(c) + " new=" + Cloud.newCount(c)
+                        + " cached=" + Cloud.cached(c).size());
+                break;
+            default:
+                Log.i(TAG, "unknown booking task " + task);
+        }
+    }
+
+    private static JSONObject sv(String s) throws Exception {
+        return new JSONObject().put("stringValue", s == null ? "" : s);
     }
 
     private static String strip(JSONObject o) {
