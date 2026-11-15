@@ -23,6 +23,9 @@ bklog "Test account can't take a real link name" bkstate "slug= accepting"
 $UI fill "Your link:" "$SLUG" > /dev/null; shot "REVIEW-bk-choose"
 $UI tap "Create my link" 2 > /dev/null; sleep 6
 check "Link created" "showfee.app/book/$SLUG"; check "Taking bookings switch" "Taking bookings"; check "Default questions Event" "=Event" 2; shot "REVIEW-bk-settings"
+main --es page gigs; sleep 6
+bklog "Phone signed up for request notifications" bkstate "push=yes"
+bk
 bklog "Page saved online with name, line and questions" bkpage "Maria Borg.*Singer in Malta|Singer in Malta.*Maria Borg"
 bklog "Page has Event and Venue questions" bkpage "Event.*Venue"
 $UI tapdesc "Monday, you work" 2 > /dev/null; sleep 3
@@ -42,6 +45,10 @@ bklog "Client request 1 accepted by Firebase" bksend "bksend sent" --es name "'P
 bklog "Client request 2 accepted by Firebase" bksend "bksend sent" --es name "'Claire Zammit'" --es contact "claire@example.com" --es answers "'Christmas dinner|'" --ei days 13
 BUSYDAY=$(date -d "+47 days" +%F)
 bklog "Page reachable before accepting" bkpage "Maria Borg"; if echo "$L" | grep -q "$BUSYDAY"; then bad "Test date $BUSYDAY should start free"; else ok "Test date $BUSYDAY starts free"; fi
+sleep 20
+NOTIF=$(adb shell dumpsys notification --noredact | grep -c "New booking request")
+if [ "$NOTIF" -gt 0 ]; then ok "Notification arrived for the new requests"; else bad "Notification arrived for the new requests (none found)"; fi
+adb shell cmd statusbar expand-notifications; sleep 2; shot "REVIEW-bk-notification"; adb shell cmd statusbar collapse
 main --es page gigs; sleep 6; main --es page gigs
 check "Home shows the new requests card" "2 new booking requests"; shot "REVIEW-bk-home-card"
 $UI tap "new booking requests" > /dev/null; sleep 4

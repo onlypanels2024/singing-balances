@@ -206,6 +206,7 @@ public class BookingLinkActivity extends Activity {
                             busy = false;
                             if (dialog[0] != null) dialog[0].dismiss();
                             toast(first ? "Your booking link is ready" : "Saved");
+                            Cloud.registerDevice(BookingLinkActivity.this);
                             render();
                         }
 
