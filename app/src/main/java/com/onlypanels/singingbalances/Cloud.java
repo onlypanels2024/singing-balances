@@ -388,13 +388,13 @@ final class Cloud {
         for (String s : questions(c)) q.put(sv(s));
         f.put("fields", arr(q));
         if (Pro.isBusiness(c)) {
-            JSONObject b = new JSONObject();
-            b.put("color", sv(brandColor(c)));
-            b.put("theme", sv("light".equals(get(c, BRAND_THEME)) ? "light" : "dark"));
-            b.put("powered", new JSONObject().put("booleanValue", sp(c).getBoolean(BRAND_POWERED, true)));
+            JSONObject br = new JSONObject();
+            br.put("color", sv(brandColor(c)));
+            br.put("theme", sv("light".equals(get(c, BRAND_THEME)) ? "light" : "dark"));
+            br.put("powered", new JSONObject().put("booleanValue", sp(c).getBoolean(BRAND_POWERED, true)));
             String logo = sp(c).getBoolean(BRAND_LOGO, false) ? logoData(c) : null;
-            if (logo != null) b.put("logo", sv(logo));
-            f.put("brand", new JSONObject().put("mapValue", new JSONObject().put("fields", b)));
+            if (logo != null) br.put("logo", sv(logo));
+            f.put("brand", new JSONObject().put("mapValue", new JSONObject().put("fields", br)));
         }
         sp(c).edit().putString(BUSY_SENT, sentKey(c, busy)).apply();
         return new JSONObject()
