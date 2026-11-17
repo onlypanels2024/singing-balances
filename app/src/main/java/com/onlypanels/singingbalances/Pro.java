@@ -20,7 +20,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * ShowFee Pro and ShowFee Business: monthly subscriptions through Google Play. Business includes everything in Pro
+ * ShowFee Pro and ShowFee Business: monthly or yearly subscriptions through Google Play. Business includes everything in Pro
  * plus branding on the booking page (logo, colour, light/dark page, no "Powered by ShowFee", own web address).
  * Pro: a monthly subscription through Google Play (price and free trial are set in Play Console).
  * Without it the app still works as a free plan: up to {@link #FREE_BOOKINGS} bookings a month, with invoices,
@@ -36,7 +36,8 @@ final class Pro {
     /** Test builds can force "free" or "pro" here. */
     static String forced;
     /** Test builds can show a pretend price here when Google Play isn't on the phone. */
-    static String fakePrice, fakeBusinessPrice;
+    static String fakePrice, fakeBusinessPrice, fakeYearly, fakeBusinessYearly;
+    static int fakeSaving;
 
     private static BillingClient client;
     private static final java.util.Map<String, ProductDetails> details = new java.util.HashMap<>();
@@ -229,12 +230,15 @@ final class Pro {
         if (r != null) new android.os.Handler(android.os.Looper.getMainLooper()).post(r);
     }
 
-    /** The offer with the free month if there is one, otherwise the normal monthly plan. */
-    private static ProductDetails.SubscriptionOfferDetails bestOffer(String product) {
+    /** The offer with the free month if there is one, otherwise the normal plan – monthly or yearly.
+     *  The plan is recognised by how often it's paid (P1M / P1Y), so a yearly plan is never picked by mistake. */
+    private static ProductDetails.SubscriptionOfferDetails bestOffer(String product, boolean yearly) {
         ProductDetails d = details.get(product);
         if (d == null || d.getSubscriptionOfferDetails() == null) return null;
         ProductDetails.SubscriptionOfferDetails best = null;
         for (ProductDetails.SubscriptionOfferDetails o : d.getSubscriptionOfferDetails()) {
+            ProductDetails.PricingPhase paid = paidPhase(o);
+            if (paid == null || paid.getBillingPeriod().endsWith("Y") != yearly) continue;
             if (best == null) best = o;
             for (ProductDetails.PricingPhase ph : o.getPricingPhases().getPricingPhaseList()) {
                 if (ph.getPriceAmountMicros() == 0) return o; // has a free trial
@@ -243,15 +247,25 @@ final class Pro {
         return best;
     }
 
-    /** E.g. "1 month free, then €6.99/month", or "" while Google Play hasn't answered. */
+    /** The phase that repeats (the real price after any free month). */
+    private static ProductDetails.PricingPhase paidPhase(ProductDetails.SubscriptionOfferDetails o) {
+        List<ProductDetails.PricingPhase> l = o.getPricingPhases().getPricingPhaseList();
+        return l.isEmpty() ? null : l.get(l.size() - 1);
+    }
+
+    /** E.g. "1 month free, then €9.99/month", or "" while Google Play hasn't answered. */
     static String priceLine() {
-        return priceLine(PRODUCT);
+        return priceLine(PRODUCT, false);
     }
 
     static String priceLine(String product) {
-        if (BUSINESS.equals(product) ? fakeBusinessPrice != null : fakePrice != null)
-            return BUSINESS.equals(product) ? fakeBusinessPrice : fakePrice;
-        ProductDetails.SubscriptionOfferDetails o = bestOffer(product);
+        return priceLine(product, false);
+    }
+
+    static String priceLine(String product, boolean yearly) {
+        String fake = BUSINESS.equals(product) ? (yearly ? fakeBusinessYearly : fakeBusinessPrice) : (yearly ? fakeYearly : fakePrice);
+        if (fakePrice != null || fakeBusinessPrice != null) return fake == null ? "" : fake;
+        ProductDetails.SubscriptionOfferDetails o = bestOffer(product, yearly);
         if (o == null) return "";
         List<ProductDetails.PricingPhase> phases = o.getPricingPhases().getPricingPhaseList();
         String free = "", price = "";
@@ -262,12 +276,32 @@ final class Pro {
         return free + price;
     }
 
+    /** True when Google Play offers a yearly plan for this product. */
+    static boolean hasYearly(String product) {
+        return !priceLine(product, true).isEmpty();
+    }
+
+    /** How much cheaper a year is than 12 months, in whole percent (0 if unknown). Worked out from Google Play's
+     *  own prices for this country, so it is always true for what the person will pay. */
+    static int yearlySaving(String product) {
+        if (fakePrice != null || fakeBusinessPrice != null) return fakeSaving;
+        ProductDetails.SubscriptionOfferDetails m = bestOffer(product, false), y = bestOffer(product, true);
+        if (m == null || y == null) return 0;
+        long month = paidPhase(m).getPriceAmountMicros(), year = paidPhase(y).getPriceAmountMicros();
+        if (month <= 0 || year <= 0) return 0;
+        return (int) Math.max(0, Math.round(100.0 - year * 100.0 / (month * 12.0)));
+    }
+
     static boolean hasTrial() {
-        return hasTrial(PRODUCT);
+        return hasTrial(PRODUCT, false);
     }
 
     static boolean hasTrial(String product) {
-        return priceLine(product).contains("free");
+        return hasTrial(product, false);
+    }
+
+    static boolean hasTrial(String product, boolean yearly) {
+        return priceLine(product, yearly).contains("free");
     }
 
     /** "P1M" -> "1 month", "P7D" -> "7 days", "P1W" -> "1 week". */
@@ -287,12 +321,16 @@ final class Pro {
 
     /** Opens Google Play's payment sheet. Returns false if Google Play isn't ready. */
     static boolean buy(Activity a) {
-        return buy(a, PRODUCT);
+        return buy(a, PRODUCT, false);
+    }
+
+    static boolean buy(Activity a, String product) {
+        return buy(a, product, false);
     }
 
     /** Pro → Business is an upgrade of the same subscription: Google Play adjusts what was already paid. */
-    static boolean buy(Activity a, String product) {
-        ProductDetails.SubscriptionOfferDetails o = bestOffer(product);
+    static boolean buy(Activity a, String product, boolean yearly) {
+        ProductDetails.SubscriptionOfferDetails o = bestOffer(product, yearly);
         ProductDetails d = details.get(product);
         if (client == null || d == null || o == null) return false;
         BillingFlowParams.Builder b = BillingFlowParams.newBuilder()

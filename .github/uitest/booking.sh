@@ -40,11 +40,7 @@ check "Question renamed" "Event type" 3; shot "REVIEW-bk-questions"
 bklog "Questions saved on the page" bkpage "Event type.*Number of guests"
 # ---- ShowFee Business: plans screen and branding ----
 seeder --es task plan --es plan free
-settings; $UI tap "ShowFee Pro" > /dev/null; sleep 2
-check "Plans screen: choose your plan" "Choose your plan"; check "Plans screen: Pro price" "6.99/month"; check "Plans screen: Business plan" "ShowFee Business" 2
-check "Plans screen: Business price" "9.99/month" 2; nocheck "Booking link no longer 'coming soon'" "coming soon"; shot "REVIEW-biz-plans"
-$UI tap "ShowFee Business" 2 > /dev/null; sleep 1; check "Choosing Business shows its price" "1 month free, then €9.99/month" 3; shot "REVIEW-biz-plans-business"
-adb shell input keyevent 4; sleep 1
+source .github/uitest/plans.sh
 seeder --es task plan --es plan pro
 bk; check "Pro: branding offers Business" "See ShowFee Business" 2; shot "REVIEW-biz-pro-upsell"
 seeder --es task plan --es plan business

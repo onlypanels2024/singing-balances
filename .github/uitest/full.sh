@@ -430,7 +430,7 @@ settings; check "Settings shows ShowFee Pro" "ShowFee Pro" 0; check "Developer c
 $UI tap "ShowFee Pro" > /dev/null; sleep 1; check "Pro screen opens" "Everything is unlocked"; shot "REVIEW-pro-developer"; adb shell input keyevent 4; sleep 1
 seeder --es task plan --es plan free
 settings; check "Free plan shown in Settings" "Free plan"; shot "REVIEW-pro-settings-free"
-$UI tap "ShowFee Pro" > /dev/null; sleep 1; check "Pro screen shows price" "6.99/month"; check "Pro screen offers free month" "Start my free month"; shot "REVIEW-pro-paywall"
+$UI tap "ShowFee Pro" > /dev/null; sleep 1; check "Pro screen shows price" "€9.99/month"; check "Pro screen offers free month" "Start my free month"; shot "REVIEW-pro-paywall"
 $UI tap "Have an access code" 3 > /dev/null; $UI fill "Access code" "WRONG-CODE" > /dev/null; $UI tap "=UNLOCK" > /dev/null; sleep 1
 check "Wrong access code keeps the free plan" "Start my free month" 2
 $UI tap "Have an access code" 3 > /dev/null; $UI fill "Access code" "SHOWFEE-REVIEW-7351" > /dev/null; $UI tap "=UNLOCK" > /dev/null; sleep 1

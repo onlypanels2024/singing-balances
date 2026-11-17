@@ -38,6 +38,8 @@ public class ProActivity extends Activity {
 
     /** Which plan the user has picked on this screen (Pro or Business). */
     private String chosen;
+    /** Monthly or yearly, picked on this screen (only offered when Google Play has a yearly plan). */
+    private boolean yearly;
 
     private void render() {
         ScrollView scroll = new ScrollView(this);
@@ -75,10 +77,26 @@ public class ProActivity extends Activity {
                 : byCode ? "Unlocked with an access code ✓"
                 : business ? "You're on ShowFee Business ✓"
                 : pro ? "You're on ShowFee Pro ✓"
-                : Pro.hasTrial(chosen) ? "Try every feature free for a month." : "Unlock every feature.";
+                : Pro.hasTrial(chosen, yearly) ? "Try every feature free for a month." : "Unlock every feature.";
         TextView h = Ui.text(this, headline, 18, pro || dev ? Ui.GREEN : Ui.PRIMARY, true);
         h.setPadding(0, Ui.dp(this, 14), 0, Ui.dp(this, 4));
         v.addView(h);
+
+        // Pay monthly or yearly – only when Google Play has a yearly plan for this country.
+        boolean offerYearly = !dev && !business && Pro.hasYearly(Pro.PRODUCT) && Pro.hasYearly(Pro.BUSINESS);
+        if (!offerYearly) yearly = false;
+        if (offerYearly) {
+            int save = Pro.yearlySaving(chosen);
+            LinearLayout seg = Ui.segmented(this, new String[][]{{"m", "Monthly"},
+                    {"y", "Yearly" + (save > 0 ? " · save " + save + "%" : "")}}, yearly ? "y" : "m", k -> {
+                yearly = "y".equals(k);
+                render();
+            });
+            seg.setContentDescription("Pay monthly or yearly");
+            LinearLayout.LayoutParams sl = Ui.matchWrap(this, 0);
+            sl.topMargin = Ui.dp(this, 12);
+            v.addView(seg, sl);
+        }
 
         // The two plans. Someone already on Business just sees what they have.
         if (!business) {
@@ -109,7 +127,7 @@ public class ProActivity extends Activity {
                 if (Pro.PRODUCT.equals(chosen)) chosen = Pro.BUSINESS;
             }
             boolean upgrade = subscribed && Pro.BUSINESS.equals(chosen);
-            String price = Pro.priceLine(chosen);
+            String price = Pro.priceLine(chosen, yearly);
             TextView pr = Ui.text(this, price.isEmpty()
                     ? (waited ? "Google Play isn't available on this phone right now, so plans can't be bought here."
                     : "Getting the price from Google Play…") : price, price.isEmpty() ? 14 : 17,
@@ -117,18 +135,19 @@ public class ProActivity extends Activity {
             pr.setPadding(0, Ui.dp(this, 20), 0, 0);
             v.addView(pr);
             Button buy = Ui.primary(this, upgrade ? "Upgrade to Business"
-                    : Pro.hasTrial(chosen) ? "Start my free month" : "Subscribe");
+                    : Pro.hasTrial(chosen, yearly) ? "Start my free month" : "Subscribe");
             buy.setEnabled(!price.isEmpty());
             buy.setAlpha(price.isEmpty() ? 0.5f : 1f);
             buy.setOnClickListener(x -> {
-                if (!Pro.buy(this, chosen)) {
+                if (!Pro.buy(this, chosen, yearly)) {
                     Toast.makeText(this, "Google Play isn't ready – please try again in a moment", Toast.LENGTH_LONG).show();
                 }
             });
             v.addView(buy);
-            v.addView(note((Pro.hasTrial(chosen) && !upgrade
+            v.addView(note((Pro.hasTrial(chosen, yearly) && !upgrade
                     ? "You won't be charged if you cancel before the free month ends. " : "")
-                    + "Payment is handled by Google Play and renews monthly – cancel any time in the Play Store. "
+                    + "Payment is handled by Google Play and renews " + (yearly ? "every year" : "monthly")
+                    + " – cancel any time in the Play Store. "
                     + (upgrade ? "Google Play adjusts what you've already paid for Pro. " : "")
                     + "Your " + Words.many(this) + " and data always stay yours, whatever plan you're on."));
             if (!subscribed) {
@@ -168,7 +187,7 @@ public class ProActivity extends Activity {
         LinearLayout top = Ui.hbox(this);
         TextView n = Ui.text(this, name, 19, Ui.DARK, true);
         top.addView(n, Ui.weight(1f));
-        String price = Pro.priceLine(product);
+        String price = Pro.priceLine(product, yearly);
         String monthly = price.contains("then ") ? price.substring(price.indexOf("then ") + 5) : price;
         top.addView(Ui.text(this, have ? "Your plan ✓" : monthly, 15, have ? Ui.GREEN : Ui.DARK, true));
         card.addView(top);
