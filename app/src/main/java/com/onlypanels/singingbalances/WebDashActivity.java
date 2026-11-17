@@ -19,7 +19,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
 
-/** Settings › Web dashboard (ShowFee Business): switch the online copy on or off. */
+/** Settings › Web dashboard (every plan): switch the online copy on or off. */
 public class WebDashActivity extends Activity {
     private static final int REQ_GOOGLE = 4421;
     private LinearLayout page;
@@ -52,16 +52,6 @@ public class WebDashActivity extends Activity {
         page.addView(h);
         page.addView(Ui.text(this, "See your " + Words.many(this) + ", calendar, who owes you and your clients at "
                 + "showfee.app/dashboard – on any computer or tablet. Sign in there with the same Google account.", 15, Ui.GREY, false));
-
-        if (!Pro.isBusiness(this)) {
-            TextView t = Ui.text(this, "The web dashboard is part of ShowFee Business.", 15, Ui.DARK, true);
-            t.setPadding(0, Ui.dp(this, 18), 0, 0);
-            page.addView(t);
-            Button see = Ui.primary(this, "See ShowFee Business");
-            see.setOnClickListener(v -> startActivity(new Intent(this, ProActivity.class).putExtra("business", true)));
-            page.addView(see);
-            return;
-        }
 
         if (!Cloud.signedIn(this)) {
             TextView t = Ui.text(this, "First, sign in with Google so your dashboard is kept under your own account.",

@@ -7,7 +7,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 /**
- * ShowFee Business web dashboard (showfee.app/dashboard). When switched on, a copy of the user's bookings,
+ * ShowFee web dashboard (every plan) (showfee.app/dashboard). When switched on, a copy of the user's bookings,
  * payments, clients and expenses is kept online under their own account, so they can see it on a computer.
  * Bank details, sign-ins and settings are never sent. Read-only on the web for now (stage 1).
  */
@@ -50,9 +50,9 @@ final class WebDash {
         return out.toString();
     }
 
-    /** Sends the latest copy if something changed. Quietly does nothing when off, not signed in or not Business. */
+    /** Sends the latest copy if something changed. Quietly does nothing when off or not signed in. */
     static void sync(Context c) {
-        if (!isOn(c) || !Cloud.signedIn(c) || !Pro.isBusiness(c)) return;
+        if (!isOn(c) || !Cloud.signedIn(c)) return;
         try {
             String data = payload(c);
             String hash = Integer.toHexString(data.hashCode()) + ":" + data.length();

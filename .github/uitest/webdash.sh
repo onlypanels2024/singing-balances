@@ -1,17 +1,14 @@
-# WEB DASHBOARD (ShowFee Business, stage 1): sourced by full.sh and quick.sh, after the sample data is loaded.
-section "Web dashboard (ShowFee Business)"
+# WEB DASHBOARD (every plan, stage 1): sourced by full.sh and quick.sh, after the sample data is loaded.
+section "Web dashboard (every plan)"
 bklog() { adb logcat -c; seeder --es task "$2" "${@:4}"; sleep 5; L=$(adb logcat -d -s UITEST | grep -E "$2" | tail -1)
           echo "      $L" | cut -c1-700 >> $R; if echo "$L" | grep -qE "$3"; then ok "$1"; else bad "$1 (log should match: $3)"; fi; }
 webdash() { adb shell am start -W --activity-clear-top -n $PKG/$NS.WebDashActivity > /dev/null; sleep 2; }
 
 seeder --es task plan --es plan free
 settings; check "Settings has Web dashboard" "Web dashboard" 3; check "Row explains it" "on a computer" 3
-webdash; check "Free plan: dashboard is part of Business" "part of ShowFee Business"; check "Free plan: see Business" "See ShowFee Business"
-shot "REVIEW-web-free"
-
-seeder --es task plan --es plan business
+webdash; nocheck "Free plan: not locked to Business" "part of ShowFee Business"
 seeder --es task bkanon; sleep 3
-webdash; check "Business: switch shown" "on the web dashboard"; check "Business: off at first" "nothing is stored online"
+webdash; check "Free plan: switch shown" "on the web dashboard"; check "Free plan: off at first" "nothing is stored online"
 shot "REVIEW-web-off"
 $UI tap "on the web dashboard" > /dev/null; sleep 8
 webdash; check "Switched on: shows when it was updated" "Updated"; check "Open dashboard button" "Open showfee.app/dashboard"
