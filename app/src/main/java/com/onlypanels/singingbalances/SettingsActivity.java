@@ -48,7 +48,7 @@ public class SettingsActivity extends Activity {
     /** Which page this is: null = the Settings menu, otherwise one of the keys below. */
     private String section;
     static final String WORK = "work", LOOK = "look", BUSINESS = "business", PAY = "pay", EMAIL_S = "email",
-            REMIND = "reminders", BACKUP = "backup", PRO = "pro", LINK = "link";
+            REMIND = "reminders", BACKUP = "backup", PRO = "pro", LINK = "link", WEB = "web";
 
     private boolean is(String key) {
         return key.equals(section);
@@ -519,6 +519,8 @@ public class SettingsActivity extends Activity {
         menuRow(g, R.drawable.ic_set_link, "Your booking link",
                 Cloud.hasLink(this) ? Cloud.link(this) + (Cloud.accepting(this) ? "" : " · paused")
                         : "Clients book you from WhatsApp, Facebook, Instagram and more", LINK, false);
+        menuRow(g, R.drawable.ic_set_web, "Web dashboard",
+                WebDash.isOn(this) ? "On · showfee.app/dashboard" : "See your " + Words.many(this) + " on a computer", WEB, false);
         menuRow(g, R.drawable.ic_set_business, "Business details & logo",
                 (name.isEmpty() ? "Add your name for invoices" : name) + (Logo.exists(this) ? " · logo added" : ""), BUSINESS, false);
         menuRow(g, R.drawable.ic_set_pay, "Getting paid",
@@ -594,6 +596,7 @@ public class SettingsActivity extends Activity {
                     startActivity(new Intent(this, BookingLinkActivity.class));
                 }
             }
+            else if (WEB.equals(key)) startActivity(new Intent(this, WebDashActivity.class));
             else open(this, key);
         });
         card.addView(row);

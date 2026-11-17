@@ -211,7 +211,7 @@ final class Cloud {
     }
 
     /** A valid Firebase key, refreshed when it's about to run out. Network thread only. */
-    private static String token(Context c) throws Exception {
+    static String token(Context c) throws Exception {
         SharedPreferences sp = sp(c);
         if (System.currentTimeMillis() < sp.getLong(EXPIRES, 0) && !get(c, ID_TOKEN).isEmpty()) return get(c, ID_TOKEN);
         String body = "grant_type=refresh_token&refresh_token=" + URLEncoder.encode(get(c, REFRESH), "UTF-8");
@@ -294,9 +294,14 @@ final class Cloud {
 
     // ------------------------------------------------------------------ notifications
 
-    /** Signs this phone up for booking-request notifications (only if the user has a booking link). */
+    /** Notifications are for people with a booking link, or who sent a contract to be signed. */
+    static boolean wantsPush(Context c) {
+        return hasLink(c) || (signedIn(c) && Contract.any(c));
+    }
+
+    /** Signs this phone up for booking-request and contract notifications. */
     static void registerDevice(Context c) {
-        if (!hasLink(c)) return;
+        if (!wantsPush(c)) return;
         try {
             com.google.firebase.messaging.FirebaseMessaging.getInstance().getToken()
                     .addOnSuccessListener(t -> registerDevice(c, t));
@@ -304,7 +309,7 @@ final class Cloud {
     }
 
     static void registerDevice(Context c, String token) {
-        if (!hasLink(c) || token == null || token.isEmpty() || token.equals(get(c, PUSH_TOKEN))) return;
+        if (!wantsPush(c) || token == null || token.isEmpty() || token.equals(get(c, PUSH_TOKEN))) return;
         run(null, () -> {
             JSONObject w = new JSONObject()
                     .put("update", new JSONObject().put("name", DOC_PREFIX + "/devices/" + get(c, UID)).put("fields", new JSONObject()))
@@ -502,6 +507,85 @@ final class Cloud {
         out.sort((x, y) -> x.isNew() != y.isNew() ? (x.isNew() ? -1 : 1)
                 : x.isNew() ? x.date.compareTo(y.date) : y.date.compareTo(x.date));
         return out;
+    }
+
+    // ------------------------------------------------------------------ contracts (ShowFee Business)
+
+    /** Puts a contract online for the client to sign. The user's signature is a PNG. */
+    static void createContract(Context c, Contract k, byte[] performerPng, Done<Void> done) {
+        run(done, () -> {
+            JSONObject f = new JSONObject()
+                    .put("owner", sv(get(c, UID)))
+                    .put("status", sv(Contract.SENT))
+                    .put("title", sv(k.title))
+                    .put("text", sv(k.text))
+                    .put("performer", sv(k.performer))
+                    .put("performerSig", sv("data:image/png;base64," + android.util.Base64.encodeToString(performerPng, android.util.Base64.NO_WRAP)))
+                    .put("client", sv(k.client))
+                    .put("version", new JSONObject().put("integerValue", String.valueOf(k.version)));
+            JSONObject w = new JSONObject()
+                    .put("update", new JSONObject().put("name", DOC_PREFIX + "/contracts/" + k.id).put("fields", f))
+                    .put("currentDocument", new JSONObject().put("exists", false))
+                    .put("updateTransforms", new JSONArray()
+                            .put(new JSONObject().put("fieldPath", "performerAt").put("setToServerValue", "REQUEST_TIME"))
+                            .put(new JSONObject().put("fieldPath", "created").put("setToServerValue", "REQUEST_TIME")));
+            call("POST", DOCS + ":commit", new JSONObject().put("writes", new JSONArray().put(w)), token(c));
+            return null;
+        });
+        registerDevice(c);
+    }
+
+    /** What the client did: ok(fields) with status, clientName, clientSig, clientAt – or ok(null) if it's gone. */
+    static void contractState(Context c, String id, Done<JSONObject> done) {
+        run(done, () -> {
+            try {
+                String raw = request("GET", DOCS + "/contracts/" + id + "?key=" + API_KEY, null, null, null);
+                JSONObject f = new JSONObject(raw).getJSONObject("fields");
+                JSONObject out = new JSONObject().put("status", str(f, "status")).put("clientName", str(f, "clientName"))
+                        .put("clientSig", str(f, "clientSig"));
+                JSONObject at = f.optJSONObject("clientAt");
+                if (at != null) {
+                    try {
+                        out.put("clientAt", java.time.Instant.parse(at.optString("timestampValue")).toEpochMilli());
+                    } catch (Exception ignored) { }
+                }
+                return out;
+            } catch (HttpError e) {
+                if (e.code == 404) return null;
+                throw e;
+            }
+        });
+    }
+
+    /** Cancels a contract that hasn't been signed: the link stops working. */
+    static void voidContract(Context c, String id, Done<Void> done) {
+        run(done, () -> {
+            call("PATCH", DOCS + "/contracts/" + id + "?updateMask.fieldPaths=status",
+                    new JSONObject().put("fields", new JSONObject().put("status", sv(Contract.VOID))), token(c));
+            return null;
+        });
+    }
+
+    // ------------------------------------------------------------------ web dashboard (ShowFee Business)
+
+    /** Stores the dashboard copy in dash/{uid} (only this user can read it). */
+    static void uploadDash(Context c, String data, Done<Void> done) {
+        run(done, () -> {
+            JSONObject w = new JSONObject()
+                    .put("update", new JSONObject().put("name", DOC_PREFIX + "/dash/" + get(c, UID))
+                            .put("fields", new JSONObject().put("uid", sv(get(c, UID))).put("data", sv(data))))
+                    .put("updateTransforms", new JSONArray()
+                            .put(new JSONObject().put("fieldPath", "updated").put("setToServerValue", "REQUEST_TIME")));
+            call("POST", DOCS + ":commit", new JSONObject().put("writes", new JSONArray().put(w)), token(c));
+            return null;
+        });
+    }
+
+    static void deleteDash(Context c, Done<Void> done) {
+        run(done, () -> {
+            if (signedIn(c)) call("DELETE", DOCS + "/dash/" + get(c, UID), null, token(c));
+            return null;
+        });
     }
 
     // ------------------------------------------------------------------ plumbing

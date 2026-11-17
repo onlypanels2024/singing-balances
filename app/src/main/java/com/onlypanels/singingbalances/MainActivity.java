@@ -157,6 +157,7 @@ public class MainActivity extends Activity {
             return;
         }
         render();
+        WebDash.sync(this);
         Updates.check(this, this::showUpdate);
         Pro.refresh(this, this::render);
         // Booking link: check for new requests and keep the page's busy dates up to date

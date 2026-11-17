@@ -64,6 +64,19 @@
             android:parentActivityName=".MainActivity" />
 
         <activity
+            android:name=".ContractActivity"
+            android:exported="false"
+            android:label="Contract"
+            android:windowSoftInputMode="adjustResize"
+            android:parentActivityName=".GigActivity" />
+
+        <activity
+            android:name=".WebDashActivity"
+            android:exported="false"
+            android:label="Web dashboard"
+            android:parentActivityName=".SettingsActivity" />
+
+        <activity
             android:name=".ProActivity"
             android:exported="false"
             android:label="ShowFee Pro"

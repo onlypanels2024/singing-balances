@@ -108,6 +108,20 @@ def tapafter(label, scroll=0):
     print(f"BUTTON NOT FOUND after: '{label}'")
     return 1
 
+def scribble(desc, scroll=0):
+    """Draws a signature across the box with this description (content-desc)."""
+    n = find(desc, scroll, "desc")
+    if not n:
+        print(f"NOT FOUND: '{desc}'")
+        return 1
+    x, y, h = n["x"], n["y"], n["h"]
+    adb("input", "swipe", str(x - 300), str(y + h // 4), str(x - 100), str(y - h // 4), "400")
+    adb("input", "swipe", str(x - 100), str(y - h // 4), str(x + 150), str(y + h // 5), "400")
+    adb("input", "swipe", str(x + 150), str(y + h // 5), str(x + 300), str(y - h // 5), "400")
+    print(f"signed in '{desc}'")
+    time.sleep(1)
+    return 0
+
 if __name__ == "__main__":
     if sys.argv[1] == "tapafter":
         sys.exit(tapafter(sys.argv[2], int(sys.argv[3]) if len(sys.argv) > 3 else 0))
@@ -118,6 +132,8 @@ if __name__ == "__main__":
         sys.exit(tap(sys.argv[2], 0, "text", int(sys.argv[3])))
     if cmd == "tapdesc":
         sys.exit(tap(sys.argv[2], int(sys.argv[3]) if len(sys.argv) > 3 else 0, "desc"))
+    if cmd == "scribble":
+        sys.exit(scribble(sys.argv[2], int(sys.argv[3]) if len(sys.argv) > 3 else 0))
     if cmd == "has":
         sys.exit(0 if find(sys.argv[2], int(sys.argv[3]) if len(sys.argv) > 3 else 0) else 1)
     if cmd == "fill":
