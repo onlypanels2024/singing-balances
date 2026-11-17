@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.util.Log;
 
 import org.json.JSONObject;
+import org.json.JSONArray;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -346,6 +347,79 @@ public class DemoSeeder extends BroadcastReceiver {
                     Log.i(TAG, "bkpage " + line);
                 } catch (Cloud.HttpError e) {
                     Log.i(TAG, "bkpage missing " + e.code);
+                }
+                break;
+            }
+            case "bkkstate": {
+                // The contracts saved on the phone for one booking (newest first)
+                long gid = in.getLongExtra("id", 0);
+                StringBuilder sb = new StringBuilder();
+                for (Contract k : Contract.forGig(c, gid)) {
+                    sb.append(" v").append(k.version).append("=").append(k.status)
+                            .append(k.isSigned() ? "(" + k.clientName + ",sig=" + k.clientSig(c).exists() + ")" : "")
+                            .append(",psig=").append(k.performerSig(c).exists()).append(",id=").append(k.id);
+                }
+                Gig g = Db.get(c).gig(gid);
+                Log.i(TAG, "bkkstate gig=" + gid + " n=" + Contract.forGig(c, gid).size() + sb
+                        + " booking=" + (g == null ? "-" : Gig.STATUS_NAMES[g.status]) + " mysig=" + Contract.mySignature(c).exists());
+                break;
+            }
+            case "bkksign": {
+                // The client signs the newest contract of a booking – without signing in, exactly like showfee.app/sign does
+                Contract k = Contract.latest(c, in.getLongExtra("id", 0));
+                if (k == null) { Log.i(TAG, "bkksign none"); break; }
+                android.graphics.Bitmap b = android.graphics.Bitmap.createBitmap(480, 150, android.graphics.Bitmap.Config.ARGB_8888);
+                android.graphics.Canvas cv = new android.graphics.Canvas(b);
+                cv.drawColor(0xFFFFFFFF);
+                android.graphics.Paint p = new android.graphics.Paint();
+                p.setColor(0xFF111111);
+                p.setStrokeWidth(5);
+                cv.drawLine(40, 110, 200, 40, p);
+                cv.drawLine(200, 40, 300, 110, p);
+                java.io.ByteArrayOutputStream bo = new java.io.ByteArrayOutputStream();
+                b.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, bo);
+                String sig = "data:image/png;base64," + android.util.Base64.encodeToString(bo.toByteArray(), android.util.Base64.NO_WRAP);
+                String name = in.getStringExtra("name") == null ? "Paul Grech" : in.getStringExtra("name");
+                JSONObject f = new JSONObject()
+                        .put("status", sv("signed")).put("clientName", sv(name)).put("clientSig", sv(sig));
+                JSONObject w = new JSONObject()
+                        .put("update", new JSONObject().put("name", "projects/showfee-app/databases/(default)/documents/contracts/" + k.id).put("fields", f))
+                        .put("updateMask", new JSONObject().put("fieldPaths", new JSONArray().put("status").put("clientName").put("clientSig")))
+                        .put("updateTransforms", new JSONArray().put(new JSONObject().put("fieldPath", "clientAt").put("setToServerValue", "REQUEST_TIME")));
+                try {
+                    Cloud.request("POST", DOCS + ":commit?key=" + KEY, new JSONObject().put("writes", new JSONArray().put(w)).toString(),
+                            "application/json", null);
+                    Log.i(TAG, "bkksign ok " + k.id);
+                } catch (Cloud.HttpError e) {
+                    Log.i(TAG, "bkksign refused " + e.code);
+                }
+                break;
+            }
+            case "bkkhack": {
+                // Someone with the link tries to change the wording or the fee of a contract – must be refused
+                Contract k = Contract.latest(c, in.getLongExtra("id", 0));
+                if (k == null) { Log.i(TAG, "bkkhack none"); break; }
+                try {
+                    Cloud.request("PATCH", DOCS + "/contracts/" + k.id + "?key=" + KEY + "&updateMask.fieldPaths=text",
+                            new JSONObject().put("fields", new JSONObject().put("text", sv("Fee: €1.00"))).toString(), "application/json", null);
+                    Log.i(TAG, "bkkhack ALLOWED");
+                } catch (Cloud.HttpError e) {
+                    Log.i(TAG, "bkkhack refused " + e.code);
+                }
+                break;
+            }
+            case "bkkdoc": {
+                // What the signing page sees for the newest contract of a booking (without the signature images)
+                Contract k = Contract.latest(c, in.getLongExtra("id", 0));
+                if (k == null) { Log.i(TAG, "bkkdoc none"); break; }
+                try {
+                    JSONObject f = new JSONObject(Cloud.request("GET", DOCS + "/contracts/" + k.id + "?key=" + KEY, null, null, null))
+                            .getJSONObject("fields");
+                    f.remove("performerSig");
+                    f.remove("clientSig");
+                    Log.i(TAG, "bkkdoc " + f.toString().replace("\n", " "));
+                } catch (Cloud.HttpError e) {
+                    Log.i(TAG, "bkkdoc missing " + e.code);
                 }
                 break;
             }

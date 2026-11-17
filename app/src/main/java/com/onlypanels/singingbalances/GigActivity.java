@@ -39,6 +39,7 @@ public class GigActivity extends Activity {
     protected void onResume() {
         super.onResume();
         render();
+        checkContract();
     }
 
     private Button action(String label, int bg, int fg, Runnable r) {
@@ -91,6 +92,8 @@ public class GigActivity extends Activity {
             n.setPadding(0, Ui.dp(this, 12), 0, 0);
             content.addView(n);
         }
+
+        if (!g.isCancelled()) contractSection(g);
 
         // Actions
         if (!g.isCancelled()) {
@@ -182,6 +185,190 @@ public class GigActivity extends Activity {
         content.addView(addExp);
     }
 
+    // ------------------------------------------------------------------ contract (ShowFee Business)
+
+    private void contractSection(Gig g) {
+        List<Contract> all = Contract.forGig(this, g.id);
+        Contract k = all.isEmpty() ? null : all.get(0);
+        boolean business = Pro.isBusiness(this);
+        if (k == null && !business) {
+            content.addView(Ui.section(this, "Contract"));
+            content.addView(Ui.text(this, "With ShowFee Business you can send a contract that you and your client "
+                    + "both sign online.", 14, Ui.GREY, false));
+            action("See ShowFee Business", Ui.PRIMARY_LIGHT, Ui.PRIMARY,
+                    () -> startActivity(new android.content.Intent(this, ProActivity.class).putExtra("business", true)));
+            return;
+        }
+        content.addView(Ui.section(this, "Contract"));
+        LinearLayout card = Ui.card(this, k != null && k.isSigned() ? Ui.GREEN_LIGHT : Ui.SURFACE);
+        card.setElevation(0);
+        java.text.DateFormat df = java.text.DateFormat.getDateTimeInstance(java.text.DateFormat.MEDIUM, java.text.DateFormat.SHORT);
+        if (k == null || k.isVoid()) {
+            card.addView(Ui.text(this, k == null ? "No contract yet" : "Contract cancelled", 16, Ui.DARK, true));
+            card.addView(Ui.text(this, "Send one to sign online – you both sign, your client on their phone, "
+                    + "no account needed.", 14, Ui.GREY, false));
+        } else if (k.isSent()) {
+            card.addView(Ui.text(this, "Waiting for " + g.client + " to sign", 16, Ui.ORANGE, true));
+            card.addView(Ui.text(this, "Version " + k.version + " · you signed and sent it " + df.format(new java.util.Date(k.sentAt)),
+                    14, Ui.GREY, false));
+        } else {
+            card.addView(Ui.text(this, "Signed by " + k.clientName, 16, Ui.GREEN, true));
+            card.addView(Ui.text(this, df.format(new java.util.Date(k.signedAt)) + " · both of you have signed",
+                    14, Ui.GREY, false));
+        }
+        content.addView(card);
+
+        if (k != null && k.isSent()) {
+            action("Send the link again", Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> sendContractLink(k));
+        }
+        if (k != null && !k.isVoid()) {
+            action(k.isSigned() ? "View signed contract (PDF)" : "View contract (PDF)", Ui.PRIMARY_LIGHT, Ui.PRIMARY,
+                    () -> openContract(k));
+        }
+        if (k != null && k.isSigned()) {
+            action("Email the signed copy to " + g.client, Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> emailSigned(k));
+        }
+        if (business) {
+            action(k == null || k.isVoid() ? "Create contract" : "New version", k == null || k.isVoid() ? Ui.PRIMARY : Ui.PRIMARY_LIGHT,
+                    k == null || k.isVoid() ? Ui.ON_PRIMARY : Ui.PRIMARY,
+                    () -> startActivityForResult(new android.content.Intent(this, ContractActivity.class).putExtra("gig", g.id),
+                            ContractActivity.REQ));
+        }
+        if (k != null && k.isSent()) {
+            Button cancel = Ui.quiet(this, "Cancel this contract");
+            cancel.setTextColor(Ui.RED);
+            cancel.setOnClickListener(v -> new AlertDialog.Builder(this)
+                    .setTitle("Cancel this contract?")
+                    .setMessage("The link stops working, so " + g.client + " can't sign it. Use this if it went out by mistake.")
+                    .setPositiveButton("Cancel contract", (d, w) -> Cloud.voidContract(this, k.id, new Cloud.Done<Void>() {
+                        @Override public void ok(Void r) {
+                            k.status = Contract.VOID;
+                            Contract.save(GigActivity.this, k);
+                            render();
+                        }
+
+                        @Override public void fail(String reason) {
+                            android.widget.Toast.makeText(GigActivity.this, reason, android.widget.Toast.LENGTH_LONG).show();
+                        }
+                    }))
+                    .setNegativeButton("Keep it", null)
+                    .show());
+            content.addView(cancel);
+        }
+        if (all.size() > 1) {
+            StringBuilder sb = new StringBuilder();
+            for (Contract x : all) {
+                if (sb.length() > 0) sb.append("\n");
+                sb.append("Version ").append(x.version).append(" · ")
+                        .append(x.isSigned() ? "signed by " + x.clientName : x.isVoid() ? (x == k ? "cancelled" : "replaced") : "waiting");
+            }
+            TextView v = Ui.text(this, sb.toString(), 13, Ui.GREY, false);
+            v.setPadding(0, Ui.dp(this, 8), 0, 0);
+            content.addView(v);
+        }
+    }
+
+    private String contractSubject(String what) {
+        return what + " – " + (gig.event.isEmpty() ? Words.One(this) : gig.event) + " (" + Dates.fmt(gig.gigDay) + ")";
+    }
+
+    private String signOff() {
+        return "Many thanks,\n" + Prefs.get(this, Prefs.NAME);
+    }
+
+    /** Emails (or shares) the signing link. */
+    private void sendContractLink(Contract k) {
+        String subject = contractSubject("Contract to sign");
+        String body = "Hi " + gig.client + ",\n\nPlease read and sign the contract for the " + Words.one(this)
+                + (gig.event.isEmpty() ? "" : " (" + gig.event + ")") + " on " + Dates.fmt(gig.gigDay) + " here:\n"
+                + k.link() + "\n\nIt only takes a minute on your phone – no account needed. I've already signed it.\n\n" + signOff();
+        Runnable share = () -> {
+            android.content.Intent i = new android.content.Intent(android.content.Intent.ACTION_SEND).setType("text/plain")
+                    .putExtra(android.content.Intent.EXTRA_SUBJECT, subject)
+                    .putExtra(android.content.Intent.EXTRA_TEXT, body);
+            if (!gig.email.isEmpty()) i.putExtra(android.content.Intent.EXTRA_EMAIL, new String[]{gig.email});
+            startActivity(android.content.Intent.createChooser(i, "Send the contract link"));
+        };
+        if (Mail.isConnected(this)) Forms.composeEmail(this, gig.email, subject, body, null, null, share);
+        else share.run();
+    }
+
+    private void openContract(Contract k) {
+        try {
+            java.io.File pdf = ContractPdf.create(this, k);
+            android.net.Uri uri = ShareProvider.uriFor(pdf);
+            startActivity(android.content.Intent.createChooser(new android.content.Intent(android.content.Intent.ACTION_VIEW)
+                    .setDataAndType(uri, "application/pdf").addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION), "Open contract"));
+        } catch (Exception e) {
+            android.widget.Toast.makeText(this, "Couldn't make the PDF: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void emailSigned(Contract k) {
+        java.io.File pdf;
+        try {
+            pdf = ContractPdf.create(this, k);
+        } catch (Exception e) {
+            android.widget.Toast.makeText(this, "Couldn't make the PDF: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
+            return;
+        }
+        String subject = contractSubject("Signed contract");
+        String body = "Hi " + gig.client + ",\n\nThank you for signing. Attached is the signed contract for your records.\n\n" + signOff();
+        if (Mail.isConnected(this)) {
+            Forms.composeEmail(this, gig.email, subject, body, pdf, null, () -> Google.openInEmailApp(this, gig, subject, body, pdf));
+        } else {
+            Google.openInEmailApp(this, gig, subject, body, pdf);
+        }
+    }
+
+    /** Has the client signed? Checks the newest contract that's still waiting. */
+    private void checkContract() {
+        if (gig == null) return;
+        Contract k = Contract.latest(this, gig.id);
+        if (k == null || !(k.isSent() || (k.isSigned() && !k.handled))) return;
+        if (k.isSigned()) {
+            signedNews(k);
+            return;
+        }
+        Cloud.contractState(this, k.id, new Cloud.Done<org.json.JSONObject>() {
+            @Override public void ok(org.json.JSONObject r) {
+                if (r == null || isFinishing() || !Contract.SIGNED.equals(r.optString("status"))) return;
+                try {
+                    String sig = r.optString("clientSig");
+                    int comma = sig.indexOf(',');
+                    byte[] png = android.util.Base64.decode(sig.substring(comma + 1), android.util.Base64.DEFAULT);
+                    try (java.io.FileOutputStream out = new java.io.FileOutputStream(k.clientSig(GigActivity.this))) {
+                        out.write(png);
+                    }
+                } catch (Exception ignored) { } // the PDF still says who signed and when
+                k.status = Contract.SIGNED;
+                k.clientName = r.optString("clientName");
+                k.signedAt = r.optLong("clientAt", System.currentTimeMillis());
+                Contract.save(GigActivity.this, k);
+                Gig g = Db.get(GigActivity.this).gig(k.gigId);
+                if (g != null && g.status == Gig.PENCILLED && Contract.confirmOnSign(GigActivity.this)) {
+                    g.status = Gig.CONFIRMED;
+                    Db.get(GigActivity.this).save(g);
+                }
+                render();
+                signedNews(k);
+            }
+
+            @Override public void fail(String reason) { } // try again next time
+        });
+    }
+
+    private void signedNews(Contract k) {
+        k.handled = true;
+        Contract.save(this, k);
+        new AlertDialog.Builder(this)
+                .setTitle("Contract signed")
+                .setMessage(k.clientName + " signed the contract. Email them the signed copy (PDF)?")
+                .setPositiveButton("Email it", (d, w) -> emailSigned(k))
+                .setNegativeButton("Later", null)
+                .show();
+    }
+
     private void setStatus(int status) {
         gig.status = status;
         Db.get(this).save(gig);
@@ -191,6 +378,13 @@ public class GigActivity extends Activity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, android.content.Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == ContractActivity.REQ) {
+            if (resultCode == RESULT_OK && data != null && gig != null) {
+                Contract k = Contract.find(this, data.getStringExtra("send"));
+                if (k != null) getWindow().getDecorView().post(() -> sendContractLink(k));
+            }
+            return;
+        }
         GoogleAccount.handleResult(this, requestCode, resultCode, data);
     }
 
@@ -229,6 +423,7 @@ public class GigActivity extends Activity {
                     .setMessage(gig.title() + "\nThis also removes its payments.")
                     .setPositiveButton("Delete", (d, w) -> {
                         Db.get(this).deleteGig(gig.id);
+                        Contract.deleteForGig(this, gig.id);
                         finish();
                     })
                     .setNegativeButton("Cancel", null)
