@@ -30,23 +30,25 @@ bklog "Web: new booking, payment, client and expense reach the phone" bkcheck 'g
 main --es page gigs; $UI tap "=Upcoming" > /dev/null; check "Web: booking made on the web is in the app" "Web Client" 4; shot "REVIEW-web-edit-phone"
 op gig '{"id":"wtest1","client":"Web Client","event":"Changed on the web","gig_day":'$((T+3))',"due_day":'$((T+5))',"fee_cents":44400,"status":0,"start_min":-1}'
 op payDel '{"id":"wtest2"}'
-bklog "Web: the silent message applies changes" bkpull 'applied=2'
+sleep 6   # the silent message should bring these in by itself, with the app in the background
+bklog "Web: changes arrive by themselves (silent message)" bkcheck 'Changed on the web\|fee=44400\|paid=0'
+bklog "Web: nothing left to apply" bkpull 'applied=[0-2]'
 bklog "Web: booking changed and payment removed" bkcheck 'gig\[Web Client\|Changed on the web\|fee=44400\|paid=0\|status=0\|start=-1\|exp=1\].* waiting=0'
 bklog "Web: dashboard copy updated afterwards" bkdash 'gigs=1[0-9]'
 op gigDel '{"id":"wtest1"}'
-bklog "Web: delete applied" bkpull 'applied=1'
+bklog "Web: delete applied" bkpull 'applied=[01]'
 bklog "Web: booking deleted on the phone" bkcheck 'bkcheck client=web@example.com'
 bklog "Web: no changes waiting means nothing to do" bkpull 'applied=0'
 # ---- date clash warning: a second booking on the same day as Bob's Bar (today, 21:00)
 op gig '{"ref":"wclash","client":"Web Clash","event":"Birthday","gig_day":'$T',"due_day":'$T',"fee_cents":10000,"status":0,"start_min":1140}'
-bklog "Clash: second booking on the same day saved" bkpull 'applied=1'
+bklog "Clash: second booking on the same day saved" bkpull 'applied=[01]'
 main --es page gigs; $UI tap "=Upcoming" > /dev/null; $UI tap "Bob's Bar" 3 > /dev/null; sleep 2
 check "Clash: booking screen warns about the other booking" "You already have Web Clash at 19:00 on this day"; shot "REVIEW-clash-booking"
 $UI tap "=EDIT" > /dev/null || $UI tap "=Edit" > /dev/null; sleep 2
 check "Clash: booking form warns too" "You already have Web Clash at 19:00 on this day"; shot "REVIEW-clash-form"
 adb shell input keyevent 4; sleep 1; adb shell input keyevent 4; sleep 1
 op gigDel '{"id":"wclash"}'
-bklog "Clash: test booking removed" bkpull 'applied=1'
+bklog "Clash: test booking removed" bkpull 'applied=[01]'
 bklog "Web: another account can't send changes" bkop 'bkop refused 403' --es t gig --es d64 "$(b64 '{"ref":"x","client":"Hacker","gig_day":1,"due_day":1,"fee_cents":1,"status":0,"start_min":-1}')" --es as other
 nocrash "Web dashboard changes"
 gig 7; $UI tap "Mark as confirmed" 3 > /dev/null; sleep 2; main --es page gigs; sleep 8
