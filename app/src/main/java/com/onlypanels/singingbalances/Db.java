@@ -137,6 +137,12 @@ final class Db extends SQLiteOpenHelper {
                 new String[]{String.valueOf(fromDay), String.valueOf(toDay)}, "g.gig_day ASC, g.start_min ASC");
     }
 
+    /** Other bookings on the same day that aren't cancelled (to warn about a date clash). */
+    List<Gig> sameDay(long day, long exceptId) {
+        return queryGigs("g.gig_day = ? AND g.status != 2 AND g.id != ?",
+                new String[]{String.valueOf(day), String.valueOf(exceptId)}, "g.start_min ASC");
+    }
+
     List<Gig> gigsForClient(String name) {
         return queryGigs("g.client = ? COLLATE NOCASE", new String[]{name}, "g.gig_day DESC");
     }

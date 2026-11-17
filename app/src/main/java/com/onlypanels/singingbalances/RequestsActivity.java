@@ -170,6 +170,12 @@ public class RequestsActivity extends Activity {
         ht.addView(Ui.text(this, Dates.withWeekday(r.day()), 14, Ui.GREY, false));
         head.addView(ht, Ui.weight(1f));
         page.addView(head);
+        String clash = r.isNew() ? Forms.clash(this, r.day(), 0) : "";
+        if (!clash.isEmpty()) {
+            TextView cl = Ui.text(this, clash, 14, Ui.ORANGE, true);
+            cl.setPadding(Ui.dp(this, 4), 0, 0, Ui.dp(this, 12));
+            page.addView(cl);
+        }
 
         if (!r.isNew()) {
             boolean ok = "accepted".equals(r.status);

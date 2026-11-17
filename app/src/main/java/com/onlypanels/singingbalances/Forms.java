@@ -12,6 +12,9 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.Spinner;
+import android.widget.TextView;
+import android.content.Context;
+import java.util.List;
 
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -60,6 +63,21 @@ final class Forms {
         return dueDay == gigDay ? Dates.fmt(dueDay) + " (" + Words.onTheNight(a) + ")" : Dates.fmt(dueDay);
     }
 
+    /** "You already have Bob's Bar at 21:00 on this day" – or "" when the day is free. */
+    static String clash(Context c, long day, long exceptId) {
+        List<Gig> l = Db.get(c).sameDay(day, exceptId);
+        if (l.isEmpty()) return "";
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < l.size() && i < 3; i++) {
+            Gig o = l.get(i);
+            if (i > 0) sb.append(i == l.size() - 1 ? " and " : ", ");
+            sb.append(o.client).append(o.startMin >= 0 ? " at " + Dates.time(o.startMin) : "");
+            if (o.status == Gig.PENCILLED) sb.append(" (pencilled in)");
+        }
+        if (l.size() > 3) sb.append(" and ").append(l.size() - 3).append(" more");
+        return "⚠  You already have " + sb + " on this day";
+    }
+
     /** existing == null means a new gig; presetDay is used for new gigs (0 = today). */
     static void editGig(Activity a, Gig existing, long presetDay, Saved onSaved) {
         final boolean isNew = existing == null || existing.id == 0;
@@ -93,6 +111,9 @@ final class Forms {
 
         EditText event = Ui.field(form, "Event / venue", g.event, TEXT_SENTENCE);
         Button dayBtn = Ui.pickerButton(form, Words.One(a) + " date");
+        TextView clashLine = Ui.text(a, "", 13, Ui.ORANGE, true);
+        clashLine.setPadding(Ui.dp(a, 4), Ui.dp(a, 2), 0, Ui.dp(a, 6));
+        form.addView(clashLine);
         Button timeBtn = Ui.pickerButton(form, "Start time");
         Spinner status = spinner(form, "Booking", Gig.STATUS_NAMES, g.status);
         EditText fee = Ui.field(form, "Fee (" + Money.label() + ") *", isNew ? "" : Money.plain(g.feeCents), MONEY);
@@ -101,6 +122,9 @@ final class Forms {
 
         Runnable refresh = () -> {
             dayBtn.setText(Dates.withWeekday(gigDay[0]));
+            String clash = clash(a, gigDay[0], g.id);
+            clashLine.setText(clash);
+            clashLine.setVisibility(clash.isEmpty() ? android.view.View.GONE : android.view.View.VISIBLE);
             timeBtn.setText(start[0] >= 0 ? Dates.time(start[0]) : "Not set");
             dueBtn.setText(dueLabel(a, gigDay[0], dueDay[0]));
         };

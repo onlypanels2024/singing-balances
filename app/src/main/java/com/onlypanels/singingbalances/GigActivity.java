@@ -62,6 +62,12 @@ public class GigActivity extends Activity {
 
         content.addView(Ui.text(this, g.title(), 22, Ui.DARK, true));
         content.addView(Ui.text(this, g.when(), 15, Ui.GREY, false));
+        String clash = g.isCancelled() ? "" : Forms.clash(this, g.gigDay, g.id);
+        if (!clash.isEmpty()) {
+            TextView cl = Ui.text(this, clash, 14, Ui.ORANGE, true);
+            cl.setPadding(0, Ui.dp(this, 4), 0, 0);
+            content.addView(cl);
+        }
         TextView booking = Ui.text(this, Gig.STATUS_NAMES[g.status], 14,
                 g.isCancelled() ? Ui.GREY : g.status == Gig.PENCILLED ? Ui.ORANGE : Ui.GREEN, true);
         booking.setPadding(0, Ui.dp(this, 4), 0, 0);

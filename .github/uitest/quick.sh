@@ -1,5 +1,5 @@
 #!/bin/bash
-# QUICK TEST: only the part being worked on (now: changes made on the web dashboard). Runs when .github/uitest/QUICK exists.
+# QUICK TEST: only the part being worked on (now: web dashboard changes and the date clash warning). Runs when .github/uitest/QUICK exists.
 # The full test (full.sh) still runs once before anything is released.
 source <(sed -n '1,45p' .github/uitest/full.sh)   # same helpers, install and phone set-up as the full test
 seeder --es task seed
