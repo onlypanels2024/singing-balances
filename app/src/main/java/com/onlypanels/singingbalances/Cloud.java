@@ -294,9 +294,10 @@ final class Cloud {
 
     // ------------------------------------------------------------------ notifications
 
-    /** Notifications are for people with a booking link, or who sent a contract to be signed. */
+    /** Notifications are for people with a booking link, who sent a contract to be signed, or who use the web
+     *  dashboard (a silent message tells the phone about changes made there). */
     static boolean wantsPush(Context c) {
-        return hasLink(c) || (signedIn(c) && Contract.any(c));
+        return hasLink(c) || (signedIn(c) && (Contract.any(c) || WebDash.isOn(c)));
     }
 
     /** Signs this phone up for booking-request and contract notifications. */
@@ -579,6 +580,68 @@ final class Cloud {
             call("POST", DOCS + ":commit", new JSONObject().put("writes", new JSONArray().put(w)), token(c));
             return null;
         });
+    }
+
+    /**
+     * Applies the changes made on the web dashboard (dash/{uid}/ops): fetches them, lets {@link WebDash#apply} make
+     * them on this phone, then in one go sends the new copy and deletes the changes it applied. Gives how many.
+     */
+    static void pullDash(Context c, Done<Integer> done) {
+        run(done, () -> {
+            if (!signedIn(c)) return 0;
+            String tok = token(c), uid = get(c, UID);
+            JSONObject r = call("GET", DOCS + "/dash/" + uid + "/ops?pageSize=300", null, tok);
+            JSONArray docs = r.optJSONArray("documents");
+            if (docs == null || docs.length() == 0) return 0;
+            List<JSONObject> ops = new ArrayList<>();
+            for (int i = 0; i < docs.length(); i++) {
+                JSONObject doc = docs.getJSONObject(i);
+                JSONObject f = doc.optJSONObject("fields");
+                if (f == null) f = new JSONObject();
+                String name = doc.optString("name");
+                JSONObject at = f.optJSONObject("at");
+                ops.add(new JSONObject()
+                        .put("id", name.substring(name.lastIndexOf('/') + 1))
+                        .put("t", str(f, "t"))
+                        .put("d", f.has("d") ? plain(f.getJSONObject("d")) : new JSONObject())
+                        .put("at", at != null ? at.optString("timestampValue", "") : doc.optString("createTime", "")));
+            }
+            ops.sort((a, b) -> a.optString("at").compareTo(b.optString("at")));
+            List<String> ids = WebDash.apply(c, ops);
+            String data = WebDash.payload(c);
+            JSONArray writes = new JSONArray().put(new JSONObject()
+                    .put("update", new JSONObject().put("name", DOC_PREFIX + "/dash/" + uid)
+                            .put("fields", new JSONObject().put("uid", sv(uid)).put("data", sv(data))))
+                    .put("updateTransforms", new JSONArray()
+                            .put(new JSONObject().put("fieldPath", "updated").put("setToServerValue", "REQUEST_TIME"))));
+            for (String id : ids) writes.put(new JSONObject().put("delete", DOC_PREFIX + "/dash/" + uid + "/ops/" + id));
+            call("POST", DOCS + ":commit", new JSONObject().put("writes", writes), tok);
+            WebDash.markSent(c, data);
+            return ids.size();
+        });
+    }
+
+    /** A Firestore value as plain JSON (numbers, text, true/false, lists and maps). */
+    static Object plain(JSONObject v) throws Exception {
+        if (v.has("stringValue")) return v.getString("stringValue");
+        if (v.has("integerValue")) return Long.parseLong(v.getString("integerValue"));
+        if (v.has("doubleValue")) return v.getDouble("doubleValue");
+        if (v.has("booleanValue")) return v.getBoolean("booleanValue");
+        if (v.has("timestampValue")) return v.getString("timestampValue");
+        if (v.has("mapValue")) {
+            JSONObject out = new JSONObject(), f = v.getJSONObject("mapValue").optJSONObject("fields");
+            if (f != null) for (java.util.Iterator<String> k = f.keys(); k.hasNext(); ) {
+                String key = k.next();
+                out.put(key, plain(f.getJSONObject(key)));
+            }
+            return out;
+        }
+        if (v.has("arrayValue")) {
+            JSONArray out = new JSONArray(), a = v.getJSONObject("arrayValue").optJSONArray("values");
+            for (int i = 0; a != null && i < a.length(); i++) out.put(plain(a.getJSONObject(i)));
+            return out;
+        }
+        return JSONObject.NULL;
     }
 
     static void deleteDash(Context c, Done<Void> done) {

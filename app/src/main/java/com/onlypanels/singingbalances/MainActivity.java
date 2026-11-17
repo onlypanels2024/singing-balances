@@ -157,6 +157,7 @@ public class MainActivity extends Activity {
             return;
         }
         render();
+        WebDash.pull(this, () -> { if (!isFinishing()) render(); }); // changes made on the web dashboard
         WebDash.sync(this);
         Updates.check(this, this::showUpdate);
         Pro.refresh(this, this::render);

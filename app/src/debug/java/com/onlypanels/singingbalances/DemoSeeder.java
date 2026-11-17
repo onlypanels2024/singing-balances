@@ -456,6 +456,66 @@ public class DemoSeeder extends BroadcastReceiver {
                 }
                 break;
             }
+            case "bkop": {
+                // A change made on the web dashboard, written exactly like the website does (t + d + server time)
+                String uid = Cloud.get(c, Cloud.UID);
+                // the details come base64-encoded (--es d64 …) so the JSON survives adb's shell quoting
+                JSONObject d = new JSONObject(new String(android.util.Base64.decode(in.getStringExtra("d64"), android.util.Base64.DEFAULT),
+                        StandardCharsets.UTF_8));
+                String token = "other".equals(in.getStringExtra("as"))
+                        ? new JSONObject(Cloud.request("POST", "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=" + KEY,
+                        "{\"returnSecureToken\":true}", "application/json", null)).getString("idToken")
+                        : Cloud.token(c);
+                JSONObject w = new JSONObject().put("update", new JSONObject()
+                                .put("name", "projects/showfee-app/databases/(default)/documents/dash/" + uid + "/ops/t" + Long.toHexString(System.nanoTime()))
+                                .put("fields", new JSONObject().put("t", sv(in.getStringExtra("t"))).put("d", fv(d))))
+                        .put("updateTransforms", new org.json.JSONArray().put(new JSONObject().put("fieldPath", "at").put("setToServerValue", "REQUEST_TIME")))
+                        .put("currentDocument", new JSONObject().put("exists", false));
+                try {
+                    Cloud.request("POST", DOCS + ":commit", new JSONObject().put("writes", new org.json.JSONArray().put(w)).toString(),
+                            "application/json", token);
+                    Log.i(TAG, "bkop saved " + in.getStringExtra("t"));
+                } catch (Cloud.HttpError e) {
+                    Log.i(TAG, "bkop refused " + e.code);
+                }
+                break;
+            }
+            case "bkpull": {
+                // What happens when the silent message arrives: apply the changes now
+                java.util.concurrent.CountDownLatch done = new java.util.concurrent.CountDownLatch(1);
+                final String[] out = {"?"};
+                Cloud.pullDash(c, new Cloud.Done<Integer>() {
+                    @Override public void ok(Integer n) { out[0] = "applied=" + n; done.countDown(); }
+                    @Override public void fail(String reason) { out[0] = "failed " + reason; done.countDown(); }
+                });
+                done.await(30, java.util.concurrent.TimeUnit.SECONDS);
+                Log.i(TAG, "bkpull " + out[0]);
+                break;
+            }
+            case "bkcheck": {
+                // The phone's data after web changes, and how many changes are still waiting online
+                Db db = Db.get(c);
+                StringBuilder sb = new StringBuilder("bkcheck");
+                for (Gig g : db.allGigs()) {
+                    if (!g.client.startsWith("Web ")) continue;
+                    sb.append(" gig[").append(g.client).append("|").append(g.event).append("|fee=").append(g.feeCents)
+                            .append("|paid=").append(g.paidCents).append("|status=").append(g.status).append("|start=").append(g.startMin)
+                            .append("|exp=").append(db.expensesForGig(g.id).size()).append("]");
+                }
+                Client k = db.client("Web New Client");
+                sb.append(" client=").append(k == null ? "none" : k.email + "/" + k.phone);
+                int left;
+                try {
+                    org.json.JSONArray docs = new JSONObject(Cloud.request("GET", DOCS + "/dash/" + Cloud.get(c, Cloud.UID) + "/ops", null, null,
+                            Cloud.token(c))).optJSONArray("documents");
+                    left = docs == null ? 0 : docs.length();
+                } catch (Cloud.HttpError e) {
+                    left = -e.code;
+                }
+                sb.append(" waiting=").append(left);
+                Log.i(TAG, sb.toString());
+                break;
+            }
             case "bkoffline":
                 Cloud.forceOffline = "on".equals(in.getStringExtra("mode"));
                 Log.i(TAG, "bkoffline " + Cloud.forceOffline);
@@ -468,6 +528,23 @@ public class DemoSeeder extends BroadcastReceiver {
             default:
                 Log.i(TAG, "unknown booking task " + task);
         }
+    }
+
+    /** Plain JSON as a Firestore value (like the website's Firebase library writes it). */
+    private static JSONObject fv(Object v) throws Exception {
+        if (v instanceof JSONObject) {
+            JSONObject f = new JSONObject(), o = (JSONObject) v;
+            for (java.util.Iterator<String> k = o.keys(); k.hasNext(); ) {
+                String key = k.next();
+                f.put(key, fv(o.get(key)));
+            }
+            return new JSONObject().put("mapValue", new JSONObject().put("fields", f));
+        }
+        if (v instanceof Integer || v instanceof Long) return new JSONObject().put("integerValue", String.valueOf(v));
+        if (v instanceof Number) return new JSONObject().put("doubleValue", ((Number) v).doubleValue());
+        if (v instanceof Boolean) return new JSONObject().put("booleanValue", v);
+        if (v == JSONObject.NULL) return new JSONObject().put("nullValue", JSONObject.NULL);
+        return sv(String.valueOf(v));
     }
 
     private static JSONObject sv(String s) throws Exception {

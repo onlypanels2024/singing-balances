@@ -28,6 +28,10 @@ public class PushService extends FirebaseMessagingService {
     @Override
     public void onMessageReceived(RemoteMessage msg) {
         Map<String, String> d = msg.getData();
+        if ("dash_edit".equals(d.get("type"))) { // a change on the web dashboard: apply it quietly
+            WebDash.pull(getApplicationContext(), null);
+            return;
+        }
         if ("contract_signed".equals(d.get("type"))) {
             signed(this, d.get("id"), d.get("name"));
             return;

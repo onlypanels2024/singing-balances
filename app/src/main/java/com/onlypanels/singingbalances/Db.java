@@ -217,13 +217,22 @@ final class Db extends SQLiteOpenHelper {
         return out;
     }
 
-    void addPayment(long gigId, long cents, long day, String note) {
+    long addPayment(long gigId, long cents, long day, String note) {
         ContentValues v = new ContentValues();
         v.put("gig_id", gigId);
         v.put("cents", cents);
         v.put("day", day);
         v.put("note", note);
-        getWritableDatabase().insert("payments", null, v);
+        long id = getWritableDatabase().insert("payments", null, v);
+        changed();
+        return id;
+    }
+
+    /** Moves every gig from one client name to another (a client renamed on the web dashboard). */
+    void renameClientOnGigs(String oldName, String newName) {
+        ContentValues gv = new ContentValues();
+        gv.put("client", newName);
+        getWritableDatabase().update("gigs", gv, "client = ? COLLATE NOCASE", new String[]{oldName});
         changed();
     }
 
