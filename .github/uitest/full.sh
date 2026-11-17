@@ -470,6 +470,7 @@ nocrash "Update bar"
 
 source .github/uitest/booking.sh
 source .github/uitest/contracts.sh
+source .github/uitest/webdash.sh
 
 section "Review pictures (Android 15 edge-to-edge)"
 for pg in gigs calendar clients money; do main --es page $pg; shot "REVIEW-e2e-$pg"; done

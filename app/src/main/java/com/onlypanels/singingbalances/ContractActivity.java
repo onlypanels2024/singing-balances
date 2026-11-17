@@ -88,7 +88,8 @@ public class ContractActivity extends Activity {
         TextView hint = Ui.text(this, "Filled in from the booking. Change anything for this client only.", 13, Ui.GREY, false);
         page.addView(hint);
         text = new EditText(this);
-        text.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        text.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES | InputType.TYPE_TEXT_FLAG_MULTI_LINE
+                | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
         text.setSingleLine(false);
         text.setMinLines(8);
         text.setTextColor(Ui.DARK);
@@ -134,20 +135,14 @@ public class ContractActivity extends Activity {
         Button preview = Ui.tonal(this, "Preview PDF");
         preview.setOnClickListener(v -> preview());
         page.addView(preview);
-        Button send = Ui.primary(this, "Sign & send to " + firstName(gig.client));
+        String to = gig.client.trim();
+        Button send = Ui.primary(this, to.isEmpty() || to.length() > 24 ? "Sign & send" : "Sign & send to " + to);
         send.setOnClickListener(v -> send());
         page.addView(send);
         TextView note = Ui.text(this, "Your client gets a link to read and sign it on their phone – no account needed.",
                 12, Ui.GREY, false);
         note.setPadding(0, Ui.dp(this, 8), 0, 0);
         page.addView(note);
-    }
-
-    private static String firstName(String s) {
-        String t = s == null ? "" : s.trim();
-        if (t.isEmpty()) return "client";
-        int sp = t.indexOf(' ');
-        return sp > 0 && !t.substring(0, sp).endsWith("&") ? t.substring(0, sp) : t;
     }
 
     private long depositCents() {

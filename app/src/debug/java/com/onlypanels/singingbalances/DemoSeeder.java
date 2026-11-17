@@ -423,6 +423,36 @@ public class DemoSeeder extends BroadcastReceiver {
                 }
                 break;
             }
+            case "bkdash": {
+                // What the web dashboard reads for this user (dash/{uid}, signed in as them)
+                try {
+                    JSONObject f = new JSONObject(Cloud.request("GET", DOCS + "/dash/" + Cloud.get(c, Cloud.UID), null, null,
+                            Cloud.token(c))).getJSONObject("fields");
+                    String data = f.getJSONObject("data").getString("stringValue");
+                    JSONObject d = new JSONObject(data);
+                    Log.i(TAG, "bkdash name=" + d.optString("name") + " currency=" + d.optString("currency")
+                            + " gigs=" + d.getJSONArray("gigs").length() + " clients=" + d.getJSONArray("clients").length()
+                            + " payments=" + d.getJSONArray("payments").length() + " expenses=" + d.getJSONArray("expenses").length()
+                            + " iban=" + (data.contains("MT84") ? "yes" : "no") + " settings=" + (d.has("settings") ? "yes" : "no")
+                            + " bytes=" + data.length());
+                } catch (Cloud.HttpError e) {
+                    Log.i(TAG, "bkdash missing " + e.code);
+                }
+                break;
+            }
+            case "bkdashother": {
+                // Another account must not be able to read someone's dashboard
+                String uid = Cloud.get(c, Cloud.UID);
+                JSONObject r = new JSONObject(Cloud.request("POST", "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=" + KEY,
+                        "{\"returnSecureToken\":true}", "application/json", null));
+                try {
+                    Cloud.request("GET", DOCS + "/dash/" + uid, null, null, r.getString("idToken"));
+                    Log.i(TAG, "bkdashother ALLOWED");
+                } catch (Cloud.HttpError e) {
+                    Log.i(TAG, "bkdashother refused " + e.code);
+                }
+                break;
+            }
             case "bkoffline":
                 Cloud.forceOffline = "on".equals(in.getStringExtra("mode"));
                 Log.i(TAG, "bkoffline " + Cloud.forceOffline);

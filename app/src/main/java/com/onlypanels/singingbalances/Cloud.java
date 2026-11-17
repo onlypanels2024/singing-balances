@@ -211,7 +211,7 @@ final class Cloud {
     }
 
     /** A valid Firebase key, refreshed when it's about to run out. Network thread only. */
-    private static String token(Context c) throws Exception {
+    static String token(Context c) throws Exception {
         SharedPreferences sp = sp(c);
         if (System.currentTimeMillis() < sp.getLong(EXPIRES, 0) && !get(c, ID_TOKEN).isEmpty()) return get(c, ID_TOKEN);
         String body = "grant_type=refresh_token&refresh_token=" + URLEncoder.encode(get(c, REFRESH), "UTF-8");
@@ -562,6 +562,28 @@ final class Cloud {
         run(done, () -> {
             call("PATCH", DOCS + "/contracts/" + id + "?updateMask.fieldPaths=status",
                     new JSONObject().put("fields", new JSONObject().put("status", sv(Contract.VOID))), token(c));
+            return null;
+        });
+    }
+
+    // ------------------------------------------------------------------ web dashboard (ShowFee Business)
+
+    /** Stores the dashboard copy in dash/{uid} (only this user can read it). */
+    static void uploadDash(Context c, String data, Done<Void> done) {
+        run(done, () -> {
+            JSONObject w = new JSONObject()
+                    .put("update", new JSONObject().put("name", DOC_PREFIX + "/dash/" + get(c, UID))
+                            .put("fields", new JSONObject().put("uid", sv(get(c, UID))).put("data", sv(data))))
+                    .put("updateTransforms", new JSONArray()
+                            .put(new JSONObject().put("fieldPath", "updated").put("setToServerValue", "REQUEST_TIME")));
+            call("POST", DOCS + ":commit", new JSONObject().put("writes", new JSONArray().put(w)), token(c));
+            return null;
+        });
+    }
+
+    static void deleteDash(Context c, Done<Void> done) {
+        run(done, () -> {
+            if (signedIn(c)) call("DELETE", DOCS + "/dash/" + get(c, UID), null, token(c));
             return null;
         });
     }
