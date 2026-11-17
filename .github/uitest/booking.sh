@@ -8,7 +8,7 @@ bklog() { adb logcat -c; seeder --es task "$2" "${@:4}"; sleep 5; L=$(adb logcat
 SLUG="test-ci-$(date +%s)"
 seeder --es task plan --es plan free
 settings; check "Settings has Your booking link" "Your booking link"; check "Row explains the link" "Clients book you from WhatsApp"; shot "REVIEW-bk-settings-row"
-$UI tap "Your booking link" > /dev/null; sleep 2; check "Free plan: booking link asks for Pro" "1 month free, then"; adb shell input keyevent 4; sleep 1
+$UI tap "Your booking link" > /dev/null; sleep 2; check "Free plan: booking link asks for Pro" "1 month free, then" 3; adb shell input keyevent 4; sleep 1
 seeder --es task plan --es plan -
 settings; $UI tap "Your booking link" > /dev/null; sleep 2
 check "Booking link intro" "Let clients book you with one link"; check "Clients need no account (said on screen)" "don't need an account"

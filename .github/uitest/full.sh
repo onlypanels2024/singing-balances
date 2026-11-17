@@ -122,7 +122,7 @@ $UI tap "All bookings" > /dev/null; check "All bookings tab shows old bookings" 
 $UI tap "=Unpaid" > /dev/null; check "Unpaid tab shows overdue booking" "Company party"
 nocheck "Unpaid tab hides paid bookings" "Gala dinner"
 $UI tap "Company party" > /dev/null; check "Tapping a booking opens it" "Record a payment"; adb shell input keyevent 4; sleep 1
-$UI tapdesc "Settings" > /dev/null; check "Settings button (cog) opens Settings" "Backup & export"; adb shell input keyevent 4; sleep 1
+$UI tapdesc "Settings" > /dev/null; check "Settings button (cog) opens Settings" "Backup & export" 4; adb shell input keyevent 4; sleep 1
 
 section "Add a booking (form, validation, pickers)"
 main --es page gigs --es gigsTab all
@@ -220,10 +220,10 @@ $UI fill "How was it paid" "Card" > /dev/null
 $UI tap "=SAVE" > /dev/null
 dcheck "Payment saved" "paid=130000 owed=160000"
 check "Amount owed went down" "€300.00"
-$UI tap "Card" > /dev/null; check "Tapping a payment asks to remove it" "Remove this payment?"
+$UI tap "Card" 4 > /dev/null; check "Tapping a payment asks to remove it" "Remove this payment?"
 $UI tap "=REMOVE" > /dev/null
 dcheck "Payment removed" "paid=120000 owed=170000"
-$UI tap "Paid in full" > /dev/null
+$UI tap "Paid in full" -4 > /dev/null
 dcheck "Paid in full records the rest" "paid=160000 owed=130000"
 check "Booking shows Fully paid" "Fully paid"
 nocrash "Payments"
@@ -232,7 +232,7 @@ section "A booking: email, calendar, expense"
 gig 4
 $UI tap "Send invoice" > /dev/null; left "Send invoice opens email app"; backto "Record a payment"
 $UI tap "Email payment reminder" > /dev/null; left "Payment reminder opens email app"; backto "Record a payment"
-$UI tap "Add chase-up to Google Calendar" > /dev/null; left "Chase-up opens calendar"; backto "Record a payment"
+$UI tap "Add chase-up to Google Calendar" 3 > /dev/null; left "Chase-up opens calendar"; backto "Add chase-up"
 $UI tap "Add an expense" 4 > /dev/null; check "Expense from booking is linked" "For: Joanna"
 $UI fill "Amount (" "10" > /dev/null; $UI tap "=SAVE" > /dev/null
 dcheck "Booking expense saved" "expenses=6"
@@ -430,7 +430,7 @@ settings; check "Settings shows ShowFee Pro" "ShowFee Pro" 0; check "Developer c
 $UI tap "ShowFee Pro" > /dev/null; sleep 1; check "Pro screen opens" "Everything is unlocked"; shot "REVIEW-pro-developer"; adb shell input keyevent 4; sleep 1
 seeder --es task plan --es plan free
 settings; check "Free plan shown in Settings" "Free plan"; shot "REVIEW-pro-settings-free"
-$UI tap "ShowFee Pro" > /dev/null; sleep 1; check "Pro screen shows price" "€9.99/month"; check "Pro screen offers free month" "Start my free month"; shot "REVIEW-pro-paywall"
+$UI tap "ShowFee Pro" > /dev/null; sleep 1; check "Pro screen shows price" "€9.99/month"; check "Pro screen offers free month" "Start my free month" 3; shot "REVIEW-pro-paywall"
 $UI tap "Have an access code" 3 > /dev/null; $UI fill "Access code" "WRONG-CODE" > /dev/null; $UI tap "=UNLOCK" > /dev/null; sleep 1
 check "Wrong access code keeps the free plan" "Start my free month" 2
 $UI tap "Have an access code" 3 > /dev/null; $UI fill "Access code" "SHOWFEE-REVIEW-7351" > /dev/null; $UI tap "=UNLOCK" > /dev/null; sleep 1
