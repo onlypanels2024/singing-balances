@@ -581,7 +581,7 @@ public class MainActivity extends Activity {
             for (Gig g : e.getValue()) {
                 if (g.isCancelled()) continue;
                 monthGigs++;
-                monthBooked += g.feeCents;
+                monthBooked += g.net();
             }
         }
 
@@ -726,7 +726,7 @@ public class MainActivity extends Activity {
             if (g.isCancelled()) continue;
             pending += g.balance();
             if (g.isOverdue()) pendingOverdue += g.balance();
-            byClient.merge(g.client, g.feeCents, Long::sum);
+            byClient.merge(g.client, g.net(), Long::sum);
         }
         for (long[] p : db.paymentsBetween(from, to)) {
             received += p[1];

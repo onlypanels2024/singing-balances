@@ -171,6 +171,8 @@ final class WebDash {
                 if (g == null) {
                     if (d.has("id")) return; // deleted on the phone since
                     g = new Gig();
+                    g.vatBp = Prefs.vatBp(c); // like a new booking made in the app
+                    g.vatIncl = Prefs.vatIncluded(c);
                 }
                 g.client = client;
                 g.event = text(d, "event", 120);

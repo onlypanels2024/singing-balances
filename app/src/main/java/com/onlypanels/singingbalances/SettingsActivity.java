@@ -38,7 +38,8 @@ public class SettingsActivity extends Activity {
 
     private final Map<String, EditText> fields = new LinkedHashMap<>();
     private EditText terms, nextInvoice;
-    private Switch notify, askCal;
+    private Switch notify, askCal, vatCharge;
+    private String vatInclKey;
     private Spinner hour;
     private TextView backupStatus;
     private Spinner profession, currency, payService;
@@ -283,6 +284,35 @@ public class SettingsActivity extends Activity {
         nextInvoice = Ui.field(f, "Next invoice number", String.valueOf(Prefs.sp(this).getInt(Prefs.NEXT_INVOICE, 1)), NUMBER);
         terms = Ui.field(f, "Payment due (days after the " + Words.one(this) + ") – 0 means paid " + Words.onTheNight(this),
                 String.valueOf(Prefs.termsDays(this)), NUMBER);
+
+        // VAT: off by default. When on, new bookings get it (each booking can still switch it off).
+        vatCharge = new Switch(this);
+        vatCharge.setText("Charge VAT");
+        vatCharge.setTextSize(15);
+        vatCharge.setTextColor(Ui.DARK);
+        vatCharge.setChecked("1".equals(Prefs.get(this, Prefs.VAT_CHARGE)));
+        vatCharge.setPadding(0, Ui.dp(this, 14), 0, Ui.dp(this, 4));
+        f.addView(vatCharge);
+        LinearLayout vatBox = Ui.vbox(this, 0);
+        f.addView(vatBox);
+        if (Prefs.get(this, Prefs.VAT_RATE).isEmpty()) Prefs.set(this, Prefs.VAT_RATE, "18");
+        add(vatBox, Prefs.VAT_RATE, "VAT rate (%)", InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
+        vatBox.addView(Ui.label(this, "My prices"));
+        vatInclKey = Prefs.vatIncluded(this) ? "incl" : "top";
+        LinearLayout vatSeg = Ui.segmented(this, new String[][]{{"top", "VAT added on top"}, {"incl", "Already include VAT"}},
+                vatInclKey, k -> vatInclKey = k);
+        vatSeg.setContentDescription("VAT added on top or included in my prices");
+        vatBox.addView(vatSeg, Ui.matchWrap(this, 6));
+        TextView vatNote = Ui.text(this, "", 13, Ui.GREY, false);
+        vatNote.setPadding(0, Ui.dp(this, 8), 0, 0);
+        vatBox.addView(vatNote);
+        Runnable vatShow = () -> {
+            vatBox.setVisibility(vatCharge.isChecked() ? View.VISIBLE : View.GONE);
+            vatNote.setText("New " + Words.many(this) + " get VAT – you can switch it off on any " + Words.one(this)
+                    + " (e.g. a client abroad). " + Words.Many(this) + " you already have don't change.");
+        };
+        vatCharge.setOnCheckedChangeListener((b, on) -> vatShow.run());
+        vatShow.run();
         }
 
         // ---- Reminders ----
@@ -471,6 +501,11 @@ public class SettingsActivity extends Activity {
             int n = 1;
             try { n = Integer.parseInt(nextInvoice.getText().toString().trim()); } catch (NumberFormatException ignored) { }
             ed.putInt(Prefs.NEXT_INVOICE, Math.max(1, n));
+        }
+        if (vatCharge != null) {
+            ed.putString(Prefs.VAT_CHARGE, vatCharge.isChecked() ? "1" : "");
+            ed.putString(Prefs.VAT_INCL, "incl".equals(vatInclKey) ? "1" : "");
+            if (Prefs.parseRateBp(Prefs.get(this, Prefs.VAT_RATE)) == 0) ed.putString(Prefs.VAT_RATE, "18");
         }
         if (notify != null) ed.putBoolean(Prefs.NOTIFY, notify.isChecked());
         if (askCal != null) ed.putBoolean(Prefs.ASK_CALENDAR, askCal.isChecked());
@@ -716,7 +751,7 @@ public class SettingsActivity extends Activity {
 
     private String gigsCsv() {
         StringBuilder sb = new StringBuilder("﻿");
-        sb.append("Client,Email,Event,Date,Start,Booking status,Due date,Fee,Paid,Owed,Payment status,Invoice,Notes\n");
+        sb.append("Client,Email,Event,Date,Start,Booking status,Due date,Fee,Extras,VAT,Total,Paid,Owed,Payment status,Invoice,Notes\n");
         for (Gig g : Db.get(this).allGigs()) {
             String st = g.isCancelled() ? "Cancelled" : g.isFuture() ? "Upcoming" : g.isPaid() ? "Paid"
                     : g.isOverdue() ? "Overdue" : "Unpaid";
@@ -726,6 +761,9 @@ public class SettingsActivity extends Activity {
                     .append(Gig.STATUS_NAMES[g.status]).append(',')
                     .append(Dates.iso(g.dueDay)).append(',')
                     .append(Money.plain(g.feeCents)).append(',')
+                    .append(Money.plain(g.extrasCents)).append(',')
+                    .append(Money.plain(g.vatCents())).append(',')
+                    .append(Money.plain(g.total())).append(',')
                     .append(Money.plain(g.paidCents)).append(',')
                     .append(Money.plain(g.isCancelled() ? 0 : g.balance())).append(',')
                     .append(st).append(',').append(csv(g.invoiceNo)).append(',').append(csv(g.notes)).append('\n');

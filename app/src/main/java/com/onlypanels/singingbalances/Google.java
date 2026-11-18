@@ -267,7 +267,7 @@ final class Google {
                 .append(Money.fmt(g.balance()))
                 .append(" is still outstanding for the ").append(Words.one(a)).append(gigDesc(g));
         if (g.paidCents > 0) {
-            body.append(" (fee ").append(Money.fmt(g.feeCents))
+            body.append(" (fee ").append(Money.fmt(g.total()))
                     .append(", ").append(Money.fmt(g.paidCents)).append(" received so far)");
         }
         body.append(". I've attached the invoice (").append(g.invoiceNo).append(") for your reference.");
@@ -287,7 +287,7 @@ final class Google {
                 .putExtra(CalendarContract.Events.TITLE, g.title())
                 .putExtra(CalendarContract.Events.EVENT_LOCATION, g.event)
                 .putExtra(CalendarContract.Events.DESCRIPTION, "Client: " + g.client
-                        + "\nFee: " + Money.fmt(g.feeCents)
+                        + "\nFee: " + Money.fmt(g.total())
                         + (g.status == Gig.PENCILLED ? "\n(Pencilled in – not confirmed yet)" : "")
                         + (g.notes.isEmpty() ? "" : "\n\n" + g.notes));
         if (g.startMin >= 0) {
@@ -308,7 +308,7 @@ final class Google {
         long day = Math.max(g.dueDay, Dates.today() + 1);
         long begin = millis(day, 10 * 60);
         String details = g.title() + "\n" + Words.One(a) + " date: " + Dates.fmt(g.gigDay)
-                + "\nFee: " + Money.fmt(g.feeCents)
+                + "\nFee: " + Money.fmt(g.total())
                 + "\nPaid so far: " + Money.fmt(g.paidCents)
                 + "\nStill owed: " + Money.fmt(g.balance())
                 + (g.email.isEmpty() ? "" : "\nEmail: " + g.email);

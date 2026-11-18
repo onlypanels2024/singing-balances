@@ -142,18 +142,36 @@ final class Invoice {
             y += 14;
             c.drawText(g.event + (g.startMin >= 0 ? ", " + Dates.time(g.startMin) : ""), M, y, grey);
         }
+        // Extra lines (travel, extra hour...)
+        for (Db.Extra x : Db.get(ctx).extras(g.id)) {
+            y += 20;
+            c.drawText(x.label, M, y, body);
+            right(c, Money.fmt(x.cents), colAmt, y, body);
+        }
         y += 14;
         c.drawLine(M, y, W - M, y, line);
 
         // Totals
         float lx = W - M - 190;
+        if (g.vatBp > 0 && !g.vatIncl) {
+            y += 22;
+            c.drawText("Subtotal", lx, y, body);
+            right(c, Money.fmt(g.subtotal()), colAmt, y, body);
+            y += 16;
+            c.drawText("VAT " + g.vatRate(), lx, y, body);
+            right(c, Money.fmt(g.vatCents()), colAmt, y, body);
+        }
         y += 22;
-        c.drawText("Total", lx, y, body);
-        right(c, Money.fmt(g.feeCents), colAmt, y, body);
+        c.drawText("Total", lx, y, bold);
+        right(c, Money.fmt(g.total()), colAmt, y, bold);
+        if (g.vatBp > 0 && g.vatIncl) {
+            y += 14;
+            c.drawText("includes VAT " + g.vatRate() + ": " + Money.fmt(g.vatCents()), lx, y, grey);
+        }
         if (g.paidCents > 0) {
             y += 16;
             c.drawText("Paid", lx, y, body);
-            right(c, "-" + Money.fmt(Math.min(g.paidCents, g.feeCents)), colAmt, y, body);
+            right(c, "-" + Money.fmt(Math.min(g.paidCents, g.total())), colAmt, y, body);
         }
         y += 22;
         Paint due = paint(14, g.isPaid() ? PAID : INK, true);

@@ -195,7 +195,7 @@ final class Contract {
                 .replace("{date}", Dates.withWeekday(g.gigDay))
                 .replace("{time}", g.startMin >= 0 ? ", starting at " + Dates.time(g.startMin) : "")
                 .replace("{venue}", venue == null || venue.trim().isEmpty() ? "" : " at " + venue.trim())
-                .replace("{fee}", Money.fmt(g.feeCents))
+                .replace("{fee}", Money.fmt(g.total()))
                 .replace("{deposit}", deposit);
     }
 }

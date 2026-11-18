@@ -27,7 +27,7 @@ final class Db extends SQLiteOpenHelper {
     }
 
     private Db(Context c) {
-        super(c, "balances.db", null, 2);
+        super(c, "balances.db", null, 3);
         app = c;
     }
 
@@ -44,11 +44,21 @@ final class Db extends SQLiteOpenHelper {
                 + "gig_id INTEGER NOT NULL REFERENCES gigs(id) ON DELETE CASCADE, "
                 + "cents INTEGER NOT NULL, day INTEGER NOT NULL, note TEXT)");
         upgradeTo2(db);
+        upgradeTo3(db);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         if (oldVersion < 2) upgradeTo2(db);
+        if (oldVersion < 3) upgradeTo3(db);
+    }
+
+    /** Version 3: extra lines on a bill (travel, extra hour...) and VAT per booking. Keeps existing data. */
+    private static void upgradeTo3(SQLiteDatabase db) {
+        db.execSQL("ALTER TABLE gigs ADD COLUMN vat_bp INTEGER NOT NULL DEFAULT 0");
+        db.execSQL("ALTER TABLE gigs ADD COLUMN vat_incl INTEGER NOT NULL DEFAULT 0");
+        db.execSQL("CREATE TABLE extras (id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + "gig_id INTEGER NOT NULL REFERENCES gigs(id) ON DELETE CASCADE, label TEXT NOT NULL, cents INTEGER NOT NULL)");
     }
 
     /** Version 2: gig status & start time, invoices, clients, expenses. Keeps existing data. */
@@ -75,10 +85,14 @@ final class Db extends SQLiteOpenHelper {
     // ---------------- Gigs ----------------
 
     private static final String PAID = "IFNULL((SELECT SUM(p.cents) FROM payments p WHERE p.gig_id = g.id), 0)";
+    private static final String EXTRAS = "IFNULL((SELECT SUM(x.cents) FROM extras x WHERE x.gig_id = g.id), 0)";
+    /** What the client pays: fee + extras, plus VAT when it's added on top (same sums as Gig.total()). */
+    private static final String TOTAL = "(g.fee_cents + " + EXTRAS + " + CASE WHEN g.vat_bp > 0 AND g.vat_incl = 0 "
+            + "THEN CAST(ROUND((g.fee_cents + " + EXTRAS + ") * g.vat_bp / 10000.0) AS INTEGER) ELSE 0 END)";
     private static final String SELECT = "SELECT g.id, g.client, IFNULL(NULLIF(c.email, ''), g.email), g.event, g.notes, "
             + "g.gig_day, g.due_day, g.fee_cents, " + PAID + " AS paid, "
             + "IFNULL((SELECT MAX(p.day) FROM payments p WHERE p.gig_id = g.id), -1), "
-            + "g.status, g.start_min, g.invoice_no, g.invoice_day "
+            + "g.status, g.start_min, g.invoice_no, g.invoice_day, " + EXTRAS + ", g.vat_bp, g.vat_incl "
             + "FROM gigs g LEFT JOIN clients c ON c.name = g.client COLLATE NOCASE";
 
     private static String str(Cursor c, int i) {
@@ -105,6 +119,9 @@ final class Db extends SQLiteOpenHelper {
         g.startMin = c.getInt(11);
         g.invoiceNo = str(c, 12);
         g.invoiceDay = c.getLong(13);
+        g.extrasCents = c.getLong(14);
+        g.vatBp = c.getInt(15);
+        g.vatIncl = c.getInt(16) == 1;
         return g;
     }
 
@@ -119,7 +136,7 @@ final class Db extends SQLiteOpenHelper {
 
     /** Gigs that have happened, aren't cancelled and aren't fully paid. Oldest due first. */
     List<Gig> unpaidGigs() {
-        return queryGigs("g.status != 2 AND g.gig_day <= ? AND g.fee_cents > " + PAID,
+        return queryGigs("g.status != 2 AND g.gig_day <= ? AND " + TOTAL + " > " + PAID,
                 args(Dates.today()), "g.due_day ASC, g.gig_day ASC");
     }
 
@@ -164,6 +181,8 @@ final class Db extends SQLiteOpenHelper {
         v.put("start_min", g.startMin);
         v.put("invoice_no", g.invoiceNo);
         v.put("invoice_day", g.invoiceDay);
+        v.put("vat_bp", g.vatBp);
+        v.put("vat_incl", g.vatIncl ? 1 : 0);
         SQLiteDatabase db = getWritableDatabase();
         if (g.id == 0) {
             g.id = db.insert("gigs", null, v);
@@ -192,6 +211,57 @@ final class Db extends SQLiteOpenHelper {
             changed();
         }
         return g.invoiceNo;
+    }
+
+    // ---------------- Extras (extra lines on a bill) ----------------
+
+    static final class Extra {
+        long id;
+        String label = "";
+        long cents;
+
+        Extra() {}
+
+        Extra(String label, long cents) {
+            this.label = label;
+            this.cents = cents;
+        }
+    }
+
+    List<Extra> extras(long gigId) {
+        List<Extra> out = new ArrayList<>();
+        try (Cursor c = getReadableDatabase().rawQuery(
+                "SELECT id, label, cents FROM extras WHERE gig_id = ? ORDER BY id", args(gigId))) {
+            while (c.moveToNext()) {
+                Extra x = new Extra(str(c, 1), c.getLong(2));
+                x.id = c.getLong(0);
+                out.add(x);
+            }
+        }
+        return out;
+    }
+
+    /** Replaces a booking's extra lines (and updates g.extrasCents). */
+    void saveExtras(Gig g, List<Extra> list) {
+        SQLiteDatabase db = getWritableDatabase();
+        db.beginTransaction();
+        try {
+            db.delete("extras", "gig_id = ?", args(g.id));
+            long sum = 0;
+            for (Extra x : list) {
+                ContentValues v = new ContentValues();
+                v.put("gig_id", g.id);
+                v.put("label", x.label);
+                v.put("cents", x.cents);
+                x.id = db.insert("extras", null, v);
+                sum += x.cents;
+            }
+            g.extrasCents = sum;
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+        }
+        changed();
     }
 
     // ---------------- Payments ----------------
@@ -355,8 +425,8 @@ final class Db extends SQLiteOpenHelper {
                 k.upcoming++;
                 continue;
             }
-            k.earnedCents += g.feeCents;
-            k.receivedCents += Math.min(g.paidCents, g.feeCents);
+            k.earnedCents += g.total();
+            k.receivedCents += Math.min(g.paidCents, g.total());
             k.owedCents += g.balance();
             if (g.isOverdue()) k.overdueCents += g.balance();
             if (g.isPaid() && g.lastPaidDay >= 0) {
@@ -427,7 +497,7 @@ final class Db extends SQLiteOpenHelper {
 
     // ---------------- Backup / restore ----------------
 
-    private static final String[] TABLES = {"clients", "gigs", "payments", "expenses"};
+    private static final String[] TABLES = {"clients", "gigs", "payments", "expenses", "extras"};
 
     JSONObject exportAll() throws JSONException {
         JSONObject root = new JSONObject();
@@ -470,6 +540,7 @@ final class Db extends SQLiteOpenHelper {
         db.beginTransaction();
         try {
             db.delete("expenses", null, null);
+            db.delete("extras", null, null);
             db.delete("payments", null, null);
             db.delete("gigs", null, null);
             db.delete("clients", null, null);

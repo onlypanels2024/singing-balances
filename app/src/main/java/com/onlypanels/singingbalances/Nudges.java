@@ -75,7 +75,7 @@ public class Nudges extends BroadcastReceiver {
             String when = (isToday ? Words.tonight(c) : "Tomorrow") + (g.startMin >= 0 ? " at " + Dates.time(g.startMin) : "");
             String extra = g.status == Gig.PENCILLED ? " · still only pencilled in" : "";
             notes.add(new Note((int) (1000 + g.id), when + ": " + g.title(),
-                    "Fee " + Money.fmt(g.feeCents) + " – remember to collect payment" + extra, g.id));
+                    "Fee " + Money.fmt(g.total()) + " – remember to collect payment" + extra, g.id));
         }
 
         long overdue = 0;

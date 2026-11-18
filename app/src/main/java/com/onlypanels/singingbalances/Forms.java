@@ -86,6 +86,8 @@ final class Forms {
         if (isNew) {
             g.gigDay = presetDay > 0 ? presetDay : g.gigDay > 0 ? g.gigDay : Dates.today();
             g.dueDay = g.gigDay + terms;
+            g.vatBp = Prefs.vatBp(a);
+            g.vatIncl = Prefs.vatIncluded(a);
         }
         final long[] gigDay = {g.gigDay};
         final long[] dueDay = {g.dueDay};
@@ -117,6 +119,89 @@ final class Forms {
         Button timeBtn = Ui.pickerButton(form, "Start time");
         Spinner status = spinner(form, "Booking", Gig.STATUS_NAMES, g.status);
         EditText fee = Ui.field(form, "Fee (" + Money.label() + ") *", isNew ? "" : Money.plain(g.feeCents), MONEY);
+
+        // Extra lines on the bill (travel, extra hour...) and VAT
+        form.addView(Ui.label(a, "Extras on the bill (optional)"));
+        LinearLayout extrasBox = Ui.vbox(a, 0);
+        form.addView(extrasBox);
+        java.util.List<EditText[]> extraRows = new java.util.ArrayList<>();
+        Button addExtra = Ui.quiet(a, "+ Add an extra (travel, extra hour…)");
+        form.addView(addExtra, Ui.matchWrap(a, 4));
+        final int[] vatBp = {g.vatBp > 0 ? g.vatBp : Prefs.parseRateBp(Prefs.get(a, Prefs.VAT_RATE)) > 0
+                ? Prefs.parseRateBp(Prefs.get(a, Prefs.VAT_RATE)) : 1800};
+        final boolean[] vatIncl = {g.vatBp > 0 ? g.vatIncl : Prefs.vatIncluded(a)};
+        android.widget.Switch vat = new android.widget.Switch(a);
+        Gig rateHolder = new Gig();
+        rateHolder.vatBp = vatBp[0];
+        vat.setText("Charge VAT (" + rateHolder.vatRate() + (vatIncl[0] ? ", included in the prices)" : ", added on top)"));
+        vat.setTextSize(15);
+        vat.setTextColor(Ui.DARK);
+        vat.setChecked(g.vatBp > 0);
+        vat.setPadding(0, Ui.dp(a, 10), 0, Ui.dp(a, 2));
+        boolean showVat = g.vatBp > 0 || Prefs.vatBp(a) > 0;
+        if (showVat) form.addView(vat);
+        TextView totalLine = Ui.text(a, "", 14, Ui.PRIMARY, true);
+        totalLine.setPadding(0, Ui.dp(a, 6), 0, Ui.dp(a, 4));
+        form.addView(totalLine);
+        Runnable totals = () -> {
+            Gig t = new Gig();
+            Long f = Money.parse(fee.getText().toString());
+            t.feeCents = f == null ? 0 : f;
+            for (EditText[] r : extraRows) {
+                Long x = Money.parse(r[1].getText().toString());
+                if (x != null) t.extrasCents += x;
+            }
+            t.vatBp = vat.isChecked() && showVat ? vatBp[0] : 0;
+            t.vatIncl = vatIncl[0];
+            boolean simple = t.extrasCents == 0 && t.vatBp == 0;
+            totalLine.setText(simple ? "" : "Total for the client: " + Money.fmt(t.total())
+                    + (t.vatBp > 0 ? " (VAT " + t.vatRate() + ": " + Money.fmt(t.vatCents()) + (t.vatIncl ? " included)" : ")") : ""));
+            totalLine.setVisibility(simple ? android.view.View.GONE : android.view.View.VISIBLE);
+        };
+        android.text.TextWatcher watch = new android.text.TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int st, int c, int af) { }
+            @Override public void onTextChanged(CharSequence s, int st, int b, int c) { }
+            @Override public void afterTextChanged(android.text.Editable s) { totals.run(); }
+        };
+        java.util.function.BiConsumer<String, Long> addRow = (label, cents) -> {
+            LinearLayout row = Ui.hbox(a);
+            row.setGravity(android.view.Gravity.CENTER_VERTICAL);
+            EditText l = new EditText(a);
+            l.setHint("e.g. Extra hour");
+            l.setInputType(TEXT_SENTENCE);
+            l.setSingleLine(true);
+            l.setText(label);
+            EditText m = new EditText(a);
+            m.setHint("0.00");
+            m.setInputType(MONEY);
+            m.setText(cents == null ? "" : Money.plain(cents));
+            m.addTextChangedListener(watch);
+            Button x = new Button(a, null, android.R.attr.borderlessButtonStyle);
+            x.setText("×");
+            x.setTextSize(20);
+            x.setTextColor(Ui.GREY);
+            x.setContentDescription("Remove this extra");
+            EditText[] pair = {l, m};
+            x.setOnClickListener(v -> {
+                extrasBox.removeView(row);
+                extraRows.remove(pair);
+                totals.run();
+            });
+            row.addView(l, Ui.weight(1.6f));
+            row.addView(m, Ui.weight(1f));
+            row.addView(x, new LinearLayout.LayoutParams(Ui.dp(a, 44), -2));
+            extrasBox.addView(row);
+            extraRows.add(pair);
+        };
+        if (!isNew) for (Db.Extra x : db.extras(g.id)) addRow.accept(x.label, x.cents);
+        addExtra.setOnClickListener(v -> {
+            addRow.accept("", null);
+            extraRows.get(extraRows.size() - 1)[0].requestFocus();
+        });
+        vat.setOnCheckedChangeListener((b, on) -> totals.run());
+        fee.addTextChangedListener(watch);
+        totals.run();
+
         Button dueBtn = Ui.pickerButton(form, "Payment due");
         EditText notes = Ui.field(form, "Notes (contact " + Words.onTheNight(a) + ", parking, special requests...)", g.notes, NOTES);
 
@@ -179,6 +264,24 @@ final class Forms {
             g.startMin = start[0];
             g.dueDay = dueDay[0];
             g.status = status.getSelectedItemPosition();
+            java.util.List<Db.Extra> extras = new java.util.ArrayList<>();
+            for (EditText[] r : extraRows) {
+                String label = r[0].getText().toString().trim();
+                String amt = r[1].getText().toString().trim();
+                if (label.isEmpty() && amt.isEmpty()) continue;
+                Long xc = Money.parse(amt);
+                if (xc == null || xc <= 0) {
+                    r[1].setError("Enter the amount, e.g. 30");
+                    return;
+                }
+                if (label.isEmpty()) {
+                    r[0].setError("What is it for?");
+                    return;
+                }
+                extras.add(new Db.Extra(label.length() > 80 ? label.substring(0, 80) : label, xc));
+            }
+            g.vatBp = showVat && vat.isChecked() ? vatBp[0] : 0;
+            g.vatIncl = g.vatBp > 0 && vatIncl[0];
             // Free plan: a few bookings a month. Editing an existing booking in the same month is always allowed.
             java.time.YearMonth month = java.time.YearMonth.from(java.time.LocalDate.ofEpochDay(g.gigDay));
             if (!g.isCancelled() && !month.equals(wasMonth) && !Pro.isPro(a)
@@ -190,6 +293,7 @@ final class Forms {
                 return;
             }
             long id = db.save(g);
+            db.saveExtras(g, extras);
             dialog.dismiss();
             onSaved.onSaved(id);
             if (isNew && !g.isCancelled() && Prefs.askCalendar(a)) Calendar.offer(a, g, true);

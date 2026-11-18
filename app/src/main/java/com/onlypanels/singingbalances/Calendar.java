@@ -125,7 +125,7 @@ final class Calendar {
     }
 
     private static void createEvent(String token, Gig g, Activity a) throws Exception {
-        String json = eventJson(g, Money.fmt(g.feeCents),
+        String json = eventJson(g, Money.fmt(g.total()),
                 g.status == Gig.PENCILLED ? "\n(Pencilled in – not confirmed yet)" : "");
         HttpURLConnection c = (HttpURLConnection) new URL("https://graph.microsoft.com/v1.0/me/events").openConnection();
         c.setRequestMethod("POST");
