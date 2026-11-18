@@ -62,6 +62,12 @@ public class GigActivity extends Activity {
 
         content.addView(Ui.text(this, g.title(), 22, Ui.DARK, true));
         content.addView(Ui.text(this, g.when(), 15, Ui.GREY, false));
+        String clash = g.isCancelled() ? "" : Forms.clash(this, g.gigDay, g.id);
+        if (!clash.isEmpty()) {
+            TextView cl = Ui.text(this, clash, 14, Ui.ORANGE, true);
+            cl.setPadding(0, Ui.dp(this, 4), 0, 0);
+            content.addView(cl);
+        }
         TextView booking = Ui.text(this, Gig.STATUS_NAMES[g.status], 14,
                 g.isCancelled() ? Ui.GREY : g.status == Gig.PENCILLED ? Ui.ORANGE : Ui.GREEN, true);
         booking.setPadding(0, Ui.dp(this, 4), 0, 0);
@@ -74,13 +80,22 @@ public class GigActivity extends Activity {
         card.setElevation(0);
         if (g.isCancelled() || g.isFuture()) {
             card.addView(Ui.text(this, g.isCancelled() ? "Fee (cancelled)" : "Fee to collect " + Words.onTheNight(this), 14, Ui.GREY, false));
-            card.addView(Ui.text(this, Money.fmt(g.feeCents), 32, g.isCancelled() ? Ui.GREY : Ui.DARK, true));
+            card.addView(Ui.text(this, Money.fmt(g.total()), 32, g.isCancelled() ? Ui.GREY : Ui.DARK, true));
         } else {
             card.addView(Ui.text(this, g.isPaid() ? "Fully paid" : "Still owed", 14, Ui.GREY, false));
-            card.addView(Ui.text(this, Money.fmt(g.isPaid() ? g.feeCents : g.balance()), 32,
+            card.addView(Ui.text(this, Money.fmt(g.isPaid() ? g.total() : g.balance()), 32,
                     g.isPaid() ? Ui.GREEN : g.isOverdue() ? Ui.RED : Ui.DARK, true));
-            card.addView(Ui.text(this, "Fee " + Money.fmt(g.feeCents) + "  ·  Received " + Money.fmt(g.paidCents),
-                    14, Ui.GREY, false));
+            card.addView(Ui.text(this, (g.total() != g.feeCents ? "Total " : "Fee ") + Money.fmt(g.total())
+                    + "  ·  Received " + Money.fmt(g.paidCents), 14, Ui.GREY, false));
+        }
+        if (g.total() != g.feeCents) { // the bill is more than the fee: show what's in it
+            StringBuilder parts = new StringBuilder("Fee " + Money.fmt(g.feeCents));
+            for (Db.Extra x : Db.get(this).extras(g.id)) parts.append("\n").append(x.label).append(" ").append(Money.fmt(x.cents));
+            if (g.vatBp > 0) parts.append("\nVAT ").append(g.vatRate()).append(" ").append(Money.fmt(g.vatCents()))
+                    .append(g.vatIncl ? " (included)" : "");
+            TextView bd = Ui.text(this, parts.toString(), 13, Ui.GREY, false);
+            bd.setPadding(0, Ui.dp(this, 6), 0, 0);
+            card.addView(bd);
         }
         TextView status = Ui.text(this, g.status(this), 14, g.statusColor(), true);
         status.setPadding(0, Ui.dp(this, 6), 0, 0);
@@ -105,7 +120,9 @@ public class GigActivity extends Activity {
                 });
             }
             if (g.isFuture()) {
-                action("Add to calendar", Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> Calendar.offer(this, g, false));
+                if (!CalendarSync.isOn(this)) { // with calendar sync on, it's in the calendar already
+                    action("Add to calendar", Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> Calendar.offer(this, g, false));
+                }
                 if (g.status == Gig.PENCILLED) {
                     action("Mark as confirmed", Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> setStatus(Gig.CONFIRMED));
                 }
@@ -175,8 +192,8 @@ public class GigActivity extends Activity {
             content.addView(Ui.text(this, "Travel, outfits, supplies... add them to see what you really took home.",
                     14, Ui.GREY, false));
         } else if (!g.isCancelled()) {
-            TextView net = Ui.text(this, "Take-home from this " + Words.one(this) + ": " + Money.fmt(g.feeCents - spent), 15,
-                    g.feeCents - spent >= 0 ? Ui.PRIMARY : Ui.RED, true);
+            TextView net = Ui.text(this, "Take-home from this " + Words.one(this) + ": " + Money.fmt(g.net() - spent), 15,
+                    g.net() - spent >= 0 ? Ui.PRIMARY : Ui.RED, true);
             net.setPadding(0, Ui.dp(this, 6), 0, 0);
             content.addView(net);
         }

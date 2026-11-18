@@ -10,6 +10,9 @@ final class Prefs {
     static final String PHONE = "phone";
     static final String ADDRESS = "address";
     static final String VAT = "vat";
+    static final String VAT_CHARGE = "vat_charge"; // "1" = new bookings charge VAT
+    static final String VAT_RATE = "vat_rate";     // percent, e.g. "18"
+    static final String VAT_INCL = "vat_incl";     // "1" = my prices already include VAT
     static final String IBAN = "iban";
     static final String BIC = "bic";
     static final String BANK_NAME = "bank_name"; // account holder name
@@ -64,6 +67,26 @@ final class Prefs {
     }
 
     private Prefs() {}
+
+    /** The VAT rate for new bookings in hundredths of a percent (1800 = 18%), or 0 when VAT is off. */
+    static int vatBp(Context c) {
+        if (!"1".equals(get(c, VAT_CHARGE))) return 0;
+        return parseRateBp(get(c, VAT_RATE));
+    }
+
+    /** "18" or "5,5" -> 1800 / 550; 0 if it isn't a sensible rate. */
+    static int parseRateBp(String s) {
+        try {
+            double r = Double.parseDouble(s.trim().replace(',', '.').replace("%", ""));
+            return r > 0 && r < 100 ? (int) Math.round(r * 100) : 0;
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    static boolean vatIncluded(Context c) {
+        return "1".equals(get(c, VAT_INCL));
+    }
 
     static SharedPreferences sp(Context c) {
         return c.getApplicationContext().getSharedPreferences("settings", Context.MODE_PRIVATE);

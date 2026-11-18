@@ -50,7 +50,7 @@ public class WebDashActivity extends Activity {
         TextView h = Ui.text(this, "Your " + Words.many(this) + " on a computer", 22, Ui.DARK, true);
         h.setPadding(0, Ui.dp(this, 12), 0, Ui.dp(this, 6));
         page.addView(h);
-        page.addView(Ui.text(this, "See your " + Words.many(this) + ", calendar, who owes you and your clients at "
+        page.addView(Ui.text(this, "See and change your " + Words.many(this) + ", calendar, payments and clients at "
                 + "showfee.app/dashboard – on any computer or tablet. Sign in there with the same Google account.", 15, Ui.GREY, false));
 
         if (!Cloud.signedIn(this)) {
@@ -99,7 +99,8 @@ public class WebDashActivity extends Activity {
             page.addView(open);
         }
 
-        TextView note = Ui.text(this, "Updates every time you open ShowFee. Bank details, sign-ins and app settings are "
+        TextView note = Ui.text(this, "You can add and change " + Words.many(this) + ", payments, clients and expenses there "
+                + "too – changes reach this phone within seconds when it's online. Bank details, sign-ins and app settings are "
                 + "never sent. Switch off to delete the online copy.", 12, Ui.GREY, false);
         note.setPadding(0, Ui.dp(this, 16), 0, 0);
         note.setGravity(Gravity.START);
@@ -114,6 +115,7 @@ public class WebDashActivity extends Activity {
             @Override public void ok(Void r) {
                 busy = false;
                 toast("Your dashboard is ready.");
+                Cloud.registerDevice(WebDashActivity.this); // so changes made on the web reach this phone straight away
                 render();
             }
 

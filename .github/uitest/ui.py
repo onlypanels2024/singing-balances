@@ -84,6 +84,11 @@ def fill(label, value, scroll=0):
                         adb("input", "keyevent", "67")              # delete
                         adb("input", "text", value.replace(" ", "%s"))
                         time.sleep(0.5)
+                        # The virtual phone's keyboard can't be switched off: close it after typing,
+                        # so it never covers the next thing the test taps (Back only closes the keyboard here)
+                        if "mInputShown=true" in adb("dumpsys", "input_method"):
+                            adb("input", "keyevent", "4")
+                            time.sleep(0.8)
                         print(f"filled '{label}' = {value}")
                         return 0
         if attempt < scroll:

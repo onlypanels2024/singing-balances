@@ -14,19 +14,51 @@ final class Gig {
     long gigDay;
     int startMin = -1;   // -1 = no time set
     long dueDay;
-    long feeCents;
+    long feeCents;       // the fee itself (without extras or VAT added on top)
+    long extrasCents;    // extra lines on the bill (travel, extra hour...)
+    int vatBp;           // VAT rate in hundredths of a percent (1800 = 18%); 0 = no VAT on this booking
+    boolean vatIncl;     // true: the prices already include VAT; false: VAT is added on top
     long paidCents;
     long lastPaidDay = -1;
     int status = CONFIRMED;
     String invoiceNo = "";
     long invoiceDay;
 
+    /** Fee plus extras, before any VAT added on top. */
+    long subtotal() {
+        return feeCents + extrasCents;
+    }
+
+    /** The VAT part of the bill (0 when there's no VAT). */
+    long vatCents() {
+        if (vatBp <= 0) return 0;
+        long sub = subtotal();
+        if (vatIncl) return sub - Math.round(sub * 10000.0 / (10000 + vatBp));
+        return Math.round(sub * vatBp / 10000.0);
+    }
+
+    /** What the client pays in all. */
+    long total() {
+        return vatBp > 0 && !vatIncl ? subtotal() + vatCents() : subtotal();
+    }
+
+    /** What the user earns (the total without VAT). */
+    long net() {
+        return total() - vatCents();
+    }
+
+    /** "18%" or "5.5%". */
+    String vatRate() {
+        return vatBp % 100 == 0 ? (vatBp / 100) + "%" : String.format(java.util.Locale.ROOT, "%.2f", vatBp / 100.0)
+                .replaceAll("0+$", "").replaceAll("\\.$", "") + "%";
+    }
+
     long balance() {
-        return Math.max(0, feeCents - paidCents);
+        return Math.max(0, total() - paidCents);
     }
 
     boolean isPaid() {
-        return paidCents >= feeCents;
+        return paidCents >= total();
     }
 
     boolean isCancelled() {
@@ -71,7 +103,7 @@ final class Gig {
         }
         String due = days == 0 ? "due today" : "due " + Dates.fmt(dueDay);
         if (paidCents > 0) {
-            return "Part paid " + Money.fmt(paidCents) + " of " + Money.fmt(feeCents) + " · " + due;
+            return "Part paid " + Money.fmt(paidCents) + " of " + Money.fmt(total()) + " · " + due;
         }
         return days == 0 ? "Due today" : "Due " + Dates.fmt(dueDay) + " (" + Dates.relative(dueDay) + ")";
     }
@@ -87,7 +119,7 @@ final class Gig {
 
     /** Amount to show on the right of a list row. */
     long displayAmount() {
-        if (isCancelled() || isFuture() || isPaid()) return feeCents;
+        if (isCancelled() || isFuture() || isPaid()) return total();
         return balance();
     }
 
