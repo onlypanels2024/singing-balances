@@ -1,0 +1,553 @@
+keyboards still on: 
+
+== Welcome screen (brand-new user) ==
+PASS  Intro page 1 shows
+PASS  Intro shows Welcome
+PASS  Intro page 2
+PASS  Intro page 3
+PASS  No Skip on the last intro page
+PASS  Reopening starts the intro again (nothing skipped by accident)
+PASS  Welcome screen shows
+PASS  Setup questions after the intro
+PASS  Intro pages: no crash
+PASS  Job chip 'Singer' -> wording 'bookings'
+PASS  Job chip 'Band' -> wording 'bookings'
+PASS  Job chip '=DJ' -> wording 'bookings'
+PASS  Job chip 'Photographer' -> wording 'shoots'
+PASS  Job chip 'Videographer' -> wording 'shoots'
+PASS  Job chip 'Hair & make-up' -> wording 'bookings'
+PASS  Job chip 'MC / host' -> wording 'events'
+PASS  Job chip 'Dancer' -> wording 'shows'
+PASS  Job chip 'Something else' -> wording 'bookings'
+PASS  Email choice Outlook selectable
+PASS  Colour swatch on welcome: no crash
+PASS  Currency picked on welcome
+PASS  Get started opens home
+PASS  Home uses chosen currency (£)
+PASS  Home uses chosen wording (Shoots)
+      data: gigs=0 cancelled=0 pencilled=0 paid=0 owed=0 expenses=0 expTotal=0 clients=0 currency=GBP accent=teal mode= profession=photographer terms=0 notify=true logo=false backup=false pay=none: vat_charge= gig4=none names=
+PASS  Welcome choices saved
+PASS  Brand-new home offers a start
+PASS  Start card: add first booking
+PASS  Start card: examples button
+PASS  Start card on Upcoming too
+PASS  Examples note shows
+      data: gigs=6 cancelled=0 pencilled=1 paid=75000 owed=140000 expenses=2 expTotal=12500 clients=4 currency=GBP accent=teal mode= profession=photographer terms=0 notify=true logo=false backup=false pay=none: vat_charge= extras=0 vat=0 total=20000 names=Blue Lagoon Bar|The Grand Hotel|Blue Lagoon Bar|Bright Events Ltd|Sarah & Tom|The Grand Hotel|
+PASS  Six example bookings added
+PASS  Examples fill the money card
+PASS  Example upcoming booking
+PASS  Example booking opens
+PASS  Examples don't use up the free plan
+PASS  Remove asks first
+PASS  Keep for now keeps them
+PASS  Examples note gone
+      data: gigs=0 cancelled=0 pencilled=0 paid=0 owed=0 expenses=0 expTotal=0 clients=0 currency=GBP accent=teal mode= profession=photographer terms=0 notify=true logo=false backup=false pay=none: vat_charge= gig4=none names=
+PASS  Examples removed
+PASS  Back to the start card
+PASS  Example bookings: no crash
+
+== Sample data loaded ==
+      data: gigs=10 cancelled=1 pencilled=1 paid=120000 owed=145000 expenses=5 expTotal=55000 clients=6 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=false pay=revolut:https://revolut.me/mariaborg vat_charge= extras=0 vat=0 total=90000 names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Sample data in place
+PASS  Total owed on home card
+PASS  Overdue amount on home card
+PASS  Next booking on home card
+
+== Home: tabs and list ==
+PASS  Upcoming tab shows future bookings
+PASS  Upcoming tab hides past bookings
+PASS  All bookings tab shows old bookings
+PASS  Unpaid tab shows overdue booking
+PASS  Unpaid tab hides paid bookings
+PASS  Tapping a booking opens it
+PASS  Settings button (cog) opens Settings
+
+== Add a booking (form, validation, pickers) ==
+PASS  Add a booking opens form
+PASS  Saving empty form is blocked
+PASS  Date picker opens
+PASS  Time picker opens
+PASS  Start time set to 20:00
+PASS  Booking status set to Pencilled in
+PASS  Saving without a fee is blocked
+PASS  Form closes after saving
+PASS  Calendar prompt appears after a new booking
+PASS  Calendar prompt offers Google and Outlook
+PASS  Not now closes the prompt
+      data: gigs=11 cancelled=1 pencilled=2 paid=120000 owed=170000 expenses=5 expTotal=55000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=false pay=revolut:https://revolut.me/mariaborg vat_charge= extras=0 vat=0 total=90000 names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Test Client|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  New booking saved
+PASS  New booking appears in list
+PASS  Add a booking: no crash
+
+== Calendar ==
+PASS  Calendar tab opens on this month
+PASS  Previous month arrow
+PASS  Next month arrow
+PASS  Tapping month name jumps back to today
+PASS  Tapping a day selects it
+PASS  Add booking on selected day opens form
+PASS  Cancel closes form
+PASS  Calendar: no crash
+
+== Clients ==
+PASS  Clients tab opens
+PASS  Client without a name is blocked
+PASS  New client appears
+      data: gigs=11 cancelled=1 pencilled=2 paid=120000 owed=170000 expenses=5 expTotal=55000 clients=8 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=false pay=revolut:https://revolut.me/mariaborg vat_charge= extras=0 vat=0 total=90000 names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Test Client|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  New client saved
+PASS  Client page opens
+PASS  Client page lists their bookings
+PASS  Call button opens the phone dialer (opened com.google.android.dialer/)
+PASS  WhatsApp button opens WhatsApp / browser (opened com.android.chrome/)
+PASS  New booking for client pre-fills client
+PASS  Edit client opens
+PASS  Client notes saved
+PASS  Zed Agency page opens
+PASS  Delete asks to confirm
+      data: gigs=11 cancelled=1 pencilled=2 paid=120000 owed=170000 expenses=5 expTotal=55000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=false pay=revolut:https://revolut.me/mariaborg vat_charge= extras=0 vat=0 total=90000 names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Test Client|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Client deleted
+PASS  Clients: no crash
+
+== Money ==
+PASS  Money tab shows this year
+PASS  Received tile
+PASS  Pending balance tile
+PASS  Previous year arrow
+PASS  Next year arrow
+PASS  Add expense opens form
+PASS  Expense without amount is blocked
+      data: gigs=11 cancelled=1 pencilled=2 paid=120000 owed=170000 expenses=6 expTotal=59000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=false pay=revolut:https://revolut.me/mariaborg vat_charge= extras=0 vat=0 total=90000 names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Test Client|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Expense saved
+PASS  Tapping an expense opens it
+      data: gigs=11 cancelled=1 pencilled=2 paid=120000 owed=170000 expenses=6 expTotal=59500 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=false pay=revolut:https://revolut.me/mariaborg vat_charge= extras=0 vat=0 total=90000 names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Test Client|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Expense edited
+      data: gigs=11 cancelled=1 pencilled=2 paid=120000 owed=170000 expenses=5 expTotal=55000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=false pay=revolut:https://revolut.me/mariaborg vat_charge= extras=0 vat=0 total=90000 names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Test Client|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Expense deleted
+PASS  Money: no crash
+
+== A booking: payments ==
+PASS  Overdue booking shows amount owed
+PASS  Record payment opens
+      data: gigs=11 cancelled=1 pencilled=2 paid=130000 owed=160000 expenses=5 expTotal=55000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=false pay=revolut:https://revolut.me/mariaborg vat_charge= extras=0 vat=0 total=90000 names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Test Client|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Payment saved
+PASS  Amount owed went down
+PASS  Tapping a payment asks to remove it
+      data: gigs=11 cancelled=1 pencilled=2 paid=120000 owed=170000 expenses=5 expTotal=55000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=false pay=revolut:https://revolut.me/mariaborg vat_charge= extras=0 vat=0 total=90000 names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Test Client|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Payment removed
+      data: gigs=11 cancelled=1 pencilled=2 paid=160000 owed=130000 expenses=5 expTotal=55000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=false pay=revolut:https://revolut.me/mariaborg vat_charge= extras=0 vat=0 total=90000 names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Test Client|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Paid in full records the rest
+PASS  Booking shows Fully paid
+PASS  Payments: no crash
+
+== A booking: email, calendar, expense ==
+PASS  Send invoice opens email app (opened )
+PASS  Payment reminder opens email app (opened com.google.android.gm/)
+PASS  Chase-up opens calendar (opened com.google.android.calendar/)
+PASS  Expense from booking is linked
+      data: gigs=11 cancelled=1 pencilled=2 paid=160000 owed=130000 expenses=6 expTotal=56000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=false pay=revolut:https://revolut.me/mariaborg vat_charge= extras=0 vat=0 total=90000 names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Test Client|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Booking expense saved
+PASS  Take-home shown
+PASS  Add to calendar asks which calendar
+PASS  Outlook without Microsoft sign-in explains it
+PASS  Google Calendar opens with the booking (opened com.google.android.calendar/)
+      data: gigs=11 cancelled=1 pencilled=1 paid=160000 owed=130000 expenses=6 expTotal=56000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=false pay=revolut:https://revolut.me/mariaborg vat_charge= extras=0 vat=0 total=90000 names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Test Client|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Mark as confirmed
+PASS  Booking actions: no crash
+
+== A booking: edit, cancel, restore, delete ==
+PASS  New booking page opens
+PASS  Edit booking opens
+PASS  Edited fee shows
+PASS  Cancel asks to confirm
+PASS  Cancelled booking offers restore
+      data: gigs=11 cancelled=2 pencilled=0 paid=160000 owed=105000 expenses=6 expTotal=56000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=false pay=revolut:https://revolut.me/mariaborg vat_charge= extras=0 vat=0 total=90000 names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Test Client|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Booking cancelled
+      data: gigs=11 cancelled=1 pencilled=0 paid=160000 owed=132500 expenses=6 expTotal=56000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=false pay=revolut:https://revolut.me/mariaborg vat_charge= extras=0 vat=0 total=90000 names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Test Client|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Booking restored
+PASS  Delete asks to confirm
+      data: gigs=10 cancelled=1 pencilled=0 paid=160000 owed=105000 expenses=6 expTotal=56000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=false pay=revolut:https://revolut.me/mariaborg vat_charge= extras=0 vat=0 total=90000 names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Booking deleted
+PASS  Edit/cancel/delete: no crash
+
+== Settings: menu ==
+PASS  Menu row: Your work
+PASS  Menu row: Appearance
+PASS  Menu row: Business details
+PASS  Menu row: Getting paid
+PASS  Menu row: Email
+PASS  Menu row: Reminders
+PASS  Menu row: Backup & export
+PASS  Menu row opens page: Your work
+PASS  Menu row opens page: Appearance
+PASS  Menu row opens page: Business details
+PASS  Menu row opens page: Getting paid
+PASS  Menu row opens page: Email
+PASS  Menu row opens page: Reminders
+PASS  Menu row opens page: Backup & export
+PASS  Menu shows summaries
+PASS  Settings menu: no crash
+
+== Settings: your work ==
+      data: gigs=10 cancelled=1 pencilled=0 paid=160000 owed=105000 expenses=6 expTotal=56000 clients=7 currency=EUR accent=indigo mode=light profession=dj terms=0 notify=true logo=false backup=false pay=revolut:https://revolut.me/mariaborg vat_charge= extras=0 vat=0 total=90000 names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Job changed to DJ
+PASS  Custom tab name used
+PASS  Tab name back to default
+
+== Settings: look ==
+      data: gigs=10 cancelled=1 pencilled=0 paid=160000 owed=105000 expenses=6 expTotal=56000 clients=7 currency=EUR accent=gold mode=light profession=singer terms=0 notify=true logo=false backup=false pay=revolut:https://revolut.me/mariaborg vat_charge= extras=0 vat=0 total=90000 names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  All 7 colours selectable
+PASS  Colours: no crash
+      data: gigs=10 cancelled=1 pencilled=0 paid=160000 owed=105000 expenses=6 expTotal=56000 clients=7 currency=EUR accent=gold mode=dark profession=singer terms=0 notify=true logo=false backup=false pay=revolut:https://revolut.me/mariaborg vat_charge= extras=0 vat=0 total=90000 names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Dark mode
+      data: gigs=10 cancelled=1 pencilled=0 paid=160000 owed=105000 expenses=6 expTotal=56000 clients=7 currency=EUR accent=gold mode=phone profession=singer terms=0 notify=true logo=false backup=false pay=revolut:https://revolut.me/mariaborg vat_charge= extras=0 vat=0 total=90000 names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Same as phone mode
+      data: gigs=10 cancelled=1 pencilled=0 paid=160000 owed=105000 expenses=6 expTotal=56000 clients=7 currency=EUR accent=gold mode=light profession=singer terms=0 notify=true logo=false backup=false pay=revolut:https://revolut.me/mariaborg vat_charge= extras=0 vat=0 total=90000 names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Light mode
+PASS  Currency change shows £
+      data: gigs=10 cancelled=1 pencilled=0 paid=160000 owed=105000 expenses=6 expTotal=56000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=false pay=revolut:https://revolut.me/mariaborg vat_charge= extras=0 vat=0 total=90000 names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Currency back to euro
+PASS  Look: no crash
+
+== Settings: logo ==
+      data: gigs=10 cancelled=1 pencilled=0 paid=160000 owed=105000 expenses=6 expTotal=56000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=true backup=false pay=revolut:https://revolut.me/mariaborg vat_charge= extras=0 vat=0 total=90000 names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Logo added from phone's files
+      data: gigs=10 cancelled=1 pencilled=0 paid=160000 owed=105000 expenses=6 expTotal=56000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=false pay=revolut:https://revolut.me/mariaborg vat_charge= extras=0 vat=0 total=90000 names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Logo removed
+
+== Settings: email sign-in buttons and choice ==
+PASS  Sign in with Google shows the account list (opened com.google.android.gms/)
+PASS  Sign in with Microsoft opens Microsoft (opened com.android.chrome/)
+PASS  Email choice Outlook changes button
+PASS  Email choice Ask each time
+PASS  Email choice Gmail
+
+== Settings: invoices, payment terms, reminders ==
+PASS  Old Revolut tag kept as Revolut pay link
+PASS  PayPal note shown
+      data: gigs=10 cancelled=1 pencilled=0 paid=160000 owed=105000 expenses=6 expTotal=56000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=7 notify=true logo=false backup=false pay=paypal:https://paypal.me/tester vat_charge= extras=0 vat=0 total=90000 names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Payment terms saved (7 days)
+      data: gigs=10 cancelled=1 pencilled=0 paid=160000 owed=105000 expenses=6 expTotal=56000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=7 notify=true logo=false backup=false pay=paypal:https://paypal.me/tester vat_charge= extras=0 vat=0 total=90000 names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  PayPal pay link saved
+PASS  Send pay link button
+PASS  Send pay link offers WhatsApp
+PASS  Text message opens messaging app (opened com.google.android.apps.messaging/)
+PASS  Other apps opens share list (opened com.android.intentresolver/)
+PASS  WhatsApp / share list opened
+PASS  Sent email has a Pay here button
+PASS  Invoice with pay link made
+PASS  Email preview shows Pay here
+      data: gigs=10 cancelled=1 pencilled=0 paid=160000 owed=105000 expenses=6 expTotal=56000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=7 notify=true logo=false backup=false pay=stripe:https://buy.stripe.com/test_abc123 vat_charge= extras=0 vat=0 total=90000 names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Stripe pay link saved
+PASS  New booking due date uses 7-day terms
+      data: gigs=10 cancelled=1 pencilled=0 paid=160000 owed=105000 expenses=6 expTotal=56000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=false pay=paypal:https://paypal.me/tester vat_charge= extras=0 vat=0 total=90000 names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Payment terms back to 0
+      data: gigs=10 cancelled=1 pencilled=0 paid=160000 owed=105000 expenses=6 expTotal=56000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=false logo=false backup=false pay=paypal:https://paypal.me/tester vat_charge= extras=0 vat=0 total=90000 names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Reminders switched off
+      data: gigs=10 cancelled=1 pencilled=0 paid=160000 owed=105000 expenses=6 expTotal=56000 clients=7 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=false pay=paypal:https://paypal.me/tester vat_charge= extras=0 vat=0 total=90000 names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Reminders switched on
+PASS  Reminder time changed
+PASS  Reminders now shows notifications (8)
+PASS  Calendar prompt can be switched off
+PASS  Reminders: no crash
+
+== Settings: backup, restore, export ==
+      data: gigs=11 cancelled=1 pencilled=0 paid=160000 owed=115000 expenses=6 expTotal=56000 clients=8 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=true pay=paypal:https://paypal.me/tester vat_charge= extras=0 vat=0 total=90000 names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Prompt Off|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Backup file chosen and written
+PASS  Back up now: no crash
+PASS  Backup status shown
+PASS  Restore asks to confirm
+      data: gigs=11 cancelled=1 pencilled=0 paid=160000 owed=115000 expenses=6 expTotal=56000 clients=8 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=false backup=true pay=paypal:https://paypal.me/tester vat_charge= extras=0 vat=0 total=90000 names=Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Prompt Off|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Restore keeps all data
+PASS  Export bookings CSV saved
+PASS  Export expenses CSV saved
+PASS  Backup/export: no crash
+
+== Notifications, widget ==
+PASS  Tapping a reminder opens ShowFee
+PASS  Widget update: no crash
+
+== ShowFee Pro (subscription) ==
+PASS  Settings shows ShowFee Pro
+PASS  Developer copy is unlocked
+PASS  Pro screen opens
+PASS  Free plan shown in Settings
+PASS  Pro screen shows price
+PASS  Pro screen offers free month
+PASS  Wrong access code keeps the free plan
+PASS  Reviewer access code unlocks Pro
+PASS  Privacy and terms links on Pro screen
+PASS  Settings shows code days left
+PASS  Settings has privacy link
+PASS  Code ends after its 30 days
+PASS  Same phone can't use the code twice
+PASS  Old tester gift link no longer opens anything: no crash
+PASS  Free plan: invoice works without Pro
+PASS  Free plan: invoice doesn't open the Pro screen
+PASS  Free plan: pay link works without Pro
+PASS  Free plan: pay link doesn't open the Pro screen
+PASS  Free plan: reminder works without Pro
+PASS  Free plan: reminder doesn't open the Pro screen
+PASS  Free plan: 6th booking this month asks for Pro
+PASS  Pro: invoice goes straight through
+PASS  Pro screen shows subscribed
+PASS  ShowFee Pro: no crash
+
+== Google Play update bar ==
+PASS  No update bar without Google Play
+PASS  Update bar shows
+PASS  Later hides the update bar
+PASS  Downloaded update asks to restart
+PASS  Update bar: no crash
+
+== Booking link and booking requests (real Firebase, throwaway test account) ==
+PASS  Settings has Your booking link
+PASS  Row explains the link
+PASS  Free plan: booking link asks for Pro
+PASS  Booking link intro
+PASS  Clients need no account (said on screen)
+PASS  Owner signs in with Google
+PASS  Sign in with Google button (the test phone has no Google account): no crash
+PASS  Booking link intro: no crash
+      11-18 12:26:39.517  5972 18797 I UITEST  : bkanon signed in uid=Bj87LwcMvEYC61CuL58BTD7bsUf1
+PASS  Test account signs in
+PASS  Signed in: choose your link
+PASS  Name filled in
+PASS  Wrong link name is refused (stays on Choose your link)
+      11-18 12:27:13.860  5972 18988 I UITEST  : bkstate signedIn=true slug= accepting=true days=[1, 2, 3, 4, 5, 6, 7] questions=[Event, Venue] new=0 cached=0 push=no
+PASS  Test account can't take a real link name
+PASS  Link created
+PASS  Taking bookings switch
+PASS  Default questions Event
+      11-18 12:27:59.917  5972 19178 I UITEST  : bkstate signedIn=true slug=test-ci-1795004738 accepting=true days=[1, 2, 3, 4, 5, 6, 7] questions=[Event, Venue] new=0 cached=0 push=yes
+PASS  Phone signed up for request notifications
+      11-18 12:28:09.909  5972 19196 I UITEST  : bkpage {"fields":{"arrayValue":{"values":[{"stringValue":"Event"},{"stringValue":"Venue"}]}},"tagline":{"stringValue":"Singer in Malta"},"days":{"arrayValue":{"values":[{"integerValue":"1"},{"integerValue":"2"},{"integerValue":"3"},{"integerValue":"4"},{"integerValue":"5"},{"integerValue":"6"},{"integerValue":"7"}]}},"brand":{"mapValue":{"fields":{"powered":{"booleanValue":true},"color":{"stringValue":"#3949ab"},"theme":{"stringValue":"dark"}}}},"accepting":{"booleanValue":true},"name":{"stringValue":"Maria Borg"},"busy":{"arrayValue":{"values":[{"stringValue":"2026-11-18"},{"stringValue":"2026-11-19"},{"stringValue":"2026-11-27"},{"stringValu
+PASS  Page saved online with name, line and questions
+      11-18 12:28:17.204  5972 19212 I UITEST  : bkpage {"tagline":{"stringValue":"Singer in Malta"},"uid":{"stringValue":"Bj87LwcMvEYC61CuL58BTD7bsUf1"},"busy":{"arrayValue":{"values":[{"stringValue":"2026-11-18"},{"stringValue":"2026-11-19"},{"stringValue":"2026-11-27"},{"stringValue":"2026-12-13"}]}},"fields":{"arrayValue":{"values":[{"stringValue":"Event"},{"stringValue":"Venue"}]}},"accepting":{"booleanValue":true},"name":{"stringValue":"Maria Borg"},"brand":{"mapValue":{"fields":{"powered":{"booleanValue":true},"color":{"stringValue":"#3949ab"},"theme":{"stringValue":"dark"}}}},"updated":{"timestampValue":"2026-11-18T12:27:31.746Z"},"days":{"arrayValue":{"values":[{"integerValue":"1"},
+PASS  Page has Event and Venue questions
+      11-18 12:28:36.547  5972 19267 I UITEST  : bkstate signedIn=true slug=test-ci-1795004738 accepting=true days=[2, 3, 4, 5, 6, 7] questions=[Event, Venue] new=0 cached=0 push=yes
+PASS  Monday turned off
+      11-18 12:28:43.885  5972 19278 I UITEST  : bkpage {"accepting":{"booleanValue":true},"name":{"stringValue":"Maria Borg"},"tagline":{"stringValue":"Singer in Malta"},"days":{"arrayValue":{"values":[{"integerValue":"2"},{"integerValue":"3"},{"integerValue":"4"},{"integerValue":"5"},{"integerValue":"6"},{"integerValue":"7"}]}},"updated":{"timestampValue":"2026-11-18T12:28:32.545Z"},"fields":{"arrayValue":{"values":[{"stringValue":"Event"},{"stringValue":"Venue"}]}},"brand":{"mapValue":{"fields":{"color":{"stringValue":"#3949ab"},"theme":{"stringValue":"dark"},"powered":{"booleanValue":true}}}},"busy":{"arrayValue":{"values":[{"stringValue":"2026-11-18"},{"stringValue":"2026-11-19"},{"stri
+PASS  Monday off on the page too
+PASS  Question added
+PASS  Venue removed
+PASS  Question renamed
+      11-18 12:30:13.043  5972 19706 I UITEST  : bkpage {"fields":{"arrayValue":{"values":[{"stringValue":"Event type"},{"stringValue":"Number of guests"}]}},"days":{"arrayValue":{"values":[{"integerValue":"2"},{"integerValue":"3"},{"integerValue":"4"},{"integerValue":"5"},{"integerValue":"6"},{"integerValue":"7"}]}},"busy":{"arrayValue":{"values":[{"stringValue":"2026-11-18"},{"stringValue":"2026-11-19"},{"stringValue":"2026-11-27"},{"stringValue":"2026-12-13"}]}},"tagline":{"stringValue":"Singer in Malta"},"updated":{"timestampValue":"2026-11-18T12:30:04.337Z"},"brand":{"mapValue":{"fields":{"powered":{"booleanValue":true},"theme":{"stringValue":"dark"},"color":{"stringValue":"#3949ab"}}}}
+PASS  Questions saved on the page
+
+== Plans: monthly and yearly ==
+PASS  Plans screen: choose your plan
+PASS  Plans screen: Pro price
+PASS  Plans screen: Business plan
+PASS  Plans screen: Business price
+PASS  Booking link no longer 'coming soon'
+PASS  Plans screen: monthly / yearly choice
+PASS  Plans screen: yearly saves 10%
+PASS  Monthly: free month offered
+PASS  Monthly: renews monthly
+PASS  Choosing Business shows its price
+PASS  Yearly: Business price
+PASS  Yearly: Pro price
+PASS  Yearly: Subscribe button
+PASS  Yearly: no free month promised
+PASS  Yearly: renews every year
+PASS  Yearly: choosing Pro keeps yearly
+PASS  Back to monthly
+PASS  Pro: branding offers Business
+PASS  Business: branding section
+PASS  Business: own web address
+PASS  Powered by switched off
+      11-18 12:33:03.037  5972 20391 I UITEST  : bkpage {"tagline":{"stringValue":"Singer in Malta"},"fields":{"arrayValue":{"values":[{"stringValue":"Event type"},{"stringValue":"Number of guests"}]}},"uid":{"stringValue":"Bj87LwcMvEYC61CuL58BTD7bsUf1"},"busy":{"arrayValue":{"values":[{"stringValue":"2026-11-18"},{"stringValue":"2026-11-19"},{"stringValue":"2026-11-27"},{"stringValue":"2026-12-13"}]}},"brand":{"mapValue":{"fields":{"powered":{"booleanValue":false},"color":{"stringValue":"#0f6b5c"},"logo":{"stringValue":"data:image\/png;base64,..."},"theme":{"stringValue":"light"}}}},"days":{"arrayValue":{"values":[{"integerValue":"2"},{"integerValue":"3"},{"integerValue":"4"},{"integerValue
+PASS  Branding saved on the page
+      11-18 12:33:10.359  5972 20402 I UITEST  : bkpage {"brand":{"mapValue":{"fields":{"theme":{"stringValue":"light"},"logo":{"stringValue":"data:image\/png;base64,..."},"color":{"stringValue":"#0f6b5c"},"powered":{"booleanValue":false}}}},"fields":{"arrayValue":{"values":[{"stringValue":"Event type"},{"stringValue":"Number of guests"}]}},"busy":{"arrayValue":{"values":[{"stringValue":"2026-11-18"},{"stringValue":"2026-11-19"},{"stringValue":"2026-11-27"},{"stringValue":"2026-12-13"}]}},"updated":{"timestampValue":"2026-11-18T12:32:50.658Z"},"tagline":{"stringValue":"Singer in Malta"},"days":{"arrayValue":{"values":[{"integerValue":"2"},{"integerValue":"3"},{"integerValue":"4"},{"integerVa
+PASS  Light page saved
+      11-18 12:33:17.696  5972 20413 I UITEST  : bkpage {"days":{"arrayValue":{"values":[{"integerValue":"2"},{"integerValue":"3"},{"integerValue":"4"},{"integerValue":"5"},{"integerValue":"6"},{"integerValue":"7"}]}},"brand":{"mapValue":{"fields":{"logo":{"stringValue":"data:image\/png;base64,..."},"powered":{"booleanValue":false},"theme":{"stringValue":"light"},"color":{"stringValue":"#0f6b5c"}}}},"accepting":{"booleanValue":true},"updated":{"timestampValue":"2026-11-18T12:32:50.658Z"},"fields":{"arrayValue":{"values":[{"stringValue":"Event type"},{"stringValue":"Number of guests"}]}},"busy":{"arrayValue":{"values":[{"stringValue":"2026-11-18"},{"stringValue":"2026-11-19"},{"stringValue":"
+PASS  Powered by off saved
+      11-18 12:33:25.005  5972 20424 I UITEST  : bkpage {"uid":{"stringValue":"Bj87LwcMvEYC61CuL58BTD7bsUf1"},"updated":{"timestampValue":"2026-11-18T12:32:50.658Z"},"name":{"stringValue":"Maria Borg"},"brand":{"mapValue":{"fields":{"color":{"stringValue":"#0f6b5c"},"theme":{"stringValue":"light"},"logo":{"stringValue":"data:image\/png;base64,..."},"powered":{"booleanValue":false}}}},"busy":{"arrayValue":{"values":[{"stringValue":"2026-11-18"},{"stringValue":"2026-11-19"},{"stringValue":"2026-11-27"},{"stringValue":"2026-12-13"}]}},"fields":{"arrayValue":{"values":[{"stringValue":"Event type"},{"stringValue":"Number of guests"}]}},"tagline":{"stringValue":"Singer in Malta"},"days":{"arrayVal
+PASS  Logo saved on the page
+PASS  Own web address opens an email (opened com.google.android.gm/)
+      11-18 12:34:07.535  5972 20628 I UITEST  : bkpage {"tagline":{"stringValue":"Singer in Malta"},"days":{"arrayValue":{"values":[{"integerValue":"2"},{"integerValue":"3"},{"integerValue":"4"},{"integerValue":"5"},{"integerValue":"6"},{"integerValue":"7"}]}},"busy":{"arrayValue":{"values":[{"stringValue":"2026-11-18"},{"stringValue":"2026-11-19"},{"stringValue":"2026-11-27"},{"stringValue":"2026-12-13"}]}},"updated":{"timestampValue":"2026-11-18T12:33:58.703Z"},"fields":{"arrayValue":{"values":[{"stringValue":"Event type"},{"stringValue":"Number of guests"}]}},"accepting":{"booleanValue":true},"uid":{"stringValue":"Bj87LwcMvEYC61CuL58BTD7bsUf1"},"name":{"stringValue":"Maria Borg"}}
+PASS  Branding removed when Business ends
+PASS  Page has no branding after Business ended
+PASS  Pausing shows on screen
+      11-18 12:34:30.775  5972 20688 I UITEST  : bksend refused 403
+PASS  Paused page refuses requests
+PASS  Taking bookings again
+      11-18 12:34:52.029  5972 20759 I UITEST  : bksend sent t27a8f6873dc
+PASS  Client request 1 accepted by Firebase
+      11-18 12:34:59.363  5972 20797 I UITEST  : bksend sent t27c44985475
+PASS  Client request 2 accepted by Firebase
+      11-18 12:35:06.680  5972 20823 I UITEST  : bkpage {"brand":{"mapValue":{"fields":{"theme":{"stringValue":"light"},"logo":{"stringValue":"data:image\/png;base64,..."},"powered":{"booleanValue":false},"color":{"stringValue":"#0f6b5c"}}}},"updated":{"timestampValue":"2026-11-18T12:34:44.047Z"},"tagline":{"stringValue":"Singer in Malta"},"name":{"stringValue":"Maria Borg"},"fields":{"arrayValue":{"values":[{"stringValue":"Event type"},{"stringValue":"Number of guests"}]}},"days":{"arrayValue":{"values":[{"integerValue":"2"},{"integerValue":"3"},{"integerValue":"4"},{"integerValue":"5"},{"integerValue":"6"},{"integerValue":"7"}]}},"busy":{"arrayValue":{"values":[{"stringValue":"2026-11-18"}
+PASS  Page reachable before accepting
+PASS  Test date 2027-01-04 starts free
+PASS  Notification arrived for the new requests
+PASS  Home shows the new requests card
+PASS  Requests list: Paul
+PASS  Requests list: Claire
+PASS  Requests list: answers summary
+PASS  Request shows question
+PASS  Request shows answer
+PASS  Request shows message
+PASS  Phone request: reply on WhatsApp
+PASS  Reply opens WhatsApp / browser (opened com.android.chrome/)
+PASS  Accept opens the booking form
+PASS  Client name filled in
+PASS  Request marked accepted
+      data: gigs=12 cancelled=1 pencilled=0 paid=160000 owed=115000 expenses=6 expTotal=56000 clients=9 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=true backup=true pay=paypal:https://paypal.me/tester vat_charge= extras=0 vat=0 total=90000 names=Paul Grech|Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Prompt Off|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Accepted request saved as a booking
+      11-18 12:37:25.561  5972 21329 I UITEST  : bkpage {"updated":{"timestampValue":"2026-11-18T12:37:03.214Z"},"brand":{"mapValue":{"fields":{"powered":{"booleanValue":false},"theme":{"stringValue":"light"},"logo":{"stringValue":"data:image\/png;base64,..."},"color":{"stringValue":"#0f6b5c"}}}},"busy":{"arrayValue":{"values":[{"stringValue":"2026-11-18"},{"stringValue":"2026-11-19"},{"stringValue":"2026-11-27"},{"stringValue":"2026-12-13"},{"stringValue":"2027-01-04"}]}},"accepting":{"booleanValue":true},"fields":{"arrayValue":{"values":[{"stringValue":"Event type"},{"stringValue":"Number of guests"}]}},"days":{"arrayValue":{"values":[{"integerValue":"2"},{"integerValue":"3"},{"integerValu
+PASS  Accepted date now busy on the page
+PASS  Email request: reply by email
+PASS  Request marked declined
+PASS  List shows Accepted
+PASS  List shows Declined
+PASS  No card when nothing is new
+PASS  Offline: requests still shown
+PASS  Requests offline: no crash
+PASS  Settings row shows the link
+PASS  Removed: back to the intro
+      11-18 12:39:08.243  5972 21707 I UITEST  : bkpage missing 404
+PASS  Removed page is gone online
+PASS  Booking link and requests: no crash
+
+== Contracts (ShowFee Business) ==
+PASS  Free plan: contracts offered with Business
+PASS  Free plan: button to see Business
+PASS  Business: no contract yet
+PASS  Business: create button
+PASS  Contract screen opens
+PASS  Wording: your name filled in
+PASS  Wording: client filled in
+PASS  Wording: fee filled in
+PASS  Wording: start time filled in
+PASS  Venue goes into the wording
+PASS  Deposit goes into the wording
+PASS  Not sent without your signature
+PASS  Link goes out through an app (email, WhatsApp…) (opened com.android.intentresolver/)
+PASS  Booking: waiting for the client
+PASS  Booking: send the link again
+      11-18 12:41:13.603  5972 22296 I UITEST  : bkkdoc {"client":{"stringValue":"Café del Mar"},"performerAt":{"timestampValue":"2026-11-18T12:40:51.348Z"},"owner":{"stringValue":"M4YOey4VmbWeH3HssniYwbf8rtp1"},"performer":{"stringValue":"Maria Borg"},"text":{"stringValue":"This agreement is between Maria Borg (\"the performer\") and Café del Mar (\"the client\").\n\nThe performer will provide their services for Acoustic night on Fri 27 Nov 2026, starting at 20:00 at Hotel Phoenicia.\n\nFee: €200.00. A deposit of €50.00 is due to confirm the date. The balance is due on the day of the booking unless agreed otherwise in writing.\n\nCancellation: if the client cancels, any deposit paid is not 
+PASS  Contract is online, waiting
+      11-18 12:41:20.903  5972 22307 I UITEST  : bkkdoc {"title":{"stringValue":"Booking agreement"},"client":{"stringValue":"Café del Mar"},"text":{"stringValue":"This agreement is between Maria Borg (\"the performer\") and Café del Mar (\"the client\").\n\nThe performer will provide their services for Acoustic night on Fri 27 Nov 2026, starting at 20:00 at Hotel Phoenicia.\n\nFee: €200.00. A deposit of €50.00 is due to confirm the date. The balance is due on the day of the booking unless agreed otherwise in writing.\n\nCancellation: if the client cancels, any deposit paid is not refundable. If the performer cannot attend because of illness or an emergency, all money paid for this booking w
+PASS  Online contract has the venue and deposit
+      11-18 12:41:28.044  5972 22318 I UITEST  : bkkstate gig=7 n=1 v1=sent,psig=true,id=test-aKwYCCgeepV2vKH4VtQ8aX booking=Confirmed mysig=true
+PASS  Your signature saved with it
+      11-18 12:41:35.356  5972 22329 I UITEST  : bkkhack refused 403
+PASS  Nobody else can change the wording
+      11-18 12:41:42.665  5972 22340 I UITEST  : bkksign ok test-aKwYCCgeepV2vKH4VtQ8aX
+PASS  Client signs (like the signing page)
+      11-18 12:41:49.994  5972 22351 I UITEST  : bkksign refused 403
+PASS  It can't be signed twice
+PASS  App sees the signature
+PASS  Booking: signed by the client
+PASS  Booking: email signed copy
+      11-18 12:42:27.989  5972 22460 I UITEST  : bkkstate gig=7 n=1 v1=signed(Paul Grech,sig=true),psig=true,id=test-aKwYCCgeepV2vKH4VtQ8aX booking=Confirmed mysig=true
+PASS  Client's signature saved, booking confirmed
+PASS  Signed PDF opens (opened com.google.android.apps.docs/)
+PASS  New version: your saved signature is ready
+PASS  Version 2 link goes out (opened com.android.intentresolver/)
+PASS  Version 2 waiting
+      11-18 12:43:29.155  5972 22746 I UITEST  : bkkstate gig=7 n=2 v2=sent,psig=true,id=test-LgbcWTofTBormwjtButEp2 v1=signed(Paul Grech,sig=true),psig=true,id=test-aKwYCCgeepV2vKH4VtQ8aX booking=Confirmed mysig=true
+PASS  Both versions kept
+PASS  Cancelled contract shown
+PASS  History shows version 1 signed
+      11-18 12:44:01.359  5972 22853 I UITEST  : bkkdoc {"performerAt":{"timestampValue":"2026-11-18T12:43:11.585Z"},"client":{"stringValue":"Café del Mar"},"text":{"stringValue":"This agreement is between Maria Borg (\"the performer\") and Café del Mar (\"the client\").\n\nThe performer will provide their services for Acoustic night on Fri 27 Nov 2026, starting at 20:00.\n\nFee: €200.00. The balance is due on the day of the booking unless agreed otherwise in writing.\n\nCancellation: if the client cancels, any deposit paid is not refundable. If the performer cannot attend because of illness or an emergency, all money paid for this booking will be refunded.\n\nThe client will provide safe ac
+PASS  Cancelled online too
+      11-18 12:44:08.664  5972 22864 I UITEST  : bkksign refused 403
+PASS  A cancelled contract can't be signed
+PASS  Contracts: no crash
+
+== Web dashboard (every plan) ==
+PASS  Settings has Web dashboard
+PASS  Row explains it
+PASS  Free plan: not locked to Business
+PASS  Free plan: switch shown
+PASS  Free plan: off at first
+PASS  Switched on: shows when it was updated
+PASS  Open dashboard button
+      11-18 12:45:09.949  5972 23066 I UITEST  : bkdash name=Maria Borg currency=EUR gigs=12 clients=9 payments=5 expenses=6 iban=no settings=no bytes=4164
+PASS  Bookings, clients, payments and expenses are online
+      11-18 12:45:17.245  5972 23080 I UITEST  : bkdash name=Maria Borg currency=EUR gigs=12 clients=9 payments=5 expenses=6 iban=no settings=no bytes=4164
+PASS  Bank details and settings are never sent
+      11-18 12:45:24.950  5972 23097 I UITEST  : bkdashother refused 403
+PASS  Nobody else can read it
+      11-18 12:46:00.645  5972 23154 I UITEST  : bkcheck gig[Web Client|From the web|fee=33300|paid=11100|status=1|start=1200|exp=1] client=web@example.com/+356 7900 0000 waiting=0
+PASS  Web: new booking, payment, client and expense reach the phone
+PASS  Web: booking made on the web is in the app
+      11-18 12:46:32.734  5972 23231 I UITEST  : bkcheck gig[Web Client|Changed on the web|fee=44400|paid=0|status=0|start=-1|exp=1] client=web@example.com/+356 7900 0000 waiting=0
+PASS  Web: changes arrive by themselves (silent message)
+      11-18 12:46:40.033  5972 23242 I UITEST  : bkpull applied=0
+PASS  Web: nothing left to apply
+      11-18 12:46:47.339  5972 23253 I UITEST  : bkcheck gig[Web Client|Changed on the web|fee=44400|paid=0|status=0|start=-1|exp=1] client=web@example.com/+356 7900 0000 waiting=0
+PASS  Web: booking changed and payment removed
+      11-18 12:46:54.636  5972 23266 I UITEST  : bkdash name=Maria Borg currency=EUR gigs=13 clients=11 payments=5 expenses=7 iban=no settings=no bytes=4723
+PASS  Web: dashboard copy updated afterwards
+      11-18 12:47:06.168  5972 23288 I UITEST  : bkpull applied=0
+PASS  Web: delete applied
+      11-18 12:47:13.461  5972 23299 I UITEST  : bkcheck client=web@example.com/+356 7900 0000 waiting=0
+PASS  Web: booking deleted on the phone
+      11-18 12:47:20.751  5972 23310 I UITEST  : bkpull applied=0
+PASS  Web: no changes waiting means nothing to do
+      11-18 12:47:32.266  5972 23332 I UITEST  : bkpull applied=0
+PASS  Clash: second booking on the same day saved
+FAIL  Clash: booking screen warns about the other booking (expected to see: You already have Web Clash at 19:00 on this day)
+FAIL  Clash: booking form warns too (expected to see: You already have Web Clash at 19:00 on this day)
+      11-18 12:48:16.864  5972 23488 I UITEST  : bkpull applied=0
+PASS  Clash: test booking removed
+      11-18 12:48:24.617  5972 23499 I UITEST  : bkop refused 403
+PASS  Web: another account can't send changes
+PASS  Web dashboard changes: no crash
+      11-18 12:49:02.222  5972 23604 I UITEST  : bkdash name=Maria Borg currency=EUR gigs=12 clients=12 payments=5 expenses=7 iban=no settings=no bytes=4604
+PASS  A change on the phone is sent again
+PASS  Settings row shows it's on
+PASS  Switching off asks first
+PASS  Switched off
+      11-18 12:49:43.536  5972 23748 I UITEST  : bkdash missing 404
+PASS  Online copy deleted
+PASS  Web dashboard: no crash
+
+== Extras and VAT on the bill ==
+PASS  VAT: rate shown when switched on
+PASS  VAT: added on top or included
+      data: gigs=12 cancelled=1 pencilled=0 paid=160000 owed=115000 expenses=7 expTotal=60200 clients=12 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=true backup=true pay=paypal:https://paypal.me/tester vat_charge=1 extras=0 vat=0 total=90000 names=Paul Grech|Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Prompt Off|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  VAT: setting saved
+PASS  Form: VAT switch offered
+PASS  Form: total for the client with VAT
+PASS  Form: VAT amount shown
+PASS  Booking: extra line shown
+PASS  Booking: VAT shown
+      data: gigs=12 cancelled=1 pencilled=0 paid=160000 owed=135920 expenses=7 expTotal=60200 clients=12 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=true backup=true pay=paypal:https://paypal.me/tester vat_charge=1 extras=4000 vat=1800 total=110920 names=Paul Grech|Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Prompt Off|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  Booking: extras and VAT saved
+PASS  Invoice with extras and VAT made
+      data: gigs=12 cancelled=1 pencilled=0 paid=160000 owed=135920 expenses=7 expTotal=60200 clients=12 currency=EUR accent=indigo mode=light profession=singer terms=0 notify=true logo=true backup=true pay=paypal:https://paypal.me/tester vat_charge= extras=4000 vat=1800 total=110920 names=Paul Grech|Radisson Blu|Café del Mar|Hilton Malta|Bob's Bar|Prompt Off|Joanna & Mark|Bob's Bar|Radisson Blu|Café del Mar|Hilton Malta|Hilton Malta|
+PASS  VAT: switched off again
+PASS  Extras and VAT: no crash
+
+== Calendar sync ==
+      11-18 12:51:46.282  5972 24395 I UITEST  : bkcalmake content://com.android.calendar/calendars/1?caller_is_syncadapter=true&account_name=Test&account_type=LOCAL
+PASS  Calendar sync screen opens from Settings
+PASS  Calendar sync off at first
+PASS  Calendar: choose which calendar
+PASS  Calendar: the phone's calendar is listed
+PASS  Calendar sync on
+      11-18 12:52:33.488  5972 24681 I UITEST  : bkcalcheck events=11 titles=Paul Grech · Birthday party · 40|Radisson Blu · Corporate event|Café del Mar · Acoustic night|Hilton Malta · New Year party rehearsal|Bob's Bar · Friday live|Prompt Off|Joanna & Mark · Wedding reception, Villa Arrigo|Radisson Blu · Company party|Café del Mar · Sunset session|Hilton Malta · Gala dinner|Hilton Malta · Summer terrace|
+PASS  Calendar: bookings added to the calendar
+      11-18 12:52:46.663  5972 24698 I UITEST  : bkcalcheck events=12 titles=Paul Grech · Birthday party · 40|Radisson Blu · Corporate event|Café del Mar · Acoustic night|Hilton Malta · New Year party rehearsal|Bob's Bar · Friday live|Prompt Off|Joanna & Mark · Wedding reception, Villa Arrigo|Radisson Blu · Company party|Café del Mar · Sunset session|Hilton Malta · Gala dinner|Hilton Malta · Summer terrace|Cal Test · Calendar test|
+PASS  Calendar: a new booking goes in by itself
+      11-18 12:52:59.842  5972 24720 I UITEST  : bkcalcheck events=12 titles=Paul Grech · Birthday party · 40|Radisson Blu · Corporate event|Café del Mar · Acoustic night|Hilton Malta · New Year party rehearsal|Bob's Bar · Friday live|Prompt Off|Joanna & Mark · Wedding reception, Villa Arrigo|Radisson Blu · Company party|Café del Mar · Sunset session|Hilton Malta · Gala dinner|Hilton Malta · Summer terrace|Cal Test · Renamed in test|
+PASS  Calendar: a changed booking is updated
+      11-18 12:53:13.019  5972 24741 I UITEST  : bkcalcheck events=11 titles=Paul Grech · Birthday party · 40|Radisson Blu · Corporate event|Café del Mar · Acoustic night|Hilton Malta · New Year party rehearsal|Bob's Bar · Friday live|Prompt Off|Joanna & Mark · Wedding reception, Villa Arrigo|Radisson Blu · Company party|Café del Mar · Sunset session|Hilton Malta · Gala dinner|Hilton Malta · Summer terrace|
+PASS  Calendar: a cancelled booking is taken out
+PASS  Settings shows calendar sync on
+PASS  Booking: no 'Add to calendar' button when synced
+PASS  Switching off asks what to do
+      11-18 12:53:51.781  5972 24887 I UITEST  : bkcalcheck events=0 titles=
+PASS  Calendar: switched off and events taken out
+PASS  Calendar sync: no crash
+
+== Review pictures (Android 15 edge-to-edge) ==
+PASS  Review pictures: no crash
+
+== Done ==
+PASS  Whole run: no crash
+
+TOTAL: 403 passed, 2 failed
