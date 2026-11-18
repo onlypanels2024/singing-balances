@@ -463,7 +463,7 @@ public class DemoSeeder extends BroadcastReceiver {
                 }
                 break;
             }
-            case "calmake": {
+            case "bkcalmake": {
                 // A calendar on the test phone (no Google account there), like the user's own calendar
                 android.net.Uri u = android.provider.CalendarContract.Calendars.CONTENT_URI.buildUpon()
                         .appendQueryParameter(android.provider.CalendarContract.CALLER_IS_SYNCADAPTER, "true")
@@ -481,10 +481,10 @@ public class DemoSeeder extends BroadcastReceiver {
                 v.put(android.provider.CalendarContract.Calendars.OWNER_ACCOUNT, "Test");
                 v.put(android.provider.CalendarContract.Calendars.VISIBLE, 1);
                 v.put(android.provider.CalendarContract.Calendars.SYNC_EVENTS, 1);
-                Log.i(TAG, "calmake " + c.getContentResolver().insert(u, v));
+                Log.i(TAG, "bkcalmake " + c.getContentResolver().insert(u, v));
                 break;
             }
-            case "calcheck": {
+            case "bkcalcheck": {
                 // ShowFee's events in the phone's calendars
                 StringBuilder sb = new StringBuilder();
                 int n = 0;
@@ -498,10 +498,10 @@ public class DemoSeeder extends BroadcastReceiver {
                         sb.append(k.getString(0)).append('|');
                     }
                 }
-                Log.i(TAG, "calcheck events=" + n + " titles=" + sb);
+                Log.i(TAG, "bkcalcheck events=" + n + " titles=" + sb);
                 break;
             }
-            case "calgig": {
+            case "bkcalgig": {
                 // A test booking tomorrow: add / rename / cancel / delete (like editing it in the app)
                 Db db = Db.get(c);
                 String what = in.getStringExtra("do");
@@ -525,7 +525,7 @@ public class DemoSeeder extends BroadcastReceiver {
                 } else if (g != null && "delete".equals(what)) {
                     db.deleteGig(g.id);
                 }
-                Log.i(TAG, "calgig " + what + " done");
+                Log.i(TAG, "bkcalgig " + what + " done");
                 break;
             }
             case "bkop": {
