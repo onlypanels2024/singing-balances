@@ -120,7 +120,9 @@ public class GigActivity extends Activity {
                 });
             }
             if (g.isFuture()) {
-                action("Add to calendar", Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> Calendar.offer(this, g, false));
+                if (!CalendarSync.isOn(this)) { // with calendar sync on, it's in the calendar already
+                    action("Add to calendar", Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> Calendar.offer(this, g, false));
+                }
                 if (g.status == Gig.PENCILLED) {
                     action("Mark as confirmed", Ui.PRIMARY_LIGHT, Ui.PRIMARY, () -> setStatus(Gig.CONFIRMED));
                 }

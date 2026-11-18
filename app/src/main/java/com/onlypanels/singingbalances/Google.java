@@ -276,7 +276,7 @@ final class Google {
         sendWithInvoice(a, g, subject, body.toString());
     }
 
-    private static long millis(long day, int minutes) {
+    static long millis(long day, int minutes) {
         return LocalDate.ofEpochDay(day).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
                 + minutes * 60_000L;
     }

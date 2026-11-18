@@ -11,5 +11,6 @@
         <activity android:name=".RequestsActivity" android:exported="true" tools:replace="android:exported" />
         <activity android:name=".ContractActivity" android:exported="true" tools:replace="android:exported" />
         <activity android:name=".WebDashActivity" android:exported="true" tools:replace="android:exported" />
+        <activity android:name=".CalendarSyncActivity" android:exported="true" tools:replace="android:exported" />
     </application>
 </manifest>

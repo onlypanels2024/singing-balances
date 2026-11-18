@@ -463,6 +463,71 @@ public class DemoSeeder extends BroadcastReceiver {
                 }
                 break;
             }
+            case "calmake": {
+                // A calendar on the test phone (no Google account there), like the user's own calendar
+                android.net.Uri u = android.provider.CalendarContract.Calendars.CONTENT_URI.buildUpon()
+                        .appendQueryParameter(android.provider.CalendarContract.CALLER_IS_SYNCADAPTER, "true")
+                        .appendQueryParameter(android.provider.CalendarContract.Calendars.ACCOUNT_NAME, "Test")
+                        .appendQueryParameter(android.provider.CalendarContract.Calendars.ACCOUNT_TYPE,
+                                android.provider.CalendarContract.ACCOUNT_TYPE_LOCAL).build();
+                android.content.ContentValues v = new android.content.ContentValues();
+                v.put(android.provider.CalendarContract.Calendars.ACCOUNT_NAME, "Test");
+                v.put(android.provider.CalendarContract.Calendars.ACCOUNT_TYPE, android.provider.CalendarContract.ACCOUNT_TYPE_LOCAL);
+                v.put(android.provider.CalendarContract.Calendars.NAME, "Test calendar");
+                v.put(android.provider.CalendarContract.Calendars.CALENDAR_DISPLAY_NAME, "Test calendar");
+                v.put(android.provider.CalendarContract.Calendars.CALENDAR_COLOR, 0xff3949ab);
+                v.put(android.provider.CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL,
+                        android.provider.CalendarContract.Calendars.CAL_ACCESS_OWNER);
+                v.put(android.provider.CalendarContract.Calendars.OWNER_ACCOUNT, "Test");
+                v.put(android.provider.CalendarContract.Calendars.VISIBLE, 1);
+                v.put(android.provider.CalendarContract.Calendars.SYNC_EVENTS, 1);
+                Log.i(TAG, "calmake " + c.getContentResolver().insert(u, v));
+                break;
+            }
+            case "calcheck": {
+                // ShowFee's events in the phone's calendars
+                StringBuilder sb = new StringBuilder();
+                int n = 0;
+                try (android.database.Cursor k = c.getContentResolver().query(android.provider.CalendarContract.Events.CONTENT_URI,
+                        new String[]{android.provider.CalendarContract.Events.TITLE},
+                        android.provider.CalendarContract.Events.DESCRIPTION + " LIKE ? AND "
+                                + android.provider.CalendarContract.Events.DELETED + " = 0",
+                        new String[]{"%Added by ShowFee%"}, null)) {
+                    while (k != null && k.moveToNext()) {
+                        n++;
+                        sb.append(k.getString(0)).append('|');
+                    }
+                }
+                Log.i(TAG, "calcheck events=" + n + " titles=" + sb);
+                break;
+            }
+            case "calgig": {
+                // A test booking tomorrow: add / rename / cancel / delete (like editing it in the app)
+                Db db = Db.get(c);
+                String what = in.getStringExtra("do");
+                Gig g = null;
+                for (Gig x : db.allGigs()) if (x.client.equals("Cal Test")) g = x;
+                if ("add".equals(what)) {
+                    g = new Gig();
+                    g.client = "Cal Test";
+                    g.event = "Calendar test";
+                    g.gigDay = Dates.today() + 1;
+                    g.dueDay = g.gigDay;
+                    g.startMin = 20 * 60;
+                    g.feeCents = 15000;
+                    db.save(g);
+                } else if (g != null && "rename".equals(what)) {
+                    g.event = "Renamed in test";
+                    db.save(g);
+                } else if (g != null && "cancel".equals(what)) {
+                    g.status = Gig.CANCELLED;
+                    db.save(g);
+                } else if (g != null && "delete".equals(what)) {
+                    db.deleteGig(g.id);
+                }
+                Log.i(TAG, "calgig " + what + " done");
+                break;
+            }
             case "bkop": {
                 // A change made on the web dashboard, written exactly like the website does (t + d + server time)
                 String uid = Cloud.get(c, Cloud.UID);

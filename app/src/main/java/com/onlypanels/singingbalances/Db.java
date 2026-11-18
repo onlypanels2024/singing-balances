@@ -80,6 +80,7 @@ final class Db extends SQLiteOpenHelper {
     private void changed() {
         Widget.updateAll(app);
         Backup.schedule(app);
+        CalendarSync.schedule(app);
     }
 
     // ---------------- Gigs ----------------

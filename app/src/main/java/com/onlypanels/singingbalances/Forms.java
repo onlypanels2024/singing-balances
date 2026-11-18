@@ -296,7 +296,7 @@ final class Forms {
             db.saveExtras(g, extras);
             dialog.dismiss();
             onSaved.onSaved(id);
-            if (isNew && !g.isCancelled() && Prefs.askCalendar(a)) Calendar.offer(a, g, true);
+            if (isNew && !g.isCancelled() && Prefs.askCalendar(a) && !CalendarSync.isOn(a)) Calendar.offer(a, g, true);
         }));
         dialog.show();
     }
