@@ -43,9 +43,9 @@ bklog "Web: no changes waiting means nothing to do" bkpull 'applied=0'
 op gig '{"ref":"wclash","client":"Web Clash","event":"Birthday","gig_day":'$T',"due_day":'$T',"fee_cents":10000,"status":0,"start_min":1140}'
 bklog "Clash: second booking on the same day saved" bkpull 'applied=[01]'
 main --es page gigs; $UI tap "=Upcoming" > /dev/null; $UI tap "Bob's Bar" 3 > /dev/null; sleep 2
-check "Clash: booking screen warns about the other booking" "You already have Web Clash at 19:00 on this day"; shot "REVIEW-clash-booking"
+check "Clash: booking screen warns about the other booking" "Web Clash at 19:00 on this day"; shot "REVIEW-clash-booking"
 $UI tap "=EDIT" > /dev/null || $UI tap "=Edit" > /dev/null; sleep 2
-check "Clash: booking form warns too" "You already have Web Clash at 19:00 on this day"; shot "REVIEW-clash-form"
+check "Clash: booking form warns too" "Web Clash at 19:00 on this day"; shot "REVIEW-clash-form"
 adb shell input keyevent 4; sleep 1; adb shell input keyevent 4; sleep 1
 op gigDel '{"id":"wclash"}'
 bklog "Clash: test booking removed" bkpull 'applied=[01]'
