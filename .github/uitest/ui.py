@@ -41,44 +41,24 @@ def match(n, text, field="text"):
         return v == text[1:]
     return text.lower() in v.lower()
 
-KB_TOP = 1450  # the on-screen keyboard starts at about this height (1080x2400 screen)
-
-def kb_shown():
-    return "mInputShown=true" in adb("dumpsys", "input_method")
-
-def usable(n, kb):
-    # something behind the keyboard can't be tapped (the tap would press a key instead)
-    return n["h"] > 0 and not (kb and n["y"] > KB_TOP)
-
 def swipe(up=False):
-    # slow drag (no fling) so the page has stopped moving before we read it again;
-    # kept above the keyboard, so the drag never presses a key
-    a, b = ("700", "1300") if kb_shown() else ("900", "1500")
+    # slow drag (no fling) so the page has stopped moving before we read it again
     if up:
-        adb("input", "swipe", "540", a, "540", b, "900")
+        adb("input", "swipe", "540", "900", "540", "1500", "900")
     else:
-        adb("input", "swipe", "540", b, "540", a, "900")
+        adb("input", "swipe", "540", "1500", "540", "900", "900")
     time.sleep(1.8)
 
 def find(text, scroll=0, field="text", nth=0):
     """scroll > 0 swipes down the page to look further; scroll < 0 swipes up (e.g. in a dropdown list)."""
     time.sleep(0.8)  # let the screen settle after the last tap
-    extra = 1  # one more drag when the thing is only hidden behind the keyboard
-    attempt = 0
-    while True:
-        kb = kb_shown()
-        ns = [n for n in nodes() if match(n, text, field) and n["h"] > 0]
-        hits = [n for n in ns if usable(n, kb)]
+    for attempt in range(abs(scroll) + 1):
+        hits = [n for n in nodes() if match(n, text, field) and n["h"] > 0]
         if len(hits) > nth:
             return hits[nth]
         if attempt < abs(scroll):
             swipe(up=scroll < 0)
-        elif len(ns) > nth and extra:
-            extra -= 1
-            swipe()
-        else:
-            return None
-        attempt += 1
+    return None
 
 def tap(text, scroll=0, field="text", nth=0):
     n = find(text, scroll, field, nth)
@@ -92,15 +72,12 @@ def tap(text, scroll=0, field="text", nth=0):
 
 def fill(label, value, scroll=0):
     """Types into the input field that follows a label."""
-    for attempt in range(scroll + 2):
-        kb = kb_shown()
+    for attempt in range(scroll + 1):
         ns = nodes()
         for i, n in enumerate(ns):
             if match(n, label):
                 for m in ns[i + 1:]:
                     if m["cls"].endswith("EditText") or m["cls"].endswith("AutoCompleteTextView"):
-                        if not usable(m, kb):
-                            break  # behind the keyboard: drag the page up and look again
                         adb("input", "tap", str(m["x"]), str(m["y"]))
                         time.sleep(0.5)
                         adb("input", "keycombination", "113", "29")  # select all
@@ -109,27 +86,24 @@ def fill(label, value, scroll=0):
                         time.sleep(0.5)
                         print(f"filled '{label}' = {value}")
                         return 0
-        if attempt < scroll + 1:
+        if attempt < scroll:
             swipe()
     print(f"FIELD NOT FOUND: '{label}'")
     return 1
 
 def tapafter(label, scroll=0):
     """Taps the button that follows a label (date and time pickers in forms)."""
-    for attempt in range(scroll + 2):
-        kb = kb_shown()
+    for attempt in range(scroll + 1):
         ns = nodes()
         for i, n in enumerate(ns):
             if match(n, label):
                 for m in ns[i + 1:]:
                     if m["cls"].endswith("Button"):
-                        if not usable(m, kb):
-                            break  # behind the keyboard: drag the page up and look again
                         adb("input", "tap", str(m["x"]), str(m["y"]))
                         print(f"tapped button after '{label}': '{m['text']}'")
                         time.sleep(1.5)
                         return 0
-        if attempt < scroll + 1:
+        if attempt < scroll:
             swipe()
     print(f"BUTTON NOT FOUND after: '{label}'")
     return 1
