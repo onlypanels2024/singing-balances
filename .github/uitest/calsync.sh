@@ -3,7 +3,7 @@ section "Calendar sync"
 type bklog > /dev/null 2>&1 || bklog() { adb logcat -c; seeder --es task "$2" "${@:4}"; sleep 5; L=$(adb logcat -d -s UITEST | grep -E "$2" | tail -1)
           echo "      $L" | cut -c1-700 >> $R; if echo "$L" | grep -qE "$3"; then ok "$1"; else bad "$1 (log should match: $3)"; fi; }
 adb shell pm grant $PKG android.permission.READ_CALENDAR; adb shell pm grant $PKG android.permission.WRITE_CALENDAR
-seeder --es task calmake
+adb logcat -c; seeder --es task calmake; sleep 2; adb logcat -d -s UITEST:* | grep -A4 calmake | head -6 | sed "s/^/      /" >> $R
 settings; $UI tap "Calendar sync" 4 > /dev/null; sleep 2
 check "Calendar sync screen opens from Settings" "Keep my bookings in my calendar"; check "Calendar sync off at first" "=Off"; shot "REVIEW-calsync-off"
 $UI tap "Keep my bookings in my calendar" > /dev/null; sleep 2
