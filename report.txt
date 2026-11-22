@@ -1,0 +1,14 @@
+keyboards still on: 
+
+== New icon ==
+PASS  App opens on the bookings list
+
+== Plans: monthly and yearly ==
+FAIL  Plans screen: choose your plan (expected to see: Choose your plan)
+FAIL  Plans screen: Pro price (expected to see: €9.99/month)
+PASS  Plans screen: Business plan
+
+== Done ==
+PASS  Whole run: no crash
+
+TOTAL: 3 passed, 2 failed
